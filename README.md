@@ -1,5 +1,7 @@
 # Durak - An online multiplayer card game
 
+[![Build Status](https://travis-ci.org/rnixik/durak.svg?branch=master)](https://travis-ci.org/rnixik/durak)
+
 Rules are described on [Wikipedia](https://en.wikipedia.org/wiki/Durak).
 This implementation is in progress.
 
