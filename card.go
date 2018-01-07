@@ -38,3 +38,7 @@ func (c *Card) lte(otherCard *Card) bool {
 	otherIndex := otherCard.getValueIndex()
 	return thisIndex <= otherIndex
 }
+
+func (c *Card) equals(otherCard *Card) bool {
+	return c.Value == otherCard.Value && c.Suit == otherCard.Suit
+}

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -41,4 +42,12 @@ func (p *Pile) getCard() (*Card, error) {
 		return card, nil
 	}
 	return &Card{}, errors.New("No cards left in pile")
+}
+
+func (p *Pile) asString() string {
+	cardsStrings := []string{}
+	for _, card := range p.cards {
+		cardsStrings = append(cardsStrings, card.Value+card.Suit)
+	}
+	return strings.Join(cardsStrings, " ")
 }
