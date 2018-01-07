@@ -1,0 +1,9 @@
+language: go
+
+go:
+  - 1.9
+  - master
+
+script:
+  - go get -t -v ./...
+  - go test -v -race ./...
