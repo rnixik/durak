@@ -1,8 +1,6 @@
 function App() {
     var app = this;
 
-    var clients = [];
-
     this.vue = new Vue({
       el: '#app',
       data: {
@@ -10,7 +8,9 @@ function App() {
           yourId: '',
           yourNickname: '',
           clients: []
-        }
+        },
+        commandError: {},
+        rooms: []
       }
     });
 
@@ -34,6 +34,7 @@ function App() {
         app.vue.clientsInfo.yourId = data.your_id;
         app.vue.clientsInfo.yourNickname = data.your_nickname;
         app.vue.clientsInfo.clients = data.clients;
+        app.vue.rooms = data.rooms;
     };
 
     this.onClientBroadCastJoinedEvent = function(data) {
@@ -49,6 +50,15 @@ function App() {
         }
         app.vue.clientsInfo.clients = clients;
     }
+
+    this.onClientCommandError = function(data) {
+        app.vue.commandError = data;
+        console.error(data.message);
+    }
+
+    this.onClientCreatedRoomEvent = function(data) {
+        app.vue.rooms.push(data.room);
+    }
 }
 
 (function(){
@@ -59,5 +69,5 @@ function App() {
 
 let sendBtn = document.getElementById('send');
 sendBtn.onclick = function() {
-    WsConnection.send(JSON.stringify({type: 'game', sub_type: 'attack', data: {}}));
+    WsConnection.send(JSON.stringify({type: 'lobby', sub_type: 'create_room', data: {}}));
 };

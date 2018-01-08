@@ -36,12 +36,14 @@ type Client struct {
 	// Buffered channel of outbound messages.
 	send chan []byte
 
+	isValid bool
+
 	nickname string
 	id       uint64
 }
 
-// ClientMessage is a command message from connected client.
-type ClientMessage struct {
+// ClientCommand is a command message from connected client.
+type ClientCommand struct {
 	Type    string      `json:"type"`
 	SubType string      `json:"sub_type"`
 	Data    interface{} `json:"data"`
@@ -71,12 +73,12 @@ func (c *Client) readLoop() {
 		}
 		log.Printf("Incoming message: %s", message)
 
-		var clientMessage ClientMessage
-		if err := json.Unmarshal(message, &clientMessage); err != nil {
+		var clientCommand ClientCommand
+		if err := json.Unmarshal(message, &clientCommand); err != nil {
 			log.Printf("json unmarshal error: %s", err)
 		} else {
-			clientMessage.client = c
-			c.lobby.onClientMessage(&clientMessage)
+			clientCommand.client = c
+			c.lobby.onClientCommand(&clientCommand)
 		}
 	}
 }

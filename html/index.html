@@ -38,12 +38,22 @@
                 <div>Your id: {{clientsInfo.yourId}}</div>
                 <div>Your nickname: {{clientsInfo.yourNickname}}</div>
             </div>
+
             <div>Clients: </div>
             <ol>
                 <li v-for="client in clientsInfo.clients">
                   {{ client.nickname }}#{{ client.id }} 
                 </li>
             </ol>
+
+            <div>Rooms: </div>
+            <ol>
+                <li v-for="room in rooms">
+                  {{ room.name }}#{{ room.id }} <span v-if="room.game_status">({{ room.game_status }})</span>
+                </li>
+            </ol>
+
+            <div class="command-error" v-if="commandError.message">Error: {{ commandError.message }}</div>
         </div>
 
         <button id="send">Send somthing</button>

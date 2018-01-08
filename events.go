@@ -11,13 +11,15 @@ type JSONEvent struct {
 	Data interface{} `json:"data"`
 }
 
-// GameInList contains short info about game.
-type GameInList struct {
-	Id   uint64 `json:"id"`
-	Name string `json:"name"`
+// RoomInList contains short info about room in the lobby.
+type RoomInList struct {
+	Id         uint64 `json:"id"`
+	OwnerId    uint64 `json:"owner_id"`
+	Name       string `json:"name"`
+	GameStatus string `json:"game_status"`
 }
 
-// ClientInList contains short info about client in lobby
+// ClientInList contains short info about client in the lobby.
 type ClientInList struct {
 	Id       uint64 `json:"id"`
 	Nickname string `json:"nickname"`
@@ -28,10 +30,10 @@ type ClientJoinedEvent struct {
 	YourId       uint64          `json:"your_id"`
 	YourNickname string          `json:"your_nickname"`
 	Clients      []*ClientInList `json:"clients"`
-	Games        []*GameInList   `json:"games"`
+	Rooms        []*RoomInList   `json:"rooms"`
 }
 
-// ClientLeftEvent contains id of client who left lobby
+// ClientLeftEvent contains id of client who left lobby.
 type ClientLeftEvent struct {
 	Id uint64 `json:"id"`
 }
@@ -40,6 +42,16 @@ type ClientLeftEvent struct {
 type ClientBroadCastJoinedEvent struct {
 	Id       uint64 `json:"id"`
 	Nickname string `json:"nickname"`
+}
+
+// ClientCommandError contains info about error on client's command.
+type ClientCommandError struct {
+	Message string `json:"message"`
+}
+
+// ClientCreatedRoomEvent contains info of created room.
+type ClientCreatedRoomEvent struct {
+	Room *RoomInList `json:"room"`
 }
 
 // PlayersEvent contains list of players which were connected to a game.
