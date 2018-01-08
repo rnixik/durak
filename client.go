@@ -46,6 +46,10 @@ type ClientMessage struct {
 	client  *Client
 }
 
+func (c *Client) Nickname() string {
+	return c.nickname
+}
+
 func (c *Client) readLoop() {
 	defer func() {
 		c.lobby.unregister <- c
