@@ -30,8 +30,7 @@ func TestGetCard(t *testing.T) {
 	pile := newPile()
 	card, err := pile.getCard()
 	if err != nil {
-		t.Errorf("TestGetCard got error: %s", err)
-		return
+		t.Fatalf("TestGetCard got error: %s", err)
 	}
 	if len(card.Value) == 0 {
 		t.Errorf("TestGetCard got empty value of card")
