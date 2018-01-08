@@ -7,15 +7,15 @@ type TestEvent struct {
 	Field2 int    `json:"field2"`
 }
 
-func TestEventToJson(t *testing.T) {
+func TestEventToJSON(t *testing.T) {
 	event := &TestEvent{"test", 123}
-	got, err := eventToJson(event)
+	got, err := eventToJSON(event)
 	if err != nil {
-		t.Fatalf("TestEventToJson got error: %s", err)
+		t.Fatalf("TestEventToJSON got error: %s", err)
 	}
 	expected := "{\"name\":\"TestEvent\",\"data\":{\"field1\":\"test\",\"field2\":123}}"
 	if string(got) != expected {
-		t.Errorf("TestAsString expected: %s, got: %s", expected, got)
+		t.Errorf("TestEventToJSON expected: %s, got: %s", expected, got)
 	}
 }
 
@@ -24,7 +24,7 @@ func TestGetNameOfStructPointer(t *testing.T) {
 	got := getNameOfStruct(event)
 	expected := "TestEvent"
 	if got != expected {
-		t.Errorf("TestAsString expected: %s, got: %s", expected, got)
+		t.Errorf("TestGetNameOfStructPointer expected: %s, got: %s", expected, got)
 	}
 }
 
@@ -33,6 +33,6 @@ func TestGetNameOfStructValue(t *testing.T) {
 	got := getNameOfStruct(event)
 	expected := "TestEvent"
 	if got != expected {
-		t.Errorf("TestAsString expected: %s, got: %s", expected, got)
+		t.Errorf("TestGetNameOfStructPointer expected: %s, got: %s", expected, got)
 	}
 }

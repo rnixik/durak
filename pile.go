@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Pile represents the pile of cars - talon
 type Pile struct {
 	cards []*Card
 }

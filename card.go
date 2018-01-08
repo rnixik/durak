@@ -1,5 +1,6 @@
 package main
 
+// Card represents a card from French playing cards with Value And Suit.
 type Card struct {
 	Value string `json:"value"`
 	Suit  string `json:"suit"`

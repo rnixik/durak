@@ -4,12 +4,14 @@ import (
 	"log"
 )
 
+// Statuses of the game.
 const (
 	GameStatusPreparing = "preparing"
 	GameStatusPlaying   = "playing"
 	GameStatusFinished  = "finished"
 )
 
+// States of the game.
 const (
 	GameStateDealing = "dealing"
 )
@@ -19,16 +21,19 @@ var (
 	cardSuits  = []string{"♣", "♦", "♥", "♠"}
 )
 
+// CardOnDesk represents a game card which was played.
 type CardOnDesk struct {
 	Card         *Card `json:"card"`
 	SourcePlayer int64 `json:"source_player"`
 	BeatByCard   *Card `json:"beat_by_card"`
 }
 
+// Desk contains played cards.
 type Desk struct {
 	Cards []*CardOnDesk `json:"cards"`
 }
 
+// Game represents status, state, etc of the game.
 type Game struct {
 	playerActions chan *PlayerAction
 	owner         *Player
@@ -238,7 +243,7 @@ func (g *Game) onClientAction(action *PlayerAction) {
 }
 
 func (g *Game) broadcastEvent(event interface{}) {
-	json, _ := eventToJson(event)
+	json, _ := eventToJSON(event)
 	for _, p := range g.players {
 		p.sendMessage(json)
 	}

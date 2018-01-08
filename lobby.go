@@ -5,8 +5,8 @@ import (
 	"sync/atomic"
 )
 
-var lastGameId uint64 = 0
-var lastClientId uint64 = 0
+var lastGameId uint64
+var lastClientId uint64
 
 // Lobby is the first place for connected clients. It passes commands to games.
 type Lobby struct {
@@ -78,7 +78,7 @@ func (l *Lobby) createNewGame(ownerClient *Client) {
 }
 
 func (l *Lobby) broadcastEvent(event interface{}) {
-	json, _ := eventToJson(event)
+	json, _ := eventToJSON(event)
 	for client := range l.clients {
 		client.sendMessage(json)
 	}

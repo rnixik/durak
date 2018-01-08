@@ -27,6 +27,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+// Client represents a connected user using websockets.
 type Client struct {
 	lobby *Lobby
 
@@ -39,6 +40,7 @@ type Client struct {
 	id       uint64
 }
 
+// ClientMessage is a command message from connected client.
 type ClientMessage struct {
 	Type    string      `json:"type"`
 	SubType string      `json:"sub_type"`
@@ -46,6 +48,7 @@ type ClientMessage struct {
 	client  *Client
 }
 
+// Nickname returns nickname of the client
 func (c *Client) Nickname() string {
 	return c.nickname
 }
@@ -70,7 +73,7 @@ func (c *Client) readLoop() {
 
 		var clientMessage ClientMessage
 		if err := json.Unmarshal(message, &clientMessage); err != nil {
-			log.Println("json unmarshal error: %s", err)
+			log.Printf("json unmarshal error: %s", err)
 		} else {
 			clientMessage.client = c
 			c.lobby.onClientMessage(&clientMessage)
@@ -112,7 +115,7 @@ func (c *Client) writeLoop() {
 }
 
 func (c *Client) sendEvent(event interface{}) {
-	json, _ := eventToJson(event)
+	json, _ := eventToJSON(event)
 	log.Printf("Send json to client %s", c.nickname)
 	log.Println(string(json))
 	c.sendMessage(json)

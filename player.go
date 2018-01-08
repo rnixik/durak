@@ -1,11 +1,13 @@
 package main
 
+// ClientInterface represents interface which sends events to connected players.
 type ClientInterface interface {
 	sendEvent(event interface{})
 	sendMessage(message []byte)
 	Nickname() string
 }
 
+// Player represents connected to a game client which can have cards.
 type Player struct {
 	Name     string `json:"name"`
 	IsActive bool   `json:"is_active"`
