@@ -33,6 +33,19 @@
             <div id="disconnected" style="display: none; color: #FFDF00; text-align: center; font-size: 18px; font-weight: bold;">Disconnected</div>
         </div>
 
+        <div id="app">
+            <div>
+                <div>Your id: {{clientsInfo.yourId}}</div>
+                <div>Your nickname: {{clientsInfo.yourNickname}}</div>
+            </div>
+            <div>Clients: </div>
+            <ol>
+                <li v-for="client in clientsInfo.clients">
+                  {{ client.nickname }}#{{ client.id }} 
+                </li>
+            </ol>
+        </div>
+
         <button id="send">Send somthing</button>
 
         <script>
@@ -116,6 +129,7 @@
                 
             })();
         </script>
+        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
         <script src="js/index.js"></script>
   </body>
 </html>

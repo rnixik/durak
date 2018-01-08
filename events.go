@@ -13,23 +13,33 @@ type JSONEvent struct {
 
 // GameInList contains short info about game.
 type GameInList struct {
-	Name string `json:"name"`
 	Id   uint64 `json:"id"`
+	Name string `json:"name"`
+}
+
+// ClientInList contains short info about client in lobby
+type ClientInList struct {
+	Id       uint64 `json:"id"`
+	Nickname string `json:"nickname"`
 }
 
 // ClientJoinedEvent contains info for the just connected client.
 type ClientJoinedEvent struct {
-	Id         uint64        `json:"id"`
-	Nickname   string        `json:"nickname"`
-	ClientsNum int           `json:"clients_num"`
-	Games      []*GameInList `json:"games"`
+	YourId       uint64          `json:"your_id"`
+	YourNickname string          `json:"your_nickname"`
+	Clients      []*ClientInList `json:"clients"`
+	Games        []*GameInList   `json:"games"`
+}
+
+// ClientLeftEvent contains id of client who left lobby
+type ClientLeftEvent struct {
+	Id uint64 `json:"id"`
 }
 
 // ClientBroadCastJoinedEvent contains info for other clients when a new client was connected.
 type ClientBroadCastJoinedEvent struct {
-	Id         uint64 `json:"id"`
-	Nickname   string `json:"nickname"`
-	ClientsNum int    `json:"clients_num"`
+	Id       uint64 `json:"id"`
+	Nickname string `json:"nickname"`
 }
 
 // PlayersEvent contains list of players which were connected to a game.
