@@ -40,6 +40,7 @@ type Client struct {
 
 	nickname string
 	id       uint64
+	room     *Room
 }
 
 // ClientCommand is a command message from connected client.

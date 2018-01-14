@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"strconv"
 	"sync/atomic"
 )
 
@@ -147,6 +149,26 @@ func (l *Lobby) onCreateNewRoomCommand(c *Client) {
 	l.broadcastEvent(event)
 }
 
+func (l *Lobby) onLeftRoom(c *Client, room *Room) {
+	changedOwner, roomBecameEmpty := room.removeClient(c)
+	log.Printf("Client %s left room %d: changed owner = %v, room became empty = %v", c.Nickname(), room.Name, changedOwner, roomBecameEmpty)
+}
+
+func (l *Lobby) onJoinRoomCommand(c *Client, roomId uint64) {
+	log.Printf("OnJoinRoomCommand: %s, %d", c.Nickname(), roomId)
+	oldRoomJoined := c.room
+	if oldRoomJoined != nil && oldRoomJoined.Id() != roomId {
+		l.onLeftRoom(c, oldRoomJoined)
+	}
+	for _, room := range l.rooms {
+		if room.Id() == roomId {
+			room.addClient(c)
+			log.Printf("Client %s joined room %d", c.Nickname(), roomId)
+			break
+		}
+	}
+}
+
 func (l *Lobby) onClientCommand(cc *ClientCommand) {
 	if cc.Type == "lobby" {
 		if cc.SubType == "join" {
@@ -157,6 +179,12 @@ func (l *Lobby) onClientCommand(cc *ClientCommand) {
 			}
 		} else if cc.SubType == "create_room" {
 			l.onCreateNewRoomCommand(cc.client)
+		} else if cc.SubType == "join_room" {
+			roomIdStr := fmt.Sprintf("%v", cc.Data)
+			roomId, err := strconv.ParseUint(roomIdStr, 10, 64)
+			if err == nil {
+				l.onJoinRoomCommand(cc.client, roomId)
+			}
 		}
 	} else if cc.Type == "game" {
 		// demo

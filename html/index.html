@@ -49,7 +49,7 @@
             <div>Rooms: </div>
             <ol>
                 <li v-for="room in rooms">
-                  {{ room.name }}#{{ room.id }} <span v-if="room.game_status">({{ room.game_status }})</span>
+                  <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.clients_num }} <span v-if="room.game_status">({{ room.game_status }})</span></a>
                 </li>
             </ol>
 

@@ -3,12 +3,14 @@ package main
 // Room represents place where some of clients want to start a new game.
 type Room struct {
 	owner   *Client
-	clients []*Client
+	clients map[*Client]bool
 	game    *Game
 }
 
 func newRoom(owner *Client) *Room {
-	return &Room{owner, make([]*Client, 0), nil}
+	clients := make(map[*Client]bool, 0)
+	clients[owner] = true
+	return &Room{owner, clients, nil}
 }
 
 // Name returns name of the room by its owner.
@@ -22,6 +24,28 @@ func (r *Room) Id() uint64 {
 	return r.owner.id
 }
 
+func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty bool) {
+	client.room = nil
+	delete(r.clients, client)
+	if len(r.clients) == 0 {
+		roomBecameEmpty = true
+		return
+	}
+	if r.owner == client {
+		for ic, _ := range r.clients {
+			r.owner = ic
+			changedOwner = true
+			return
+		}
+	}
+	return
+}
+
+func (r *Room) addClient(client *Client) {
+	r.clients[client] = true
+	client.room = r
+}
+
 func (r *Room) toRoomInList() *RoomInList {
 	gameStatus := ""
 	if r.game != nil {
@@ -32,6 +56,7 @@ func (r *Room) toRoomInList() *RoomInList {
 		OwnerId:    r.owner.id,
 		Name:       r.Name(),
 		GameStatus: gameStatus,
+		ClientsNum: len(r.clients),
 	}
 	return roomInList
 }

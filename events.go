@@ -17,6 +17,7 @@ type RoomInList struct {
 	OwnerId    uint64 `json:"owner_id"`
 	Name       string `json:"name"`
 	GameStatus string `json:"game_status"`
+	ClientsNum int    `json:"clients_num"`
 }
 
 // ClientInList contains short info about client in the lobby.

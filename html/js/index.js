@@ -11,6 +11,15 @@ function App() {
         },
         commandError: {},
         rooms: []
+      },
+      methods: {
+        joinRoom: function (roomId, event) {
+          if (event) { 
+            event.preventDefault();
+          }
+          console.log('join room', roomId);
+          app.commandJoinRoom(roomId);
+        }
       }
     });
 
@@ -59,6 +68,14 @@ function App() {
     this.onClientCreatedRoomEvent = function(data) {
         app.vue.rooms.push(data.room);
     }
+
+    this.sendCommand = function(type, subType, data) {
+        WsConnection.send(JSON.stringify({type: type, sub_type: subType, data: data}));
+    }
+
+    this.commandJoinRoom = function(roomId) {
+        app.sendCommand('lobby', 'join_room', roomId);
+    } 
 }
 
 (function(){
