@@ -34,7 +34,7 @@ func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty 
 		return
 	}
 	if r.owner == client {
-		for ic, _ := range r.clients {
+		for ic := range r.clients {
 			r.owner = ic
 			changedOwner = true
 			return
