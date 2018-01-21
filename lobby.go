@@ -154,6 +154,11 @@ func (l *Lobby) onCreateNewRoomCommand(c *Client) {
 		return
 	}
 
+	oldRoomJoined := c.room
+	if oldRoomJoined != nil {
+		l.onLeftRoom(c, oldRoomJoined)
+	}
+
 	atomic.AddUint64(&lastRoomId, 1)
 	lastRoomIdSafe := atomic.LoadUint64(&lastRoomId)
 
@@ -177,6 +182,7 @@ func (l *Lobby) onLeftRoom(c *Client, room *Room) {
 	if roomBecameEmpty {
 		roomRemovedEvent := &RoomRemovedEvent{room.Id()}
 		l.broadcastEvent(roomRemovedEvent)
+		l.rooms[c] = nil
 		delete(l.rooms, c)
 		return
 	}

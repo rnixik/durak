@@ -18,14 +18,12 @@ function App() {
           if (event) { 
             event.preventDefault();
           }
-          console.log('create room');
           app.commandCreateRoom();
         },
         joinRoom: function (roomId, event) {
           if (event) { 
             event.preventDefault();
           }
-          console.log('join room', roomId);
           app.commandJoinRoom(roomId);
           app.vue.clientsInfo.yourRoomId = roomId;
         }
