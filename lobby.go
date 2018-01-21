@@ -9,6 +9,7 @@ import (
 
 var lastGameId uint64
 var lastClientId uint64
+var lastRoomId uint64
 
 // Lobby is the first place for connected clients. It passes commands to games.
 type Lobby struct {
@@ -24,6 +25,9 @@ type Lobby struct {
 	// Unregister requests from clients.
 	unregister chan *Client
 
+	// Commands from clients
+	clientCommands chan *ClientCommand
+
 	// Started games
 	games []*Game
 
@@ -33,12 +37,13 @@ type Lobby struct {
 
 func newLobby() *Lobby {
 	return &Lobby{
-		broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		clients:    make(map[*Client]bool),
-		games:      make([]*Game, 0),
-		rooms:      make(map[*Client]*Room),
+		broadcast:      make(chan []byte),
+		register:       make(chan *Client),
+		unregister:     make(chan *Client),
+		clients:        make(map[*Client]bool),
+		clientCommands: make(chan *ClientCommand),
+		games:          make([]*Game, 0),
+		rooms:          make(map[*Client]*Room),
 	}
 }
 
@@ -53,13 +58,12 @@ func (l *Lobby) run() {
 			client.isValid = true
 			l.clients[client] = true
 		case client := <-l.unregister:
-			leftId := client.id
 			if _, ok := l.clients[client]; ok {
+				l.onClientLeft(client)
 				client.isValid = false
 				delete(l.clients, client)
 				close(client.send)
 			}
-			l.onLeft(leftId)
 		case message := <-l.broadcast:
 			for client := range l.clients {
 				select {
@@ -70,6 +74,8 @@ func (l *Lobby) run() {
 					delete(l.clients, client)
 				}
 			}
+		case clientCommand := <-l.clientCommands:
+			l.onClientCommand(clientCommand)
 		}
 	}
 }
@@ -91,6 +97,7 @@ func (l *Lobby) createNewGame(ownerClient *Client) {
 func (l *Lobby) broadcastEvent(event interface{}) {
 	json, _ := eventToJSON(event)
 	for client := range l.clients {
+		// TODO: add check whether client is in a room or in a game
 		client.sendMessage(json)
 	}
 }
@@ -128,9 +135,13 @@ func (l *Lobby) onJoinCommand(c *Client, nickname string) {
 	c.sendEvent(event)
 }
 
-func (l *Lobby) onLeft(leftId uint64) {
+func (l *Lobby) onClientLeft(client *Client) {
+	room := client.room
+	if room != nil {
+		l.onLeftRoom(client, room)
+	}
 	leftEvent := &ClientLeftEvent{
-		Id: leftId,
+		Id: client.id,
 	}
 	l.broadcastEvent(leftEvent)
 }
@@ -142,30 +153,59 @@ func (l *Lobby) onCreateNewRoomCommand(c *Client) {
 		c.sendEvent(errEvent)
 		return
 	}
-	room := newRoom(c)
+
+	atomic.AddUint64(&lastRoomId, 1)
+	lastRoomIdSafe := atomic.LoadUint64(&lastRoomId)
+
+	room := newRoom(lastRoomIdSafe, c)
 	l.rooms[c] = room
-	roomInList := room.toRoomInList()
-	event := &ClientCreatedRoomEvent{roomInList}
+	event := &ClientCreatedRoomEvent{room.toRoomInList()}
 	l.broadcastEvent(event)
+}
+
+func (l *Lobby) getRoomById(roomId uint64) (room *Room, err error) {
+	for _, r := range l.rooms {
+		if r.Id() == roomId {
+			return r, nil
+		}
+	}
+	return nil, fmt.Errorf("Room not found by id = %d", roomId)
 }
 
 func (l *Lobby) onLeftRoom(c *Client, room *Room) {
 	changedOwner, roomBecameEmpty := room.removeClient(c)
-	log.Printf("Client %s left room %d: changed owner = %v, room became empty = %v", c.Nickname(), room.Name, changedOwner, roomBecameEmpty)
+	if roomBecameEmpty {
+		roomRemovedEvent := &RoomRemovedEvent{room.Id()}
+		l.broadcastEvent(roomRemovedEvent)
+		delete(l.rooms, c)
+		return
+	}
+	if changedOwner {
+		l.rooms[room.owner] = room
+		delete(l.rooms, c)
+	}
+	roomUpdatedEvent := &RoomUpdatedEvent{room.toRoomInList()}
+	l.broadcastEvent(roomUpdatedEvent)
 }
 
 func (l *Lobby) onJoinRoomCommand(c *Client, roomId uint64) {
 	log.Printf("OnJoinRoomCommand: %s, %d", c.Nickname(), roomId)
 	oldRoomJoined := c.room
-	if oldRoomJoined != nil && oldRoomJoined.Id() != roomId {
+	if oldRoomJoined != nil && oldRoomJoined.Id() == roomId {
+		return
+	}
+	if oldRoomJoined != nil {
 		l.onLeftRoom(c, oldRoomJoined)
 	}
-	for _, room := range l.rooms {
-		if room.Id() == roomId {
-			room.addClient(c)
-			log.Printf("Client %s joined room %d", c.Nickname(), roomId)
-			break
-		}
+	room, err := l.getRoomById(roomId)
+	if err == nil {
+		room.addClient(c)
+		roomUpdatedEvent := &RoomUpdatedEvent{room.toRoomInList()}
+		l.broadcastEvent(roomUpdatedEvent)
+		log.Printf("Client %s joined room %d", c.Nickname(), roomId)
+	} else {
+		errEvent := &ClientCommandError{fmt.Sprintf("Room does not exists: %d", roomId)}
+		c.sendEvent(errEvent)
 	}
 }
 
@@ -175,7 +215,7 @@ func (l *Lobby) onClientCommand(cc *ClientCommand) {
 			nickname, ok := cc.Data.(string)
 			if ok {
 				l.onJoinCommand(cc.client, nickname)
-				l.createNewGame(cc.client)
+				//l.createNewGame(cc.client)
 			}
 		} else if cc.SubType == "create_room" {
 			l.onCreateNewRoomCommand(cc.client)

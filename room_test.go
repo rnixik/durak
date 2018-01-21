@@ -6,7 +6,7 @@ import (
 
 func TestNewRoom(t *testing.T) {
 	client := &Client{nickname: "test_nickname"}
-	room := newRoom(client)
+	room := newRoom(1, client)
 	got := room.owner
 	expected := client
 	if got != expected {
@@ -20,7 +20,7 @@ func TestNewRoom(t *testing.T) {
 
 func TestName(t *testing.T) {
 	client := &Client{nickname: "test_nickname"}
-	room := newRoom(client)
+	room := newRoom(1, client)
 	got := room.Name()
 	expected := "test_nickname"
 	if got != expected {
@@ -30,9 +30,9 @@ func TestName(t *testing.T) {
 
 func TestId(t *testing.T) {
 	client := &Client{id: 123}
-	room := newRoom(client)
+	room := newRoom(12345, client)
 	got := room.Id()
-	expected := uint64(123)
+	expected := uint64(12345)
 	if got != expected {
 		t.Errorf("TestId expected: %v, got: %v", expected, got)
 	}
@@ -40,7 +40,7 @@ func TestId(t *testing.T) {
 
 func TestToRoomInList(t *testing.T) {
 	client := &Client{id: 123, nickname: "test_nickname"}
-	room := newRoom(client)
+	room := newRoom(1, client)
 	roomInList := room.toRoomInList()
 	got := getNameOfStruct(roomInList)
 	expected := "RoomInList"
@@ -51,7 +51,7 @@ func TestToRoomInList(t *testing.T) {
 
 func TestAddClient(t *testing.T) {
 	client := &Client{id: 123, nickname: "test_nickname"}
-	room := newRoom(client)
+	room := newRoom(1, client)
 	client2 := &Client{id: 456, nickname: "test_nickname2"}
 	room.addClient(client2)
 	got := len(room.clients)
@@ -63,7 +63,7 @@ func TestAddClient(t *testing.T) {
 
 func TestRemoveLastClient(t *testing.T) {
 	client := &Client{id: 123, nickname: "test_nickname"}
-	room := newRoom(client)
+	room := newRoom(1, client)
 	_, roomBecameEmpty := room.removeClient(client)
 	if !roomBecameEmpty {
 		t.Errorf("TestRemoveLastClient expected that room became empty")
@@ -72,7 +72,7 @@ func TestRemoveLastClient(t *testing.T) {
 
 func TestRemoveOwnerClient(t *testing.T) {
 	client1 := &Client{id: 123, nickname: "test_nickname"}
-	room := newRoom(client1)
+	room := newRoom(1, client1)
 	client2 := &Client{id: 456, nickname: "test_nickname2"}
 	room.addClient(client2)
 	changedOwner, _ := room.removeClient(client1)
@@ -88,7 +88,7 @@ func TestRemoveOwnerClient(t *testing.T) {
 
 func TestRemoveRegularClient(t *testing.T) {
 	client1 := &Client{id: 123, nickname: "test_nickname"}
-	room := newRoom(client1)
+	room := newRoom(1, client1)
 	client2 := &Client{id: 456, nickname: "test_nickname2"}
 	room.addClient(client2)
 	changedOwner, roomBecameEmpty := room.removeClient(client2)

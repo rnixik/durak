@@ -2,15 +2,18 @@ package main
 
 // Room represents place where some of clients want to start a new game.
 type Room struct {
+	id      uint64
 	owner   *Client
 	clients map[*Client]bool
 	game    *Game
 }
 
-func newRoom(owner *Client) *Room {
+func newRoom(roomId uint64, owner *Client) *Room {
 	clients := make(map[*Client]bool, 0)
 	clients[owner] = true
-	return &Room{owner, clients, nil}
+	room := &Room{roomId, owner, clients, nil}
+	owner.room = room
+	return room
 }
 
 // Name returns name of the room by its owner.
@@ -20,8 +23,7 @@ func (r *Room) Name() string {
 
 // Id returns id of the room
 func (r *Room) Id() uint64 {
-	// Just use id of onwer because one client can't have more than 1 room
-	return r.owner.id
+	return r.id
 }
 
 func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty bool) {

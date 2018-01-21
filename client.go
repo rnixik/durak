@@ -79,7 +79,7 @@ func (c *Client) readLoop() {
 			log.Printf("json unmarshal error: %s", err)
 		} else {
 			clientCommand.client = c
-			c.lobby.onClientCommand(&clientCommand)
+			c.lobby.clientCommands <- &clientCommand
 		}
 	}
 }

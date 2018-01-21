@@ -47,16 +47,22 @@
             </ol>
 
             <div>Rooms: </div>
-            <ol>
-                <li v-for="room in rooms">
-                  <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.clients_num }} <span v-if="room.game_status">({{ room.game_status }})</span></a>
+            <transition-group name="slide-fade" tag="ol">
+                <li v-for="room in rooms" v-bind:key="room.id">
+                  <strong v-if="room.id == clientsInfo.yourRoomId">--here--</strong>
+                  <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.clients_num }}
+                    <span v-if="room.game_status"> ({{ room.game_status }})</span></a>
+                    <strong v-if="room.owner_id == clientsInfo.yourId">you are onwer</strong>
                 </li>
-            </ol>
+            </transition-group>
 
             <div class="command-error" v-if="commandError.message">Error: {{ commandError.message }}</div>
-        </div>
+        
 
-        <button id="send">Send somthing</button>
+            <button v-on:click="createRoom">Create new room</button><br>
+            <button id="send">Send somthing</button>
+
+        </div>
 
         <script>
             var loginElement = document.getElementById('login');

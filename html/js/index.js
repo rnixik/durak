@@ -7,18 +7,27 @@ function App() {
         clientsInfo: {
           yourId: '',
           yourNickname: '',
+          yourRoomId: '',
           clients: []
         },
         commandError: {},
         rooms: []
       },
       methods: {
+        createRoom: function (event) {
+          if (event) { 
+            event.preventDefault();
+          }
+          console.log('create room');
+          app.commandCreateRoom();
+        },
         joinRoom: function (roomId, event) {
           if (event) { 
             event.preventDefault();
           }
           console.log('join room', roomId);
           app.commandJoinRoom(roomId);
+          app.vue.clientsInfo.yourRoomId = roomId;
         }
       }
     });
@@ -60,6 +69,22 @@ function App() {
         app.vue.clientsInfo.clients = clients;
     }
 
+    this.onRoomUpdatedEvent = function(data) {
+        const index = app.getRoomIndexById(data.room.id);
+        if (index > -1) {
+          Vue.set(app.vue.rooms, index, data.room);
+        }
+    }
+
+    this.onRoomRemovedEvent = function(data) {
+        const index = app.getRoomIndexById(data.room_id);
+        if (index > -1) {
+          app.vue.rooms.splice(index, 1);
+        } else {
+          console.warn("Can't remove room", data.room_id);
+        }
+    }
+
     this.onClientCommandError = function(data) {
         app.vue.commandError = data;
         console.error(data.message);
@@ -67,6 +92,9 @@ function App() {
 
     this.onClientCreatedRoomEvent = function(data) {
         app.vue.rooms.push(data.room);
+        if (data.room.owner_id === app.vue.clientsInfo.yourId) {
+          app.vue.clientsInfo.yourRoomId = data.room.id;
+        }
     }
 
     this.sendCommand = function(type, subType, data) {
@@ -75,7 +103,21 @@ function App() {
 
     this.commandJoinRoom = function(roomId) {
         app.sendCommand('lobby', 'join_room', roomId);
-    } 
+    }
+
+    this.commandCreateRoom = function(roomId) {
+        app.sendCommand('lobby', 'create_room', null);
+    }
+
+
+    this.getRoomIndexById = function(roomId) {
+      for (let i = 0; i < app.vue.rooms.length; i++) {
+        if (app.vue.rooms[i].id === roomId) {
+          return i;
+        }
+      }
+      return -1;
+    }
 }
 
 (function(){
@@ -86,5 +128,5 @@ function App() {
 
 let sendBtn = document.getElementById('send');
 sendBtn.onclick = function() {
-    WsConnection.send(JSON.stringify({type: 'lobby', sub_type: 'create_room', data: {}}));
+    //WsConnection.send(JSON.stringify({type: 'lobby', sub_type: 'create_room', data: {}}));
 };
