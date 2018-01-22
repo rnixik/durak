@@ -164,6 +164,7 @@ func (l *Lobby) onCreateNewRoomCommand(c *Client) {
 
 	room := newRoom(lastRoomIdSafe, c)
 	l.rooms[c] = room
+
 	event := &ClientCreatedRoomEvent{room.toRoomInList()}
 	l.broadcastEvent(event)
 }
@@ -180,8 +181,8 @@ func (l *Lobby) getRoomById(roomId uint64) (room *Room, err error) {
 func (l *Lobby) onLeftRoom(c *Client, room *Room) {
 	changedOwner, roomBecameEmpty := room.removeClient(c)
 	if roomBecameEmpty {
-		roomRemovedEvent := &RoomRemovedEvent{room.Id()}
-		l.broadcastEvent(roomRemovedEvent)
+		roomInListRemovedEvent := &RoomInListRemovedEvent{room.Id()}
+		l.broadcastEvent(roomInListRemovedEvent)
 		l.rooms[c] = nil
 		delete(l.rooms, c)
 		return
@@ -190,8 +191,8 @@ func (l *Lobby) onLeftRoom(c *Client, room *Room) {
 		l.rooms[room.owner] = room
 		delete(l.rooms, c)
 	}
-	roomUpdatedEvent := &RoomUpdatedEvent{room.toRoomInList()}
-	l.broadcastEvent(roomUpdatedEvent)
+	roomInListUpdatedEvent := &RoomInListUpdatedEvent{room.toRoomInList()}
+	l.broadcastEvent(roomInListUpdatedEvent)
 }
 
 func (l *Lobby) onJoinRoomCommand(c *Client, roomId uint64) {
@@ -206,8 +207,8 @@ func (l *Lobby) onJoinRoomCommand(c *Client, roomId uint64) {
 	room, err := l.getRoomById(roomId)
 	if err == nil {
 		room.addClient(c)
-		roomUpdatedEvent := &RoomUpdatedEvent{room.toRoomInList()}
-		l.broadcastEvent(roomUpdatedEvent)
+		roomInListUpdatedEvent := &RoomInListUpdatedEvent{room.toRoomInList()}
+		l.broadcastEvent(roomInListUpdatedEvent)
 		log.Printf("Client %s joined room %d", c.Nickname(), roomId)
 	} else {
 		errEvent := &ClientCommandError{fmt.Sprintf("Room does not exists: %d", roomId)}

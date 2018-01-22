@@ -13,6 +13,10 @@ func newRoom(roomId uint64, owner *Client) *Room {
 	clients[owner] = true
 	room := &Room{roomId, owner, clients, nil}
 	owner.room = room
+
+	roomJoinedEvent := RoomJoinedEvent{room.toRoomInfo()}
+	owner.sendEvent(roomJoinedEvent)
+
 	return room
 }
 
@@ -29,6 +33,10 @@ func (r *Room) Id() uint64 {
 func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty bool) {
 	client.room = nil
 	delete(r.clients, client)
+
+	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
+	r.broadcastEvent(roomUpdatedEvent, nil)
+
 	if len(r.clients) == 0 {
 		roomBecameEmpty = true
 		return
@@ -46,6 +54,21 @@ func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty 
 func (r *Room) addClient(client *Client) {
 	r.clients[client] = true
 	client.room = r
+
+	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
+	r.broadcastEvent(roomUpdatedEvent, client)
+
+	roomJoinedEvent := RoomJoinedEvent{r.toRoomInfo()}
+	client.sendEvent(roomJoinedEvent)
+}
+
+func (r *Room) broadcastEvent(event interface{}, exceptClient *Client) {
+	json, _ := eventToJSON(event)
+	for c := range r.clients {
+		if exceptClient == nil || c.id != exceptClient.id {
+			c.sendMessage(json)
+		}
+	}
 }
 
 func (r *Room) toRoomInList() *RoomInList {
@@ -61,4 +84,29 @@ func (r *Room) toRoomInList() *RoomInList {
 		ClientsNum: len(r.clients),
 	}
 	return roomInList
+}
+
+func (r *Room) toRoomInfo() *RoomInfo {
+	gameStatus := ""
+	if r.game != nil {
+		gameStatus = r.game.status
+	}
+
+	clientsInList := make([]*ClientInList, 0)
+	for client := range r.clients {
+		clientInList := &ClientInList{
+			Id:       client.id,
+			Nickname: client.Nickname(),
+		}
+		clientsInList = append(clientsInList, clientInList)
+	}
+
+	roomInfo := &RoomInfo{
+		Id:         r.Id(),
+		OwnerId:    r.owner.id,
+		Name:       r.Name(),
+		GameStatus: gameStatus,
+		Clients:    clientsInList,
+	}
+	return roomInfo
 }

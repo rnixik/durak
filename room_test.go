@@ -49,6 +49,17 @@ func TestToRoomInList(t *testing.T) {
 	}
 }
 
+func TestToRoomInfo(t *testing.T) {
+	client := &Client{id: 123, nickname: "test_nickname"}
+	room := newRoom(1, client)
+	roomInfo := room.toRoomInfo()
+	got := getNameOfStruct(roomInfo)
+	expected := "RoomInfo"
+	if got != expected {
+		t.Errorf("TestToRoomInfo expected: %v, got: %v", expected, got)
+	}
+}
+
 func TestAddClient(t *testing.T) {
 	client := &Client{id: 123, nickname: "test_nickname"}
 	room := newRoom(1, client)

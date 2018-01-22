@@ -39,12 +39,12 @@ type ClientCreatedRoomEvent struct {
 	Room *RoomInList `json:"room"`
 }
 
-// RoomRemovedEvent contains id of the room which was removed from lobby
-type RoomRemovedEvent struct {
+// RoomInListRemovedEvent contains id of the room which was removed from lobby
+type RoomInListRemovedEvent struct {
 	RoomId uint64 `json:"room_id"`
 }
 
-// RoomUpdatedEvent contains info about room which was changed
-type RoomUpdatedEvent struct {
+// RoomInListUpdatedEvent contains info about room which was changed
+type RoomInListUpdatedEvent struct {
 	Room *RoomInList `json:"room"`
 }

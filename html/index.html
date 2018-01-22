@@ -56,6 +56,15 @@
                 </li>
             </transition-group>
 
+            <div v-if="room && room.id">
+                <h2>Room - {{ room.name }}</h2>
+                <transition-group name="slide-fade" tag="ol">
+                    <li v-for="client in room.clients" v-bind:key="client.id">
+                      {{ client.nickname }}
+                    </li>
+                </transition-group>
+            </div>
+
             <div class="command-error" v-if="commandError.message">Error: {{ commandError.message }}</div>
         
 

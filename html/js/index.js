@@ -11,7 +11,8 @@ function App() {
           clients: []
         },
         commandError: {},
-        rooms: []
+        rooms: [],
+        room: {}
       },
       methods: {
         createRoom: function (event) {
@@ -67,20 +68,28 @@ function App() {
         app.vue.clientsInfo.clients = clients;
     }
 
-    this.onRoomUpdatedEvent = function(data) {
+    this.onRoomInListUpdatedEvent = function(data) {
         const index = app.getRoomIndexById(data.room.id);
         if (index > -1) {
           Vue.set(app.vue.rooms, index, data.room);
         }
     }
 
-    this.onRoomRemovedEvent = function(data) {
+    this.onRoomInListRemovedEvent = function(data) {
         const index = app.getRoomIndexById(data.room_id);
         if (index > -1) {
           app.vue.rooms.splice(index, 1);
         } else {
           console.warn("Can't remove room", data.room_id);
         }
+    }
+
+    this.onRoomJoinedEvent = function(data) {
+        app.vue.room = data.room;
+    }
+
+    this.onRoomUpdatedEvent = function(data) {
+        app.vue.room = data.room;
     }
 
     this.onClientCommandError = function(data) {
