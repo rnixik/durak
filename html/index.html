@@ -59,8 +59,12 @@
             <div v-if="room && room.id">
                 <h2>Room - {{ room.name }}</h2>
                 <transition-group name="slide-fade" tag="ol">
-                    <li v-for="member in room.members" v-bind:key="member.id" v-bind:class="{ 'member-want-to-play': member.want_to_play }">
+                    <li v-for="member in room.members" v-bind:key="member.id" v-bind:class="{ 'member-want-to-play': member.want_to_play, 'member-is-player': member.is_player }">
                       {{ member.nickname }}
+                      <span v-if="room.owner_id == clientsInfo.yourId">
+                        <button v-if="member.want_to_play && !member.is_player && playersInRoom < room.max_players" v-on:click="setPlayerStatus(member.id, true)">mark as player</button>
+                        <button v-if="member.is_player" v-on:click="setPlayerStatus(member.id, false)">mark as spectator</button>
+                      </span>
                     </li>
                 </transition-group>
             </div>

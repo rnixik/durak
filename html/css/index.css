@@ -35,3 +35,7 @@ body {
 .member-want-to-play {
   color: green;
 }
+
+.member-is-player {
+  font-weight: bold;
+}

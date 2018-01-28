@@ -53,9 +53,9 @@ type Client struct {
 
 // ClientCommand is a command message from connected client.
 type ClientCommand struct {
-	Type    string      `json:"type"`
-	SubType string      `json:"sub_type"`
-	Data    interface{} `json:"data"`
+	Type    string          `json:"type"`
+	SubType string          `json:"sub_type"`
+	Data    json.RawMessage `json:"data"`
 	client  *Client
 }
 

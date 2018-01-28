@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
 	"sync/atomic"
 )
 
@@ -223,19 +223,20 @@ func (l *Lobby) onJoinRoomCommand(c *Client, roomId uint64) {
 func (l *Lobby) onClientCommand(cc *ClientCommand) {
 	if cc.Type == "lobby" {
 		if cc.SubType == "join" {
-			nickname, ok := cc.Data.(string)
-			if ok {
-				l.onJoinCommand(cc.client, nickname)
-				//l.createNewGame(cc.client)
+			var nickname string
+			if err := json.Unmarshal(cc.Data, &nickname); err != nil {
+				return
 			}
+			l.onJoinCommand(cc.client, nickname)
+			//l.createNewGame(cc.client)
 		} else if cc.SubType == "create_room" {
 			l.onCreateNewRoomCommand(cc.client)
 		} else if cc.SubType == "join_room" {
-			roomIdStr := fmt.Sprintf("%v", cc.Data)
-			roomId, err := strconv.ParseUint(roomIdStr, 10, 64)
-			if err == nil {
-				l.onJoinRoomCommand(cc.client, roomId)
+			var roomId uint64
+			if err := json.Unmarshal(cc.Data, &roomId); err != nil {
+				return
 			}
+			l.onJoinRoomCommand(cc.client, roomId)
 		}
 	} else if cc.Type == "game" {
 		// demo

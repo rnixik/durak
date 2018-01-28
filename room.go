@@ -1,16 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 )
 
 // MaxPlayersInRoom limits maximum number of players in room
-const MaxPlayersInRoom = 6
+const MaxPlayersInRoom = 2
 
 // RoomMember represents connected to a room client.
 type RoomMember struct {
 	client     ClientSender
 	wantToPlay bool
+	isPlayer   bool
 }
 
 // Room represents place where some of members want to start a new game.
@@ -24,6 +26,7 @@ type Room struct {
 func newRoom(roomId uint64, owner *Client) *Room {
 	members := make(map[*RoomMember]bool, 0)
 	ownerInRoom := newRoomMember(owner)
+	ownerInRoom.isPlayer = true
 	members[ownerInRoom] = true
 	room := &Room{roomId, ownerInRoom, members, nil}
 	owner.room = room
@@ -35,7 +38,7 @@ func newRoom(roomId uint64, owner *Client) *Room {
 }
 
 func newRoomMember(client ClientSender) *RoomMember {
-	return &RoomMember{client, true}
+	return &RoomMember{client, true, false}
 }
 
 // Name returns name of the room by its owner.
@@ -134,20 +137,46 @@ func (r *Room) changeMemberWantStatus(client *Client, wantToPlay bool) {
 	r.broadcastEvent(changeStatusEvent, nil)
 }
 
-func (r *Room) onWantToPlayCommand(cc *ClientCommand) {
-	r.changeMemberWantStatus(cc.client, true)
+func (r *Room) onWantToPlayCommand(client *Client) {
+	r.changeMemberWantStatus(client, true)
 }
 
-func (r *Room) onWantToSpectateCommand(cc *ClientCommand) {
-	r.changeMemberWantStatus(cc.client, false)
+func (r *Room) onWantToSpectateCommand(client *Client) {
+	r.changeMemberWantStatus(client, false)
+	r.onSetPlayerStatusCommand(client.Id(), false)
+}
+
+func (r *Room) onSetPlayerStatusCommand(memberId uint64, playerStatus bool) {
+	var foundMember *RoomMember
+	for rm := range r.members {
+		if rm.client.Id() == memberId {
+			rm.isPlayer = playerStatus
+			foundMember = rm
+			break
+		}
+	}
+
+	if foundMember == nil {
+		return
+	}
+
+	memberInfo := foundMember.memberToRoomMemberInfo()
+	roomMemberChangedPlayerStatusEvent := &RoomMemberChangedPlayerStatusEvent{memberInfo}
+	r.broadcastEvent(roomMemberChangedPlayerStatusEvent, nil)
 }
 
 func (r *Room) onClientCommand(cc *ClientCommand) {
 	log.Println(cc.SubType)
 	if cc.SubType == "want_to_play" {
-		r.onWantToPlayCommand(cc)
+		r.onWantToPlayCommand(cc.client)
 	} else if cc.SubType == "want_to_spectate" {
-		r.onWantToSpectateCommand(cc)
+		r.onWantToSpectateCommand(cc.client)
+	} else if cc.SubType == "set_player_status" {
+		var statusData RoomSetPlayerStatusCommandData
+		if err := json.Unmarshal(cc.Data, &statusData); err != nil {
+			return
+		}
+		r.onSetPlayerStatusCommand(statusData.MemberId, statusData.Status)
 	}
 }
 
@@ -156,6 +185,7 @@ func (rm *RoomMember) memberToRoomMemberInfo() *RoomMemberInfo {
 		Id:         rm.client.Id(),
 		Nickname:   rm.client.Nickname(),
 		WantToPlay: rm.wantToPlay,
+		IsPlayer:   rm.isPlayer,
 	}
 }
 
@@ -192,6 +222,7 @@ func (r *Room) toRoomInfo() *RoomInfo {
 		Name:       r.Name(),
 		GameStatus: gameStatus,
 		Members:    membersInfo,
+		MaxPlayers: MaxPlayersInRoom,
 	}
 	return roomInfo
 }

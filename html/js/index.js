@@ -13,7 +13,8 @@ function App() {
         commandError: {},
         rooms: [],
         room: {},
-        wantToPlay: true
+        wantToPlay: true,
+        playersInRoom: 0
       },
       methods: {
         createRoom: function (event) {
@@ -36,6 +37,9 @@ function App() {
         markWantToSpectate: function () {
           app.commandWantToSpectate();
           this.wantToPlay = false;
+        },
+        setPlayerStatus: function (memberId, status) {
+          app.commandSetPlayerStatus(memberId, status);
         }
       }
     });
@@ -95,10 +99,12 @@ function App() {
 
     this.onRoomJoinedEvent = function(data) {
         app.vue.room = data.room;
+        app.updatePlayersInRoomCounter();
     }
 
     this.onRoomUpdatedEvent = function(data) {
         app.vue.room = data.room;
+        app.updatePlayersInRoomCounter();
     }
 
     this.onClientCommandError = function(data) {
@@ -114,17 +120,21 @@ function App() {
     }
 
     this.onRoomMemberChangedStatusEvent = function(data) {
-        if (!app.vue.room) {
-          console.warn("No room for event")
-        }
         if (data.member.id === app.vue.clientsInfo.yourId) {
             app.vue.wantToPlay = data.member.want_to_play;
         }
-        for (let i = 0; i < app.vue.room.members.length; i++) {
-          if (app.vue.room.members[i].id === data.member.id) {
-            Vue.set(app.vue.room.members, i, data.member);
-          }
+        const memberIndex = app.getRoomMemberIndexById(data.member.id);
+        if (memberIndex > -1) {
+          Vue.set(app.vue.room.members, memberIndex, data.member);
         }
+    }
+
+    this.onRoomMemberChangedPlayerStatusEvent = function(data) {
+        const memberIndex = app.getRoomMemberIndexById(data.member.id);
+        if (memberIndex > -1) {
+          Vue.set(app.vue.room.members, memberIndex, data.member);
+        }
+        app.updatePlayersInRoomCounter();
     }
 
     this.sendCommand = function(type, subType, data) {
@@ -148,6 +158,10 @@ function App() {
         app.sendCommand('room', 'want_to_spectate', null);
     }
 
+    this.commandSetPlayerStatus = function(memberId, status) {
+        app.sendCommand('room', 'set_player_status', {member_id: memberId, status: status});
+    }
+
     this.getRoomIndexById = function(roomId) {
       for (let i = 0; i < app.vue.rooms.length; i++) {
         if (app.vue.rooms[i].id === roomId) {
@@ -155,6 +169,29 @@ function App() {
         }
       }
       return -1;
+    }
+
+    this.getRoomMemberIndexById = function(memberId) {
+      if (!app.vue.room) {
+        console.warn("No room for event");
+        return -1;
+      }
+      for (let i = 0; i < app.vue.room.members.length; i++) {
+        if (app.vue.room.members[i].id === memberId) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    this.updatePlayersInRoomCounter = function() {
+      let playersNum = 0;
+      for (let i = 0; i < app.vue.room.members.length; i++) {
+        if (app.vue.room.members[i].is_player) {
+          playersNum++;
+        }
+      }
+      app.vue.playersInRoom = playersNum;
     }
 }
 
