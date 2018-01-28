@@ -1,5 +1,6 @@
 package main
 
+// RoomMemberInfo contains info about a client in the room
 type RoomMemberInfo struct {
 	Id         uint64 `json:"id"`
 	Nickname   string `json:"nickname"`
