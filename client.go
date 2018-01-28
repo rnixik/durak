@@ -27,6 +27,14 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+// ClientSender represents interface which sends events to connected players.
+type ClientSender interface {
+	sendEvent(event interface{})
+	sendMessage(message []byte)
+	Id() uint64
+	Nickname() string
+}
+
 // Client represents a connected user using websockets.
 type Client struct {
 	lobby *Lobby
@@ -54,6 +62,11 @@ type ClientCommand struct {
 // Nickname returns nickname of the client
 func (c *Client) Nickname() string {
 	return c.nickname
+}
+
+// Id returns id of the client
+func (c *Client) Id() uint64 {
+	return c.id
 }
 
 func (c *Client) readLoop() {

@@ -12,7 +12,8 @@ function App() {
         },
         commandError: {},
         rooms: [],
-        room: {}
+        room: {},
+        wantToPlay: true
       },
       methods: {
         createRoom: function (event) {
@@ -27,6 +28,14 @@ function App() {
           }
           app.commandJoinRoom(roomId);
           app.vue.clientsInfo.yourRoomId = roomId;
+        },
+        markWantToPlay: function () {
+          app.commandWantToPlay();
+          this.wantToPlay = true;
+        },
+        markWantToSpectate: function () {
+          app.commandWantToSpectate();
+          this.wantToPlay = false;
         }
       }
     });
@@ -105,6 +114,7 @@ function App() {
     }
 
     this.sendCommand = function(type, subType, data) {
+        console.log("send", type, subType, data);
         WsConnection.send(JSON.stringify({type: type, sub_type: subType, data: data}));
     }
 
@@ -116,6 +126,13 @@ function App() {
         app.sendCommand('lobby', 'create_room', null);
     }
 
+    this.commandWantToPlay = function() {
+        app.sendCommand('room', 'want_to_play', null);
+    }
+
+    this.commandWantToSpectate = function() {
+        app.sendCommand('room', 'want_to_spectate', null);
+    }
 
     this.getRoomIndexById = function(roomId) {
       for (let i = 0; i < app.vue.rooms.length; i++) {

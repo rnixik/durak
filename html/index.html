@@ -50,7 +50,7 @@
             <transition-group name="slide-fade" tag="ol">
                 <li v-for="room in rooms" v-bind:key="room.id">
                   <strong v-if="room.id == clientsInfo.yourRoomId">--here--</strong>
-                  <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.clients_num }}
+                  <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.members_num }}
                     <span v-if="room.game_status"> ({{ room.game_status }})</span></a>
                     <strong v-if="room.owner_id == clientsInfo.yourId">you are onwer</strong>
                 </li>
@@ -59,8 +59,8 @@
             <div v-if="room && room.id">
                 <h2>Room - {{ room.name }}</h2>
                 <transition-group name="slide-fade" tag="ol">
-                    <li v-for="client in room.clients" v-bind:key="client.id">
-                      {{ client.nickname }}
+                    <li v-for="member in room.members" v-bind:key="member.id">
+                      {{ member.nickname }}
                     </li>
                 </transition-group>
             </div>
@@ -69,6 +69,7 @@
         
 
             <button v-on:click="createRoom">Create new room</button><br>
+            <button v-on:click="markWantToPlay" v-bind:class="{ 'want-btn-active': wantToPlay }">Want to play</button><button v-bind:class="{ 'want-btn-active': !wantToPlay }" v-on:click="markWantToSpectate">Want to spectate</button><br>
             <button id="send">Send somthing</button>
 
         </div>

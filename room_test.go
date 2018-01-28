@@ -7,14 +7,14 @@ import (
 func TestNewRoom(t *testing.T) {
 	client := &Client{nickname: "test_nickname"}
 	room := newRoom(1, client)
-	got := room.owner
+	got := room.owner.client
 	expected := client
 	if got != expected {
 		t.Errorf("TestNewRoom expected: %v, got: %v", expected, got)
 	}
-	clientsNum := len(room.clients)
-	if clientsNum != 1 {
-		t.Errorf("TestNewRoom expected clients: 1, got: %v", clientsNum)
+	membersNum := len(room.members)
+	if membersNum != 1 {
+		t.Errorf("TestNewRoom expected members: 1, got: %v", membersNum)
 	}
 }
 
@@ -65,7 +65,7 @@ func TestAddClient(t *testing.T) {
 	room := newRoom(1, client)
 	client2 := &Client{id: 456, nickname: "test_nickname2"}
 	room.addClient(client2)
-	got := len(room.clients)
+	got := len(room.members)
 	expected := 2
 	if got != expected {
 		t.Errorf("TestAddClient expected: %v, got: %v", expected, got)
@@ -90,7 +90,7 @@ func TestRemoveOwnerClient(t *testing.T) {
 	if !changedOwner {
 		t.Errorf("TestRemoveOwnerClient expected that room changed owner")
 	}
-	got := room.owner
+	got := room.owner.client
 	expected := client2
 	if got != expected {
 		t.Errorf("TestRemoveOwnerClient expected: %v, got: %v", expected, got)
@@ -109,7 +109,7 @@ func TestRemoveRegularClient(t *testing.T) {
 	if roomBecameEmpty {
 		t.Errorf("TestRemoveRegularClient expected that room did not become empty")
 	}
-	got := room.owner
+	got := room.owner.client
 	expected := client1
 	if got != expected {
 		t.Errorf("TestRemoveRegularClient expected: %v, got: %v", expected, got)

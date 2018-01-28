@@ -188,7 +188,11 @@ func (l *Lobby) onLeftRoom(c *Client, room *Room) {
 		return
 	}
 	if changedOwner {
-		l.rooms[room.owner] = room
+		roomOwnerClient, ok := room.owner.client.(*Client)
+		if !ok {
+			return
+		}
+		l.rooms[roomOwnerClient] = room
 		delete(l.rooms, c)
 	}
 	roomInListUpdatedEvent := &RoomInListUpdatedEvent{room.toRoomInList()}
@@ -241,5 +245,10 @@ func (l *Lobby) onClientCommand(cc *ClientCommand) {
 		}
 		playerAction := &PlayerAction{Name: "attack", Data: actionData, player: l.games[0].players[0]}
 		l.games[0].playerActions <- playerAction
+	} else if cc.Type == "room" {
+		if cc.client.room == nil {
+			return
+		}
+		cc.client.room.onClientCommand(cc)
 	}
 }

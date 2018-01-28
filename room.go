@@ -1,17 +1,29 @@
 package main
 
-// Room represents place where some of clients want to start a new game.
+import (
+	"fmt"
+	"log"
+)
+
+// RoomMember represents connected to a room client.
+type RoomMember struct {
+	client     ClientSender
+	wantToPlay bool
+}
+
+// Room represents place where some of members want to start a new game.
 type Room struct {
 	id      uint64
-	owner   *Client
-	clients map[*Client]bool
+	owner   *RoomMember
+	members map[*RoomMember]bool
 	game    *Game
 }
 
 func newRoom(roomId uint64, owner *Client) *Room {
-	clients := make(map[*Client]bool, 0)
-	clients[owner] = true
-	room := &Room{roomId, owner, clients, nil}
+	members := make(map[*RoomMember]bool, 0)
+	ownerInRoom := newRoomMember(owner)
+	members[ownerInRoom] = true
+	room := &Room{roomId, ownerInRoom, members, nil}
 	owner.room = room
 
 	roomJoinedEvent := RoomJoinedEvent{room.toRoomInfo()}
@@ -20,9 +32,13 @@ func newRoom(roomId uint64, owner *Client) *Room {
 	return room
 }
 
+func newRoomMember(client ClientSender) *RoomMember {
+	return &RoomMember{client, false}
+}
+
 // Name returns name of the room by its owner.
 func (r *Room) Name() string {
-	return r.owner.Nickname()
+	return r.owner.client.Nickname()
 }
 
 // Id returns id of the room
@@ -30,19 +46,32 @@ func (r *Room) Id() uint64 {
 	return r.id
 }
 
+func (r *Room) getRoomMember(client *Client) (*RoomMember, error) {
+	for c := range r.members {
+		if c.client.Id() == client.Id() {
+			return c, nil
+		}
+	}
+	return nil, fmt.Errorf("Client in room not found: %d", client.id)
+}
+
 func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty bool) {
 	client.room = nil
-	delete(r.clients, client)
+	member, err := r.getRoomMember(client)
+	if err != nil {
+		return
+	}
+	delete(r.members, member)
 
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
 	r.broadcastEvent(roomUpdatedEvent, nil)
 
-	if len(r.clients) == 0 {
+	if len(r.members) == 0 {
 		roomBecameEmpty = true
 		return
 	}
-	if r.owner == client {
-		for ic := range r.clients {
+	if r.owner == member {
+		for ic := range r.members {
 			r.owner = ic
 			changedOwner = true
 			return
@@ -52,22 +81,30 @@ func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty 
 }
 
 func (r *Room) addClient(client *Client) {
-	r.clients[client] = true
+	member := newRoomMember(client)
+	r.members[member] = true
 	client.room = r
 
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
-	r.broadcastEvent(roomUpdatedEvent, client)
+	r.broadcastEvent(roomUpdatedEvent, member)
 
 	roomJoinedEvent := RoomJoinedEvent{r.toRoomInfo()}
 	client.sendEvent(roomJoinedEvent)
 }
 
-func (r *Room) broadcastEvent(event interface{}, exceptClient *Client) {
+func (r *Room) broadcastEvent(event interface{}, exceptMember *RoomMember) {
 	json, _ := eventToJSON(event)
-	for c := range r.clients {
-		if exceptClient == nil || c.id != exceptClient.id {
-			c.sendMessage(json)
+	for m := range r.members {
+		if exceptMember == nil || m.client.Id() != exceptMember.client.Id() {
+			m.client.sendMessage(json)
 		}
+	}
+}
+
+func (r *Room) onClientCommand(cc *ClientCommand) {
+	log.Println(cc.SubType)
+	if cc.SubType == "want_to_play" {
+
 	}
 }
 
@@ -78,10 +115,10 @@ func (r *Room) toRoomInList() *RoomInList {
 	}
 	roomInList := &RoomInList{
 		Id:         r.Id(),
-		OwnerId:    r.owner.id,
+		OwnerId:    r.owner.client.Id(),
 		Name:       r.Name(),
 		GameStatus: gameStatus,
-		ClientsNum: len(r.clients),
+		MembersNum: len(r.members),
 	}
 	return roomInList
 }
@@ -92,21 +129,22 @@ func (r *Room) toRoomInfo() *RoomInfo {
 		gameStatus = r.game.status
 	}
 
-	clientsInList := make([]*ClientInList, 0)
-	for client := range r.clients {
-		clientInList := &ClientInList{
-			Id:       client.id,
-			Nickname: client.Nickname(),
+	membersInfo := make([]*RoomMemberInfo, 0)
+	for member := range r.members {
+		memberInfo := &RoomMemberInfo{
+			Id:         member.client.Id(),
+			Nickname:   member.client.Nickname(),
+			WantToPlay: member.wantToPlay,
 		}
-		clientsInList = append(clientsInList, clientInList)
+		membersInfo = append(membersInfo, memberInfo)
 	}
 
 	roomInfo := &RoomInfo{
 		Id:         r.Id(),
-		OwnerId:    r.owner.id,
+		OwnerId:    r.owner.client.Id(),
 		Name:       r.Name(),
 		GameStatus: gameStatus,
-		Clients:    clientsInList,
+		Members:    membersInfo,
 	}
 	return roomInfo
 }

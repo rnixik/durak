@@ -26,3 +26,8 @@ body {
   transform: translateX(10px);
   opacity: 0;
 }
+
+.want-btn-active {
+  background: grey;
+  border: 1px solid grey;
+}
