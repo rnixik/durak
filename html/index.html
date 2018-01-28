@@ -59,7 +59,7 @@
             <div v-if="room && room.id">
                 <h2>Room - {{ room.name }}</h2>
                 <transition-group name="slide-fade" tag="ol">
-                    <li v-for="member in room.members" v-bind:key="member.id">
+                    <li v-for="member in room.members" v-bind:key="member.id" v-bind:class="{ 'member-want-to-play': member.want_to_play }">
                       {{ member.nickname }}
                     </li>
                 </transition-group>

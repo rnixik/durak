@@ -113,6 +113,20 @@ function App() {
         }
     }
 
+    this.onRoomMemberChangedStatusEvent = function(data) {
+        if (!app.vue.room) {
+          console.warn("No room for event")
+        }
+        if (data.member.id === app.vue.clientsInfo.yourId) {
+            app.vue.wantToPlay = data.member.want_to_play;
+        }
+        for (let i = 0; i < app.vue.room.members.length; i++) {
+          if (app.vue.room.members[i].id === data.member.id) {
+            Vue.set(app.vue.room.members, i, data.member);
+          }
+        }
+    }
+
     this.sendCommand = function(type, subType, data) {
         console.log("send", type, subType, data);
         WsConnection.send(JSON.stringify({type: type, sub_type: subType, data: data}));

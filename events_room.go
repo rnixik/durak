@@ -24,3 +24,8 @@ type RoomJoinedEvent struct {
 type RoomUpdatedEvent struct {
 	Room *RoomInfo `json:"room"`
 }
+
+// RoomMemberChangedStatusEvent contains info about room member when he changes his status
+type RoomMemberChangedStatusEvent struct {
+	Room *RoomMemberInfo `json:"member"`
+}

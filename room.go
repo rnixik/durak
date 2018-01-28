@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"log"
 )
+
+// MaxPlayersInRoom limits maximum number of players in room
+const MaxPlayersInRoom = 6
 
 // RoomMember represents connected to a room client.
 type RoomMember struct {
@@ -33,7 +35,7 @@ func newRoom(roomId uint64, owner *Client) *Room {
 }
 
 func newRoomMember(client ClientSender) *RoomMember {
-	return &RoomMember{client, false}
+	return &RoomMember{client, true}
 }
 
 // Name returns name of the room by its owner.
@@ -46,19 +48,19 @@ func (r *Room) Id() uint64 {
 	return r.id
 }
 
-func (r *Room) getRoomMember(client *Client) (*RoomMember, error) {
+func (r *Room) getRoomMember(client *Client) (*RoomMember, bool) {
 	for c := range r.members {
 		if c.client.Id() == client.Id() {
-			return c, nil
+			return c, true
 		}
 	}
-	return nil, fmt.Errorf("Client in room not found: %d", client.id)
+	return nil, false
 }
 
 func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty bool) {
 	client.room = nil
-	member, err := r.getRoomMember(client)
-	if err != nil {
+	member, ok := r.getRoomMember(client)
+	if !ok {
 		return
 	}
 	delete(r.members, member)
@@ -101,10 +103,59 @@ func (r *Room) broadcastEvent(event interface{}, exceptMember *RoomMember) {
 	}
 }
 
+func (r *Room) getMembersWhoWantToPlay() []*RoomMember {
+	membersWhoWantToPlay := make([]*RoomMember, 0)
+	for rm := range r.members {
+		if rm.wantToPlay {
+			membersWhoWantToPlay = append(membersWhoWantToPlay, rm)
+		}
+	}
+	return membersWhoWantToPlay
+}
+
+func (r *Room) hasSlotForPlayer() bool {
+	membersWhoWantToPlayNum := 0
+	for rm := range r.members {
+		if rm.wantToPlay {
+			membersWhoWantToPlayNum++
+		}
+	}
+	return membersWhoWantToPlayNum+1 <= MaxPlayersInRoom
+}
+
+func (r *Room) changeMemberWantStatus(client *Client, wantToPlay bool) {
+	member, ok := r.getRoomMember(client)
+	if !ok {
+		return
+	}
+	member.wantToPlay = wantToPlay
+	memberInfo := member.memberToRoomMemberInfo()
+	changeStatusEvent := &RoomMemberChangedStatusEvent{memberInfo}
+	r.broadcastEvent(changeStatusEvent, nil)
+}
+
+func (r *Room) onWantToPlayCommand(cc *ClientCommand) {
+	r.changeMemberWantStatus(cc.client, true)
+}
+
+func (r *Room) onWantToSpectateCommand(cc *ClientCommand) {
+	r.changeMemberWantStatus(cc.client, false)
+}
+
 func (r *Room) onClientCommand(cc *ClientCommand) {
 	log.Println(cc.SubType)
 	if cc.SubType == "want_to_play" {
+		r.onWantToPlayCommand(cc)
+	} else if cc.SubType == "want_to_spectate" {
+		r.onWantToSpectateCommand(cc)
+	}
+}
 
+func (rm *RoomMember) memberToRoomMemberInfo() *RoomMemberInfo {
+	return &RoomMemberInfo{
+		Id:         rm.client.Id(),
+		Nickname:   rm.client.Nickname(),
+		WantToPlay: rm.wantToPlay,
 	}
 }
 
@@ -131,11 +182,7 @@ func (r *Room) toRoomInfo() *RoomInfo {
 
 	membersInfo := make([]*RoomMemberInfo, 0)
 	for member := range r.members {
-		memberInfo := &RoomMemberInfo{
-			Id:         member.client.Id(),
-			Nickname:   member.client.Nickname(),
-			WantToPlay: member.wantToPlay,
-		}
+		memberInfo := member.memberToRoomMemberInfo()
 		membersInfo = append(membersInfo, memberInfo)
 	}
 
