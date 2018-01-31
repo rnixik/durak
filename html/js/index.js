@@ -40,11 +40,14 @@ function App() {
         },
         setPlayerStatus: function (memberId, status) {
           app.commandSetPlayerStatus(memberId, status);
+        },
+        startGame: function () {
+          app.commandStartGame();
         }
       }
     });
 
-    this.onMessage = function(msg) {
+    this.onMessage = function (msg) {
         const onEventMethodName = 'on' + msg.name;
         let methodFound = false;
         for (prop in app) {
@@ -60,18 +63,18 @@ function App() {
         console.log(msg.name, msg.data);
     };
 
-    this.onClientJoinedEvent = function(data) {
+    this.onClientJoinedEvent = function (data) {
         app.vue.clientsInfo.yourId = data.your_id;
         app.vue.clientsInfo.yourNickname = data.your_nickname;
         app.vue.clientsInfo.clients = data.clients;
         app.vue.rooms = data.rooms;
     };
 
-    this.onClientBroadCastJoinedEvent = function(data) {
+    this.onClientBroadCastJoinedEvent = function (data) {
         app.vue.clientsInfo.clients.push(data);
     };
 
-    this.onClientLeftEvent = function(data) {
+    this.onClientLeftEvent = function (data) {
         let clients = app.vue.clientsInfo.clients;
         for (let ind = 0; ind < clients.length; ind++) {
             if (clients[ind].id === data.id) {
@@ -81,14 +84,14 @@ function App() {
         app.vue.clientsInfo.clients = clients;
     }
 
-    this.onRoomInListUpdatedEvent = function(data) {
+    this.onRoomInListUpdatedEvent = function (data) {
         const index = app.getRoomIndexById(data.room.id);
         if (index > -1) {
           Vue.set(app.vue.rooms, index, data.room);
         }
     }
 
-    this.onRoomInListRemovedEvent = function(data) {
+    this.onRoomInListRemovedEvent = function (data) {
         const index = app.getRoomIndexById(data.room_id);
         if (index > -1) {
           app.vue.rooms.splice(index, 1);
@@ -97,29 +100,29 @@ function App() {
         }
     }
 
-    this.onRoomJoinedEvent = function(data) {
+    this.onRoomJoinedEvent = function (data) {
         app.vue.room = data.room;
         app.updatePlayersInRoomCounter();
     }
 
-    this.onRoomUpdatedEvent = function(data) {
+    this.onRoomUpdatedEvent = function (data) {
         app.vue.room = data.room;
         app.updatePlayersInRoomCounter();
     }
 
-    this.onClientCommandError = function(data) {
+    this.onClientCommandError = function (data) {
         app.vue.commandError = data;
         console.error(data.message);
     }
 
-    this.onClientCreatedRoomEvent = function(data) {
+    this.onClientCreatedRoomEvent = function (data) {
         app.vue.rooms.push(data.room);
         if (data.room.owner_id === app.vue.clientsInfo.yourId) {
           app.vue.clientsInfo.yourRoomId = data.room.id;
         }
     }
 
-    this.onRoomMemberChangedStatusEvent = function(data) {
+    this.onRoomMemberChangedStatusEvent = function (data) {
         if (data.member.id === app.vue.clientsInfo.yourId) {
             app.vue.wantToPlay = data.member.want_to_play;
         }
@@ -137,32 +140,36 @@ function App() {
         app.updatePlayersInRoomCounter();
     }
 
-    this.sendCommand = function(type, subType, data) {
+    this.sendCommand = function (type, subType, data) {
         console.log("send", type, subType, data);
         WsConnection.send(JSON.stringify({type: type, sub_type: subType, data: data}));
     }
 
-    this.commandJoinRoom = function(roomId) {
+    this.commandJoinRoom = function (roomId) {
         app.sendCommand('lobby', 'join_room', roomId);
     }
 
-    this.commandCreateRoom = function(roomId) {
+    this.commandCreateRoom = function (roomId) {
         app.sendCommand('lobby', 'create_room', null);
     }
 
-    this.commandWantToPlay = function() {
+    this.commandWantToPlay = function () {
         app.sendCommand('room', 'want_to_play', null);
     }
 
-    this.commandWantToSpectate = function() {
+    this.commandWantToSpectate = function () {
         app.sendCommand('room', 'want_to_spectate', null);
     }
 
-    this.commandSetPlayerStatus = function(memberId, status) {
+    this.commandSetPlayerStatus = function (memberId, status) {
         app.sendCommand('room', 'set_player_status', {member_id: memberId, status: status});
     }
 
-    this.getRoomIndexById = function(roomId) {
+    this.commandStartGame = function () {
+        app.sendCommand('room', 'start_game', null);
+    }
+
+    this.getRoomIndexById = function (roomId) {
       for (let i = 0; i < app.vue.rooms.length; i++) {
         if (app.vue.rooms[i].id === roomId) {
           return i;
@@ -171,7 +178,7 @@ function App() {
       return -1;
     }
 
-    this.getRoomMemberIndexById = function(memberId) {
+    this.getRoomMemberIndexById = function (memberId) {
       if (!app.vue.room) {
         console.warn("No room for event");
         return -1;
@@ -199,9 +206,3 @@ function App() {
   var app = new App();
   OnIncomingMessage = app.onMessage;
 })();
-
-
-let sendBtn = document.getElementById('send');
-sendBtn.onclick = function() {
-    //WsConnection.send(JSON.stringify({type: 'lobby', sub_type: 'create_room', data: {}}));
-};

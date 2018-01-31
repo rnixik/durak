@@ -3,10 +3,13 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"sync/atomic"
 )
 
 // MaxPlayersInRoom limits maximum number of players in room
 const MaxPlayersInRoom = 2
+
+var lastGameId uint64
 
 // RoomMember represents connected to a room client.
 type RoomMember struct {
@@ -21,14 +24,15 @@ type Room struct {
 	owner   *RoomMember
 	members map[*RoomMember]bool
 	game    *Game
+	lobby   *Lobby
 }
 
-func newRoom(roomId uint64, owner *Client) *Room {
+func newRoom(roomId uint64, owner *Client, lobby *Lobby) *Room {
 	members := make(map[*RoomMember]bool, 0)
 	ownerInRoom := newRoomMember(owner)
 	ownerInRoom.isPlayer = true
 	members[ownerInRoom] = true
-	room := &Room{roomId, ownerInRoom, members, nil}
+	room := &Room{roomId, ownerInRoom, members, nil, lobby}
 	owner.room = room
 
 	roomJoinedEvent := RoomJoinedEvent{room.toRoomInfo()}
@@ -90,6 +94,10 @@ func (r *Room) addClient(client *Client) {
 	r.members[member] = true
 	client.room = r
 
+	if len(r.getPlayers()) < 2 {
+		member.isPlayer = true
+	}
+
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
 	r.broadcastEvent(roomUpdatedEvent, member)
 
@@ -104,6 +112,16 @@ func (r *Room) broadcastEvent(event interface{}, exceptMember *RoomMember) {
 			m.client.sendMessage(json)
 		}
 	}
+}
+
+func (r *Room) getPlayers() []*RoomMember {
+	players := make([]*RoomMember, 0)
+	for rm := range r.members {
+		if rm.isPlayer {
+			players = append(players, rm)
+		}
+	}
+	return players
 }
 
 func (r *Room) getMembersWhoWantToPlay() []*RoomMember {
@@ -165,6 +183,42 @@ func (r *Room) onSetPlayerStatusCommand(memberId uint64, playerStatus bool) {
 	r.broadcastEvent(roomMemberChangedPlayerStatusEvent, nil)
 }
 
+func (r *Room) onStartGameCommand(c *Client) {
+	pls := r.getPlayers()
+	if len(pls) < 2 {
+		errEvent := &ClientCommandError{"Need 1 more player"}
+		c.sendEvent(errEvent)
+		return
+	}
+	if len(pls) > MaxPlayersInRoom {
+		errEvent := &ClientCommandError{"Number of players exceeded limit"}
+		c.sendEvent(errEvent)
+		return
+	}
+	if r.game != nil {
+		errEvent := &ClientCommandError{"Game have been already started"}
+		c.sendEvent(errEvent)
+		return
+	}
+
+	players := make([]*Player, 0)
+	for rm := range r.members {
+		player := newPlayer(rm.client, rm.isPlayer)
+		players = append(players, player)
+	}
+
+	atomic.AddUint64(&lastGameId, 1)
+	lastGameIdSafe := atomic.LoadUint64(&lastGameId)
+
+	r.game = newGame(lastGameIdSafe, players[0], players)
+	go r.game.begin()
+
+	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
+	r.broadcastEvent(roomUpdatedEvent, nil)
+
+	r.lobby.sendRoomUpdate(r)
+}
+
 func (r *Room) onClientCommand(cc *ClientCommand) {
 	log.Println(cc.SubType)
 	if cc.SubType == "want_to_play" {
@@ -177,6 +231,8 @@ func (r *Room) onClientCommand(cc *ClientCommand) {
 			return
 		}
 		r.onSetPlayerStatusCommand(statusData.MemberId, statusData.Status)
+	} else if cc.SubType == "start_game" {
+		r.onStartGameCommand(cc.client)
 	}
 }
 

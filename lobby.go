@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 )
 
-var lastGameId uint64
 var lastClientId uint64
 var lastRoomId uint64
 
@@ -80,20 +79,6 @@ func (l *Lobby) run() {
 	}
 }
 
-func (l *Lobby) createNewGame(ownerClient *Client) {
-	players := make([]*Player, 3)
-	players[0] = newPlayer(ownerClient, true)
-	players[1] = newPlayer(&Client{nickname: "pl2"}, true)
-	players[2] = newPlayer(&Client{nickname: "pl3"}, false)
-
-	atomic.AddUint64(&lastGameId, 1)
-	lastGameIdSafe := atomic.LoadUint64(&lastGameId)
-
-	game := newGame(lastGameIdSafe, players[0], players)
-	l.games = append(l.games, game)
-	go game.begin()
-}
-
 func (l *Lobby) broadcastEvent(event interface{}) {
 	json, _ := eventToJSON(event)
 	for client := range l.clients {
@@ -162,7 +147,7 @@ func (l *Lobby) onCreateNewRoomCommand(c *Client) {
 	atomic.AddUint64(&lastRoomId, 1)
 	lastRoomIdSafe := atomic.LoadUint64(&lastRoomId)
 
-	room := newRoom(lastRoomIdSafe, c)
+	room := newRoom(lastRoomIdSafe, c, l)
 	l.rooms[c] = room
 
 	event := &ClientCreatedRoomEvent{room.toRoomInList()}
@@ -228,7 +213,6 @@ func (l *Lobby) onClientCommand(cc *ClientCommand) {
 				return
 			}
 			l.onJoinCommand(cc.client, nickname)
-			//l.createNewGame(cc.client)
 		} else if cc.SubType == "create_room" {
 			l.onCreateNewRoomCommand(cc.client)
 		} else if cc.SubType == "join_room" {
@@ -252,4 +236,9 @@ func (l *Lobby) onClientCommand(cc *ClientCommand) {
 		}
 		cc.client.room.onClientCommand(cc)
 	}
+}
+
+func (l *Lobby) sendRoomUpdate(room *Room) {
+	roomInListUpdatedEvent := &RoomInListUpdatedEvent{room.toRoomInList()}
+	l.broadcastEvent(roomInListUpdatedEvent)
 }
