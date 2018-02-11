@@ -68,6 +68,14 @@ function App() {
         app.vue.clientsInfo.yourNickname = data.your_nickname;
         app.vue.clientsInfo.clients = data.clients;
         app.vue.rooms = data.rooms;
+        if (data.rooms.length === 0) {
+          // auto create
+          app.commandCreateRoom();
+        } else if (data.rooms.length === 1 && data.rooms[0].members_num === 1) {
+          // auto join
+          app.commandJoinRoom(data.rooms[0].id);
+          app.vue.clientsInfo.yourRoomId = data.rooms[0].id;
+        }
     };
 
     this.onClientBroadCastJoinedEvent = function (data) {
