@@ -156,15 +156,34 @@ func (r *Room) changeMemberWantStatus(client *Client, wantToPlay bool) {
 }
 
 func (r *Room) onWantToPlayCommand(client *Client) {
+	if r.game != nil {
+		errEvent := &ClientCommandError{"Can't change status: game has been started"}
+		client.sendEvent(errEvent)
+		return
+	}
 	r.changeMemberWantStatus(client, true)
 }
 
 func (r *Room) onWantToSpectateCommand(client *Client) {
+	if r.game != nil {
+		errEvent := &ClientCommandError{"Can't change status: game has been started"}
+		client.sendEvent(errEvent)
+		return
+	}
 	r.changeMemberWantStatus(client, false)
-	r.onSetPlayerStatusCommand(client.Id(), false)
+	r.setPlayerStatus(client.Id(), false)
 }
 
-func (r *Room) onSetPlayerStatusCommand(memberId uint64, playerStatus bool) {
+func (r *Room) onSetPlayerStatusCommand(c *Client, memberId uint64, playerStatus bool) {
+	if r.game != nil {
+		errEvent := &ClientCommandError{"Can't change status: game has been started"}
+		c.sendEvent(errEvent)
+		return
+	}
+	r.setPlayerStatus(memberId, playerStatus)
+}
+
+func (r *Room) setPlayerStatus(memberId uint64, playerStatus bool) {
 	var foundMember *RoomMember
 	for rm := range r.members {
 		if rm.client.Id() == memberId {
@@ -196,7 +215,7 @@ func (r *Room) onStartGameCommand(c *Client) {
 		return
 	}
 	if r.game != nil {
-		errEvent := &ClientCommandError{"Game have been already started"}
+		errEvent := &ClientCommandError{"Game has been already started"}
 		c.sendEvent(errEvent)
 		return
 	}
@@ -230,7 +249,7 @@ func (r *Room) onClientCommand(cc *ClientCommand) {
 		if err := json.Unmarshal(cc.Data, &statusData); err != nil {
 			return
 		}
-		r.onSetPlayerStatusCommand(statusData.MemberId, statusData.Status)
+		r.onSetPlayerStatusCommand(cc.client, statusData.MemberId, statusData.Status)
 	} else if cc.SubType == "start_game" {
 		r.onStartGameCommand(cc.client)
 	}

@@ -62,8 +62,8 @@
                     <li v-for="member in room.members" v-bind:key="member.id" v-bind:class="{ 'member-want-to-play': member.want_to_play, 'member-is-player': member.is_player }">
                       {{ member.nickname }}
                       <span v-if="room.owner_id == clientsInfo.yourId">
-                        <button v-if="member.want_to_play && !member.is_player && playersInRoom < room.max_players" v-on:click="setPlayerStatus(member.id, true)">mark as player</button>
-                        <button v-if="member.is_player" v-on:click="setPlayerStatus(member.id, false)">mark as spectator</button>
+                        <button v-if="member.want_to_play && !member.is_player && playersInRoom < room.max_players && !room.game_status" v-on:click="setPlayerStatus(member.id, true)">mark as player</button>
+                        <button v-if="member.is_player && !room.game_status" v-on:click="setPlayerStatus(member.id, false)">mark as spectator</button>
                       </span>
                     </li>
                 </transition-group>
@@ -73,8 +73,9 @@
         
 
             <button v-on:click="createRoom">Create new room</button><br>
-            <button v-on:click="markWantToPlay" v-bind:class="{ 'want-btn-active': wantToPlay }">Want to play</button><button v-bind:class="{ 'want-btn-active': !wantToPlay }" v-on:click="markWantToSpectate">Want to spectate</button><br>
-            <button v-if="room.owner_id == clientsInfo.yourId" v-on:click="startGame">Start the game</button>
+            <button v-if="!room.game_status" v-on:click="markWantToPlay" v-bind:class="{ 'want-btn-active': wantToPlay }">Want to play</button>
+            <button v-if="!room.game_status" v-on:click="markWantToSpectate" v-bind:class="{ 'want-btn-active': !wantToPlay }">Want to spectate</button><br>
+            <button v-if="room.owner_id == clientsInfo.yourId && !room.game_status" v-on:click="startGame">Start the game</button>
 
         </div>
 
