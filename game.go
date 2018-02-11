@@ -76,7 +76,7 @@ func (g *Game) getName() string {
 }
 
 func (g *Game) sendPlayersEvent() {
-	pe := PlayersEvent{
+	pe := GamePlayersEvent{
 		YourPlayerIndex: -1,
 		Players:         g.players,
 	}
@@ -124,7 +124,7 @@ func (g *Game) sendDealEvent() {
 		handSizes[i] = len(p.cards)
 	}
 
-	de := DealEvent{
+	de := GameDealEvent{
 		YourHand:                      make([]*Card, 0),
 		HandsSizes:                    handSizes,
 		PileSize:                      len(g.pile.cards),
@@ -209,7 +209,7 @@ func (g *Game) findFirstAttacker() (firstAttackerIndex int, lowestTrumpCard *Car
 }
 
 func (g *Game) sendFirstAttackerEvent() {
-	fae := FirstAttackerEvent{
+	fae := GameFirstAttackerEvent{
 		ReasonCard:    g.firstAttackerReasonCard,
 		AttackerIndex: g.attackerIndex,
 	}
