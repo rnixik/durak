@@ -14,7 +14,11 @@ function App() {
         rooms: [],
         room: {},
         wantToPlay: true,
-        playersInRoom: 0
+        playersInRoom: 0,
+        game: {
+          players: [],
+          yourPlayerIndex: -1
+        }
       },
       methods: {
         createRoom: function (event) {
@@ -140,12 +144,17 @@ function App() {
         }
     }
 
-    this.onRoomMemberChangedPlayerStatusEvent = function(data) {
+    this.onRoomMemberChangedPlayerStatusEvent = function (data) {
         const memberIndex = app.getRoomMemberIndexById(data.member.id);
         if (memberIndex > -1) {
           Vue.set(app.vue.room.members, memberIndex, data.member);
         }
         app.updatePlayersInRoomCounter();
+    }
+
+    this.onGamePlayersEvent = function (data) {
+        app.vue.game.players = data.players;
+        app.vue.game.yourPlayerIndex = data.your_player_index;
     }
 
     this.sendCommand = function (type, subType, data) {

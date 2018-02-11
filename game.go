@@ -38,6 +38,7 @@ type Game struct {
 	playerActions chan *PlayerAction
 	owner         *Player
 	id            uint64
+	room          *Room
 	// playing, finished
 	status  string
 	players []*Player
@@ -52,9 +53,10 @@ type Game struct {
 	attackerIndex                 int
 }
 
-func newGame(id uint64, owner *Player, players []*Player) *Game {
+func newGame(id uint64, room *Room, owner *Player, players []*Player) *Game {
 	return &Game{
 		id:            id,
+		room:          room,
 		owner:         owner,
 		playerActions: make(chan *PlayerAction),
 		status:        GameStatusPreparing,
@@ -246,5 +248,14 @@ func (g *Game) broadcastEvent(event interface{}) {
 	json, _ := eventToJSON(event)
 	for _, p := range g.players {
 		p.sendMessage(json)
+	}
+}
+
+func (g *Game) onClientRemoved(client *Client) {
+	// TODO: implement logic
+	for _, p := range g.getActivePlayers() {
+		if p.client.Id() == client.Id() {
+			//
+		}
 	}
 }

@@ -77,6 +77,15 @@
             <button v-if="!room.game_status" v-on:click="markWantToSpectate" v-bind:class="{ 'want-btn-active': !wantToPlay }">Want to spectate</button><br>
             <button v-if="room.owner_id == clientsInfo.yourId && !room.game_status" v-on:click="startGame">Start the game</button>
 
+            <div v-if="room && room.game_status">
+                <h2>Game: {{ room.game_status }}</h2>
+                <ol>
+                <li v-for="player in game.players">
+                  {{ player.name }}
+                </li>
+            </ol>
+            </div>
+
         </div>
 
         <script>

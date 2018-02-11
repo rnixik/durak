@@ -72,6 +72,10 @@ func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty 
 	}
 	delete(r.members, member)
 
+	if r.game != nil {
+		r.game.onClientRemoved(client)
+	}
+
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
 	r.broadcastEvent(roomUpdatedEvent, nil)
 
@@ -229,7 +233,7 @@ func (r *Room) onStartGameCommand(c *Client) {
 	atomic.AddUint64(&lastGameId, 1)
 	lastGameIdSafe := atomic.LoadUint64(&lastGameId)
 
-	r.game = newGame(lastGameIdSafe, players[0], players)
+	r.game = newGame(lastGameIdSafe, r, players[0], players)
 	go r.game.begin()
 
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
