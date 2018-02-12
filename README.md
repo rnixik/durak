@@ -10,7 +10,7 @@ This implementation is in progress.
 [x] Basic structs and client-server interactions  
 [x] Pile of cards, shuffle, deal  
 [x] Lobby: creating a room, joining a room, leaving a room  
-[ ] Lobby: creating a game, joining a game, leaving a game, starting a game  
+[x] Lobby: creating a game, joining a game, leaving a game, starting a game  
 [ ] Basic visualizing of cards on client-side  
 [ ] Game process and rules  
 [ ] i18n  
