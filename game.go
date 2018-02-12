@@ -53,28 +53,14 @@ type Game struct {
 	attackerIndex                 int
 }
 
-func newGame(id uint64, room *Room, owner *Player, players []*Player) *Game {
+func newGame(id uint64, room *Room, players []*Player) *Game {
 	return &Game{
 		id:            id,
 		room:          room,
-		owner:         owner,
 		playerActions: make(chan *PlayerAction),
 		status:        GameStatusPreparing,
 		players:       players,
 	}
-}
-
-func (g *Game) getActivePlayers() (activePlayers []*Player) {
-	for _, p := range g.players {
-		if p.IsActive {
-			activePlayers = append(activePlayers, p)
-		}
-	}
-	return activePlayers
-}
-
-func (g *Game) getName() string {
-	return g.owner.Name
 }
 
 func (g *Game) sendPlayersEvent() {
@@ -90,12 +76,11 @@ func (g *Game) sendPlayersEvent() {
 }
 
 func (g *Game) deal() {
-	activePlayers := g.getActivePlayers()
 	cardsLimit := 6
 	var lastCard *Card
 	lastPlayerIndex := -1
 	for cardIndex := 0; cardIndex < cardsLimit; cardIndex = cardIndex + 1 {
-		for playerIndex, p := range activePlayers {
+		for playerIndex, p := range g.players {
 			if len(p.cards) >= cardsLimit {
 				break
 			}
@@ -184,7 +169,7 @@ func (g *Game) findFirstAttacker() (firstAttackerIndex int, lowestTrumpCard *Car
 	firstAttackerIndex = -1
 	lowestTrumpCard = &Card{"A", g.trumpSuit}
 
-	for playerIndex, p := range g.getActivePlayers() {
+	for playerIndex, p := range g.players {
 		for _, c := range p.cards {
 			if c.Suit == g.trumpSuit && c.lte(lowestTrumpCard) {
 				firstAttackerIndex = playerIndex
@@ -198,7 +183,7 @@ func (g *Game) findFirstAttacker() (firstAttackerIndex int, lowestTrumpCard *Car
 	}
 
 	// fallback
-	for playerIndex, p := range g.getActivePlayers() {
+	for playerIndex, p := range g.players {
 		for _, c := range p.cards {
 			if c.lte(lowestTrumpCard) {
 				firstAttackerIndex = playerIndex
@@ -224,7 +209,10 @@ func (g *Game) begin() {
 	g.prepare()
 	for {
 		select {
-		case action := <-g.playerActions:
+		case action, ok := <-g.playerActions:
+			if !ok {
+				return
+			}
 			log.Printf("action: %#v", action)
 			g.onClientAction(action)
 		}
@@ -251,11 +239,33 @@ func (g *Game) broadcastEvent(event interface{}) {
 	}
 }
 
+func (g *Game) onGameEnded(winnerIndex int) {
+	gameEndEvent := &GameEndEvent{winnerIndex}
+	g.room.broadcastEvent(gameEndEvent, nil)
+	close(g.playerActions)
+	g.room.onGameEnded()
+}
+
+func (g *Game) onPlayerLeft(playerIndex int) {
+	gamePlayerLeft := &GamePlayerLeftEvent{playerIndex}
+	g.room.broadcastEvent(gamePlayerLeft, nil)
+
+	winnerIndex := -1
+	if len(g.players) == 2 {
+		if playerIndex == 0 {
+			winnerIndex = 1
+		} else {
+			winnerIndex = 0
+		}
+		g.onGameEnded(winnerIndex)
+	}
+}
+
 func (g *Game) onClientRemoved(client *Client) {
-	// TODO: implement logic
-	for _, p := range g.getActivePlayers() {
+	for index, p := range g.players {
 		if p.client.Id() == client.Id() {
-			//
+			g.onPlayerLeft(index)
+			return
 		}
 	}
 }

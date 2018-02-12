@@ -103,16 +103,16 @@ func (r *Room) addClient(client *Client) {
 	}
 
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
-	r.broadcastEvent(roomUpdatedEvent, member)
+	r.broadcastEvent(roomUpdatedEvent, member.client.(*Client))
 
 	roomJoinedEvent := RoomJoinedEvent{r.toRoomInfo()}
 	client.sendEvent(roomJoinedEvent)
 }
 
-func (r *Room) broadcastEvent(event interface{}, exceptMember *RoomMember) {
+func (r *Room) broadcastEvent(event interface{}, exceptClient *Client) {
 	json, _ := eventToJSON(event)
 	for m := range r.members {
-		if exceptMember == nil || m.client.Id() != exceptMember.client.Id() {
+		if exceptClient == nil || m.client.Id() != exceptClient.Id() {
 			m.client.sendMessage(json)
 		}
 	}
@@ -226,14 +226,16 @@ func (r *Room) onStartGameCommand(c *Client) {
 
 	players := make([]*Player, 0)
 	for rm := range r.members {
-		player := newPlayer(rm.client, rm.isPlayer)
-		players = append(players, player)
+		if rm.isPlayer {
+			player := newPlayer(rm.client, rm.isPlayer)
+			players = append(players, player)
+		}
 	}
 
 	atomic.AddUint64(&lastGameId, 1)
 	lastGameIdSafe := atomic.LoadUint64(&lastGameId)
 
-	r.game = newGame(lastGameIdSafe, r, players[0], players)
+	r.game = newGame(lastGameIdSafe, r, players)
 	go r.game.begin()
 
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
@@ -257,6 +259,13 @@ func (r *Room) onClientCommand(cc *ClientCommand) {
 	} else if cc.SubType == "start_game" {
 		r.onStartGameCommand(cc.client)
 	}
+}
+
+func (r *Room) onGameEnded() {
+	r.game = nil
+	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
+	r.broadcastEvent(roomUpdatedEvent, nil)
+	r.lobby.sendRoomUpdate(r)
 }
 
 func (rm *RoomMember) memberToRoomMemberInfo() *RoomMemberInfo {

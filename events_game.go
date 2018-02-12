@@ -22,3 +22,13 @@ type GameFirstAttackerEvent struct {
 	ReasonCard    *Card `json:"reason_card"`
 	AttackerIndex int   `json:"attacker_index"`
 }
+
+// GamePlayerLeftEvent contains index of player who left the game
+type GamePlayerLeftEvent struct {
+	PlayerIndex int `json:"player_index"`
+}
+
+// GameEndEvent contains index of player who left the game
+type GameEndEvent struct {
+	WinnerIndex int `json:"winner_index"`
+}
