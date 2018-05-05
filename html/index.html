@@ -12,6 +12,7 @@
             }
         };
     </script>
+    <link href="css/cards-svg-data.css" rel="stylesheet" media="all" />
     <link href="css/index.css" rel="stylesheet" media="all" />
   </head>
   <body>
@@ -80,12 +81,20 @@
             <div v-if="room && room.game_status">
                 <h2>Game: {{ room.game_status }}</h2>
                 <ol>
-                <li v-for="player in game.players">
-                  {{ player.name }}
-                </li>
-            </ol>
+                    <li v-for="player in game.players">
+                      {{ player.name }}
+                    </li>
+                </ol>
             </div>
 
+        </div>
+
+        <div class="playing-card-box">
+            <div class="playing-card icon-8_of_clubs"></div>
+        </div>
+
+        <div class="playing-card-box">
+            <div class="playing-card icon-queen_of_hearts"></div>
         </div>
 
         <script>
