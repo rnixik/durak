@@ -18,6 +18,15 @@ function App() {
         game: {
           players: [],
           yourPlayerIndex: -1
+        },
+        playingTable: {
+          handsSizes: [],
+          pileSize: 0,
+          trumpCard: null,
+          trumpCardIsInPile: false,
+          trumpCardIsOwnedByPlayerIndex: -1,
+          trumpSuit: null,
+          yourHand: []
         }
       },
       methods: {
@@ -47,6 +56,23 @@ function App() {
         },
         startGame: function () {
           app.commandStartGame();
+        },
+        convertCardToCssClass: function (card) {
+          const replaces = {
+            'J': 'jack',
+            'Q': 'queen',
+            'K': 'king',
+            'A': 'ace',
+            '♣': 'clubs',
+            '♦': 'diamonds',
+            '♥': 'hearts',
+            '♠': 'spades',
+          };
+          let cssClass = card.value + '_of_' + card.suit;
+          for (orig in replaces) {
+            cssClass = cssClass.replace(new RegExp(orig, "g"), replaces[orig]);
+          }
+          return cssClass;
         }
       }
     });
@@ -157,6 +183,17 @@ function App() {
         app.vue.game.yourPlayerIndex = data.your_player_index;
     }
 
+    this.onGameDealEvent = function (data) {
+        console.log(data);
+        for (let property in data) {
+            if (data.hasOwnProperty(property)) {
+                const camelizedProperty = this.camelize(property);
+                app.vue.playingTable[camelizedProperty] = data[property];
+                console.log("set", camelizedProperty, data[property]);
+            }
+        }
+    }
+
     this.sendCommand = function (type, subType, data) {
         console.log("send", type, subType, data);
         WsConnection.send(JSON.stringify({type: type, sub_type: subType, data: data}));
@@ -208,7 +245,7 @@ function App() {
       return -1;
     }
 
-    this.updatePlayersInRoomCounter = function() {
+    this.updatePlayersInRoomCounter = function () {
       let playersNum = 0;
       for (let i = 0; i < app.vue.room.members.length; i++) {
         if (app.vue.room.members[i].is_player) {
@@ -216,6 +253,10 @@ function App() {
         }
       }
       app.vue.playersInRoom = playersNum;
+    }
+
+    this.camelize = function (str) {
+      return str.replace(/(_)(.)/g, function($1, $2, $3) { return $3.toUpperCase(); })
     }
 }
 

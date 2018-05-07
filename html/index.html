@@ -34,68 +34,88 @@
             <div id="disconnected" style="display: none; color: #FFDF00; text-align: center; font-size: 18px; font-weight: bold;">Disconnected</div>
         </div>
 
-        <div id="app">
-            <div>
-                <div>Your id: {{clientsInfo.yourId}}</div>
-                <div>Your nickname: {{clientsInfo.yourNickname}}</div>
-            </div>
+        <div id="app" class="app">
+            <div class="game-info">
+                <div>
+                    <div>Your id: {{clientsInfo.yourId}}</div>
+                    <div>Your nickname: {{clientsInfo.yourNickname}}</div>
+                </div>
 
-            <div>Clients: </div>
-            <ol>
-                <li v-for="client in clientsInfo.clients">
-                  {{ client.nickname }}#{{ client.id }} 
-                </li>
-            </ol>
-
-            <div>Rooms: </div>
-            <transition-group name="slide-fade" tag="ol">
-                <li v-for="room in rooms" v-bind:key="room.id">
-                  <strong v-if="room.id == clientsInfo.yourRoomId">--here--</strong>
-                  <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.members_num }}
-                    <span v-if="room.game_status"> ({{ room.game_status }})</span></a>
-                    <strong v-if="room.owner_id == clientsInfo.yourId">you are onwer</strong>
-                </li>
-            </transition-group>
-
-            <div v-if="room && room.id">
-                <h2>Room - {{ room.name }} - {{ room.game_status }}</h2>
-                <transition-group name="slide-fade" tag="ol">
-                    <li v-for="member in room.members" v-bind:key="member.id" v-bind:class="{ 'member-want-to-play': member.want_to_play, 'member-is-player': member.is_player }">
-                      {{ member.nickname }}
-                      <span v-if="room.owner_id == clientsInfo.yourId">
-                        <button v-if="member.want_to_play && !member.is_player && playersInRoom < room.max_players && !room.game_status" v-on:click="setPlayerStatus(member.id, true)">mark as player</button>
-                        <button v-if="member.is_player && !room.game_status" v-on:click="setPlayerStatus(member.id, false)">mark as spectator</button>
-                      </span>
-                    </li>
-                </transition-group>
-            </div>
-
-            <div class="command-error" v-if="commandError.message">Error: {{ commandError.message }}</div>
-        
-
-            <button v-on:click="createRoom">Create new room</button><br>
-            <button v-if="!room.game_status" v-on:click="markWantToPlay" v-bind:class="{ 'want-btn-active': wantToPlay }">Want to play</button>
-            <button v-if="!room.game_status" v-on:click="markWantToSpectate" v-bind:class="{ 'want-btn-active': !wantToPlay }">Want to spectate</button><br>
-            <button v-if="room.owner_id == clientsInfo.yourId && !room.game_status" v-on:click="startGame">Start the game</button>
-
-            <div v-if="room && room.game_status">
-                <h2>Game: {{ room.game_status }}</h2>
+                <div>Clients: </div>
                 <ol>
-                    <li v-for="player in game.players">
-                      {{ player.name }}
+                    <li v-for="client in clientsInfo.clients">
+                      {{ client.nickname }}#{{ client.id }} 
                     </li>
                 </ol>
+
+                <div>Rooms: </div>
+                <transition-group name="slide-fade" tag="ol">
+                    <li v-for="room in rooms" v-bind:key="room.id">
+                      <strong v-if="room.id == clientsInfo.yourRoomId">--here--</strong>
+                      <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.members_num }}
+                        <span v-if="room.game_status"> ({{ room.game_status }})</span></a>
+                        <strong v-if="room.owner_id == clientsInfo.yourId">you are onwer</strong>
+                    </li>
+                </transition-group>
+
+                <div v-if="room && room.id">
+                    <h2>Room - {{ room.name }} - {{ room.game_status }}</h2>
+                    <transition-group name="slide-fade" tag="ol">
+                        <li v-for="member in room.members" v-bind:key="member.id" v-bind:class="{ 'member-want-to-play': member.want_to_play, 'member-is-player': member.is_player }">
+                          {{ member.nickname }}
+                          <span v-if="room.owner_id == clientsInfo.yourId">
+                            <button v-if="member.want_to_play && !member.is_player && playersInRoom < room.max_players && !room.game_status" v-on:click="setPlayerStatus(member.id, true)">mark as player</button>
+                            <button v-if="member.is_player && !room.game_status" v-on:click="setPlayerStatus(member.id, false)">mark as spectator</button>
+                          </span>
+                        </li>
+                    </transition-group>
+                </div>
+
+                <div class="command-error" v-if="commandError.message">Error: {{ commandError.message }}</div>
+            
+
+                <button v-on:click="createRoom">Create new room</button><br>
+                <button v-if="!room.game_status" v-on:click="markWantToPlay" v-bind:class="{ 'want-btn-active': wantToPlay }">Want to play</button>
+                <button v-if="!room.game_status" v-on:click="markWantToSpectate" v-bind:class="{ 'want-btn-active': !wantToPlay }">Want to spectate</button><br>
+                <button v-if="room.owner_id == clientsInfo.yourId && !room.game_status" v-on:click="startGame">Start the game</button>
+
+                <div v-if="room && room.game_status">
+                    <h2>Game: {{ room.game_status }}</h2>
+                    <ol>
+                        <li v-for="player in game.players">
+                          {{ player.name }}
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="playing-table">
+                <div>
+                    Pile: {{ playingTable.pileSize }}, TrumpSuit: {{ playingTable.trumpSuit }}, 
+                    <span v-if="playingTable.trumpCard">TrumpCard: {{ playingTable.trumpCard.value }}{{ playingTable.trumpCard.suit }}</span>
+                    Trump card is in pile: {{ playingTable.trumpCardIsInPile }}
+                </div>
+                <div>
+                    Hands:
+                    <ol>
+                        <li v-for="handSize in playingTable.handsSizes">
+                          {{ handSize }}
+                        </li>
+                    </ol>
+                </div>
+                <div>
+                    Your hand:
+                    <div v-if="playingTable.yourHand.length">
+                        <div class="playing-card-box" v-for="yourCard in playingTable.yourHand">
+                            <div class="playing-card" v-bind:class="'icon-' + convertCardToCssClass(yourCard)"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
 
-        <div class="playing-card-box">
-            <div class="playing-card icon-8_of_clubs"></div>
-        </div>
-
-        <div class="playing-card-box">
-            <div class="playing-card icon-queen_of_hearts"></div>
-        </div>
+       
 
         <script>
             var loginElement = document.getElementById('login');
