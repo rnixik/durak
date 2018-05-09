@@ -1,3 +1,32 @@
+Vue.component('playing-card', {
+  template: '#playing-card-template',
+  props: {
+    card: {
+      type: Object,
+      required: true
+    }
+  },
+  computed: {
+    className: function () {
+      const replaces = {
+        'J': 'jack',
+        'Q': 'queen',
+        'K': 'king',
+        'A': 'ace',
+        '♣': 'clubs',
+        '♦': 'diamonds',
+        '♥': 'hearts',
+        '♠': 'spades',
+      };
+      let cssClass = this.card.value + '_of_' + this.card.suit;
+      for (orig in replaces) {
+        cssClass = cssClass.replace(new RegExp(orig, "g"), replaces[orig]);
+      }
+      return cssClass;
+    }
+  }
+});
+
 function App() {
     var app = this;
 
@@ -141,6 +170,8 @@ function App() {
     this.onRoomJoinedEvent = function (data) {
         app.vue.room = data.room;
         app.updatePlayersInRoomCounter();
+        // TODO: remove debug
+        app.commandStartGame();
     }
 
     this.onRoomUpdatedEvent = function (data) {
