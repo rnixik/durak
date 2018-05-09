@@ -138,7 +138,7 @@ func (c *Client) sendEvent(event interface{}) {
 }
 
 func (c *Client) sendMessage(message []byte) {
-	if c.send == nil {
+	if c.send == nil || !c.isValid {
 		return
 	}
 	c.send <- message
