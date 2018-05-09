@@ -27,6 +27,24 @@ Vue.component('playing-card', {
   }
 });
 
+Vue.component('playing-card-back', {
+  template: '#playing-card-back-template'
+});
+
+Vue.component('opponent', {
+  template: '#opponent-template',
+  props: {
+    handSize: {
+      type: Number,
+      required: true
+    },
+    nickname: {
+      type: String,
+      required: true
+    }
+  }
+});
+
 function App() {
     var app = this;
 
@@ -85,23 +103,6 @@ function App() {
         },
         startGame: function () {
           app.commandStartGame();
-        },
-        convertCardToCssClass: function (card) {
-          const replaces = {
-            'J': 'jack',
-            'Q': 'queen',
-            'K': 'king',
-            'A': 'ace',
-            '♣': 'clubs',
-            '♦': 'diamonds',
-            '♥': 'hearts',
-            '♠': 'spades',
-          };
-          let cssClass = card.value + '_of_' + card.suit;
-          for (orig in replaces) {
-            cssClass = cssClass.replace(new RegExp(orig, "g"), replaces[orig]);
-          }
-          return cssClass;
         }
       }
     });
