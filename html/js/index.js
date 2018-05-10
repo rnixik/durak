@@ -45,6 +45,24 @@ Vue.component('opponent', {
   }
 });
 
+Vue.component('deck', {
+  template: '#deck-template',
+  props: {
+    deckSize: {
+      type: Number,
+      required: true
+    },
+    trumpCard: {
+      type: Object,
+      required: true
+    },
+    trumpSuit: {
+      type: String,
+      required: true
+    }
+  }
+});
+
 function App() {
     var app = this;
 

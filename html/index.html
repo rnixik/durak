@@ -97,6 +97,14 @@
                 </div>
 
                 <div>
+                    <deck 
+                        v-bind:deck-size="playingTable.pileSize"
+                        v-bind:trump-card="playingTable.trumpCard"
+                        v-bind:trump-suit="playingTable.trumpSuit"
+                    ></deck>
+                </div>
+
+                <div>
                         <opponent 
                             v-for="(handSize, handIndex) in playingTable.handsSizes"
                             v-if="handIndex != game.yourPlayerIndex"
@@ -150,6 +158,32 @@
                           'z-index': handSize-index
                         }"
                     ></playing-card-back>
+                </div>
+            </div>
+        </script>
+
+        <script type="text/x-template" id="deck-template">
+            <div class="deck">
+                <div class="deck__cards" v-if="deckSize > 0" v-bind:style="{width: deckSize * 65 + 'px'}">
+                    <playing-card-back 
+                      v-for="index in deckSize"
+                      v-if="index != deckSize"
+                      v-bind:style="{
+                          left: ((index-1) * -65) + 'px',
+                          bottom: (-20 + (index-1) * 0.5) + 'px',
+                          'z-index': 2
+                        }"
+                    ></playing-card-back>
+
+                    <playing-card
+                      v-bind:card="trumpCard" 
+                      v-if="deckSize > 1"
+                    ></playing-card>
+                </div>
+                <div v-if="deckSize == 0" class="deck__empty">
+                    <div class="deck__trump-suit" v-bind:class="{'deck__suit-red': trumpSuit == '♦' || trumpSuit == '♥'}">
+                        {{ trumpSuit }}
+                    </div>
                 </div>
             </div>
         </script>
