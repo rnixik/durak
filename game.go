@@ -51,6 +51,7 @@ type Game struct {
 	trumpCardIsOwnedByPlayerIndex int
 	firstAttackerReasonCard       *Card
 	attackerIndex                 int
+	defenderIndex                 int
 }
 
 func newGame(id uint64, room *Room, players []*Player) *Game {
@@ -158,21 +159,23 @@ func (g *Game) prepare() {
 	g.pile.shuffle()
 	g.deal()
 	g.sendDealEvent()
-	g.attackerIndex, g.firstAttackerReasonCard = g.findFirstAttacker()
+	g.attackerIndex, g.defenderIndex, g.firstAttackerReasonCard = g.findFirstAttacker()
 	g.dumpHands()
 	g.dumpPile()
 	g.dump()
 	g.sendFirstAttackerEvent()
 }
 
-func (g *Game) findFirstAttacker() (firstAttackerIndex int, lowestTrumpCard *Card) {
+func (g *Game) findFirstAttacker() (firstAttackerIndex int, defenderIndex int, lowestTrumpCard *Card) {
 	firstAttackerIndex = -1
+	defenderIndex = -1
 	lowestTrumpCard = &Card{"A", g.trumpSuit}
 
 	for playerIndex, p := range g.players {
 		for _, c := range p.cards {
 			if c.Suit == g.trumpSuit && c.lte(lowestTrumpCard) {
 				firstAttackerIndex = playerIndex
+				defenderIndex = g.getNextPlayerIndex(firstAttackerIndex)
 				lowestTrumpCard = c
 			}
 		}
@@ -187,6 +190,7 @@ func (g *Game) findFirstAttacker() (firstAttackerIndex int, lowestTrumpCard *Car
 		for _, c := range p.cards {
 			if c.lte(lowestTrumpCard) {
 				firstAttackerIndex = playerIndex
+				defenderIndex = g.getNextPlayerIndex(firstAttackerIndex)
 				lowestTrumpCard = c
 			}
 		}
@@ -195,10 +199,24 @@ func (g *Game) findFirstAttacker() (firstAttackerIndex int, lowestTrumpCard *Car
 	return
 }
 
+func (g *Game) getNextPlayerIndex(playerIndex int) (nextPlayerIndex int) {
+	nextPlayerIndex = -1
+	if len(g.players) > playerIndex+1 {
+		nextPlayerIndex = playerIndex + 1
+		return
+	}
+	if len(g.players) > 1 {
+		nextPlayerIndex = 0
+		return
+	}
+	return
+}
+
 func (g *Game) sendFirstAttackerEvent() {
 	fae := GameFirstAttackerEvent{
 		ReasonCard:    g.firstAttackerReasonCard,
 		AttackerIndex: g.attackerIndex,
+		DefenderIndex: g.defenderIndex,
 	}
 	for _, p := range g.players {
 		p.sendEvent(fae)

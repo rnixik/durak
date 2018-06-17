@@ -105,12 +105,14 @@
                 </div>
 
                 <div>
-                        <opponent 
-                            v-for="(handSize, handIndex) in playingTable.handsSizes"
-                            v-if="handIndex != game.yourPlayerIndex"
-                            v-bind:hand-size="handSize"  
-                            v-bind:nickname="game.players[handIndex].name"
-                        ></opponent>
+                    <opponent 
+                        v-for="(handSize, handIndex) in playingTable.handsSizes"
+                        v-if="handIndex != game.yourPlayerIndex"
+                        v-bind:hand-size="handSize"  
+                        v-bind:nickname="game.players[handIndex].name"
+                        v-bind:is-attacker="gameState.attackerIndex == handIndex"
+                        v-bind:is-defender="gameState.defenderIndex == handIndex"
+                    ></opponent>
                 </div>
 
                 <div class="your-hand-holder">
@@ -125,8 +127,20 @@
                         }"
                         ></playing-card>
                     </div>
+
                 </div>
                 
+                <div class="game-state-holder">
+                    <span v-if="isYouAttacker">You are attacker!</span>
+                    <span v-if="!isYouAttacker && attackerNickname">{{ attackerNickname }} is attacker!</span>
+                    <span v-if="gameState.firstAttackerReasonCard">
+                        Reason: 
+                        <span v-bind:class="{'game-state__suit-red': gameState.firstAttackerReasonCard.suit == '♦' || gameState.firstAttackerReasonCard.suit == '♥'}">
+                            {{ gameState.firstAttackerReasonCard.value }}{{ gameState.firstAttackerReasonCard.suit }}
+                        </span>
+                    </span>
+                    <span v-if="isYouDefender">You are defender!</span>
+                </div>
             </div>
 
         </div>
@@ -149,6 +163,8 @@
                   class="opponet__nickname" 
                   v-bind:style="{'z-index': handSize}"
                 >{{ nickname }}</div>
+                <div class="opponet__attack-state" v-bind:style="{'z-index': handSize}" v-if="isAttacker" title="Attacker">⚔</div>
+                <div class="opponet__attack-state opponet__attack-state_defender" v-bind:style="{'z-index': handSize}" v-if="isDefender" title="Defender">🛡</div>
                 <div class="opponet__card-num" v-bind:style="{'z-index': handSize}">{{ handSize }}</div>
                 <div class="opponet__hand" v-bind:style="{width: handSize * 65 + 'px'}">
                     <playing-card-back 

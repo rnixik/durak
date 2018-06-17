@@ -43,7 +43,6 @@ body {
 .your-hand-holder {
   overflow: hidden;
   max-width: 1400px;
-  
 }
 .your-hand {
   margin: 30px 70px 100px 70px;
@@ -120,9 +119,26 @@ body {
   padding: 2px;
   box-sizing: border-box;
 }
+.opponet__attack-state {
+  position: absolute;
+  top: 21px;
+  left: 16px;
+  text-align: center;
+  color: #f33;
+  font-weight: bold;
+  font-size: 28px;
+  width: 33px;
+  overflow: hidden;
+  padding: 2px;
+  box-sizing: border-box;
+  text-shadow: -3px 3px 4px #fff, 3px -3px 4px #fff, -3px -3px 4px #fff, 3px 3px 4px #fff;
+}
+.opponet__attack-state_defender{
+  color: #03f;
+}
 .opponet__card-num {
   position: absolute;
-  top: 46px;
+  top: 58px;
   left: 6px;
   font-size: 26px;
   width: 52px;
@@ -173,4 +189,20 @@ body {
 }
 .game-info {
   margin-right: 20px;
+}
+.game-state-holder {
+  position: absolute;
+  bottom: 10px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 22px;
+  width: 576px;
+  overflow: hidden;
+  padding: 4px;
+  box-sizing: border-box;
+  border-radius: 4px;
+}
+.game-state__suit-red {
+  color: red;
 }

@@ -41,6 +41,12 @@ Vue.component('opponent', {
     nickname: {
       type: String,
       required: true
+    },
+    isAttacker: {
+      type: Boolean
+    },
+    isDefender: {
+      type: Boolean
     }
   }
 });
@@ -92,6 +98,11 @@ function App() {
           trumpCardIsOwnedByPlayerIndex: -1,
           trumpSuit: null,
           yourHand: []
+        },
+        gameState: {
+          attackerIndex: -1,
+          defenderIndex: -1,
+          firstAttackerReasonCard: null
         }
       },
       methods: {
@@ -121,6 +132,24 @@ function App() {
         },
         startGame: function () {
           app.commandStartGame();
+        }
+      },
+      computed: {
+        isYouAttacker: function () {
+          return this.gameState.attackerIndex == this.game.yourPlayerIndex;
+        },
+        isYouDefender: function () {
+          return this.gameState.defenderIndex == this.game.yourPlayerIndex;
+        },
+        attackerNickname: function () {
+          if (this.gameState.attackerIndex < 0) {
+            return;
+          }
+          const atInd = this.gameState.attackerIndex;
+          if (!this.game.players[atInd]) {
+            return;
+          }
+          return this.game.players[atInd].name;
         }
       }
     });
@@ -234,7 +263,6 @@ function App() {
     }
 
     this.onGameDealEvent = function (data) {
-        console.log(data);
         for (let property in data) {
             if (data.hasOwnProperty(property)) {
                 const camelizedProperty = this.camelize(property);
@@ -242,6 +270,12 @@ function App() {
                 console.log("set", camelizedProperty, data[property]);
             }
         }
+    }
+
+    this.onGameFirstAttackerEvent = function (data) {
+        app.vue.gameState.attackerIndex = data.attacker_index;
+        app.vue.gameState.defenderIndex = data.defender_index;
+        app.vue.gameState.firstAttackerReasonCard = data.reason_card;
     }
 
     this.sendCommand = function (type, subType, data) {

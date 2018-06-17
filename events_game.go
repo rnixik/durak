@@ -21,6 +21,7 @@ type GameDealEvent struct {
 type GameFirstAttackerEvent struct {
 	ReasonCard    *Card `json:"reason_card"`
 	AttackerIndex int   `json:"attacker_index"`
+	DefenderIndex int   `json:"defender_index"`
 }
 
 // GamePlayerLeftEvent contains index of player who left the game
