@@ -237,15 +237,15 @@ func (g *Game) begin() {
 	}
 }
 
-func (g *Game) attack(player *Player, data AttackActionData) {
-	log.Printf("attack: %#v", data)
+func (g *Game) useCard(player *Player, data UseCardActionData) {
+	log.Printf("useCard: %#v", data)
 }
 
 func (g *Game) onClientAction(action *PlayerAction) {
-	if action.Name == "attack" {
-		data, ok := action.Data.(AttackActionData)
+	if action.Name == "use_card" {
+		data, ok := action.Data.(UseCardActionData)
 		if ok {
-			g.attack(action.player, data)
+			g.useCard(action.player, data)
 		}
 	}
 }
@@ -286,4 +286,13 @@ func (g *Game) onClientRemoved(client *Client) {
 			return
 		}
 	}
+}
+
+func (g *Game) findPlayerOfClient(client *Client) *Player {
+	for _, p := range g.players {
+		if p.client.Id() == client.Id() {
+			return p
+		}
+	}
+	return nil
 }

@@ -27,9 +27,20 @@ Vue.component('playing-card', {
   }
 });
 
+Vue.component('playing-card-inhand', {
+  props: {
+    card: {
+      type: Object,
+      required: true
+    }
+  },
+  template: '#playing-card-inhand-template'
+});
+
 Vue.component('playing-card-back', {
   template: '#playing-card-back-template'
 });
+
 
 Vue.component('opponent', {
   template: '#opponent-template',
@@ -88,7 +99,7 @@ function App() {
         playersInRoom: 0,
         game: {
           players: [],
-          yourPlayerIndex: -1
+          yourPlayerIndex: null
         },
         playingTable: {
           handsSizes: [],
@@ -132,14 +143,19 @@ function App() {
         },
         startGame: function () {
           app.commandStartGame();
+        },
+        useCard: function (card) {
+          console.log('kekus');
+          console.log(card);
+          app.commandUseCard(card.value, card.suit);
         }
       },
       computed: {
         isYouAttacker: function () {
-          return this.gameState.attackerIndex == this.game.yourPlayerIndex;
+          return this.gameState.attackerIndex === this.game.yourPlayerIndex;
         },
         isYouDefender: function () {
-          return this.gameState.defenderIndex == this.game.yourPlayerIndex;
+          return this.gameState.defenderIndex === this.game.yourPlayerIndex;
         },
         attackerNickname: function () {
           if (this.gameState.attackerIndex < 0) {
@@ -305,6 +321,10 @@ function App() {
 
     this.commandStartGame = function () {
         app.sendCommand('room', 'start_game', null);
+    }
+
+    this.commandUseCard = function (value, suit) {
+        app.sendCommand('game', 'use_card', {value: value, suit: suit});
     }
 
     this.getRoomIndexById = function (roomId) {

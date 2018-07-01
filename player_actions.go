@@ -7,8 +7,7 @@ type PlayerAction struct {
 	player *Player
 }
 
-// AttackActionData contains data of command message from a player to a game.
-type AttackActionData struct {
-	Card        *Card `json:"card"`
-	TargetIndex int   `json:"target_index"`
+// UseCardActionData contains data of command message to use card from a player to a game.
+type UseCardActionData struct {
+	Card *Card `json:"card"`
 }

@@ -117,15 +117,15 @@
 
                 <div class="your-hand-holder">
                     <div v-if="playingTable.yourHand.length" class="your-hand" v-bind:style="{width: playingTable.yourHand.length * 140 + 'px'}">
-                        <playing-card 
-                        v-for="(yourCard, index) in playingTable.yourHand" 
-                        v-bind:card="yourCard" 
+                        <playing-card-inhand v-on:use-card="useCard"
+                        v-for="(yourCard, index) in playingTable.yourHand"
+                        v-bind:card="yourCard"
                         v-bind:style="{
                           left: index*(Math.min(playingTable.yourHand.length/6 * -40), -70) + 'px', 
                           transform: 'rotate(' + (index+0.5-playingTable.yourHand.length/2) * 3 + 'deg)',
                           bottom: Math.abs(index+0.5-playingTable.yourHand.length/2) * Math.abs(index+0.5-playingTable.yourHand.length/2) * (6/playingTable.yourHand.length * -2.1) + 'px'
                         }"
-                        ></playing-card>
+                        ></playing-card-inhand>
                     </div>
 
                 </div>
@@ -155,6 +155,10 @@
             <div class="playing-card-back-box">
                 <div class="playing-card-back"></div>
             </div>
+        </script>
+
+        <script type="text/x-template" id="playing-card-inhand-template">
+            <playing-card v-bind:card="card" @click.native="$emit('use-card', card)"></playing-card>
         </script>
 
         <script type="text/x-template" id="opponent-template">

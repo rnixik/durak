@@ -223,13 +223,27 @@ func (l *Lobby) onClientCommand(cc *ClientCommand) {
 			l.onJoinRoomCommand(cc.client, roomId)
 		}
 	} else if cc.Type == "game" {
-		// demo
-		actionData := AttackActionData{
-			Card:        &Card{"6", "♦"},
-			TargetIndex: 1,
+		if cc.client.room == nil {
+			return
 		}
-		playerAction := &PlayerAction{Name: "attack", Data: actionData, player: l.games[0].players[0]}
-		l.games[0].playerActions <- playerAction
+		if cc.client.room.game == nil {
+			return
+		}
+		game := cc.client.room.game
+		player := game.findPlayerOfClient(cc.client)
+		if player == nil {
+			return
+		}
+
+		if cc.SubType == "use_card" {
+			var useCard Card
+			if err := json.Unmarshal(cc.Data, &useCard); err != nil {
+				return
+			}
+			actionData := &UseCardActionData{Card: &useCard}
+			playerAction := &PlayerAction{Name: "user_card", Data: actionData, player: player}
+			game.playerActions <- playerAction
+		}
 	} else if cc.Type == "room" {
 		if cc.client.room == nil {
 			return
