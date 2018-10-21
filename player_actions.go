@@ -1,5 +1,7 @@
 package main
 
+const PlayerActionNameUseCard = "use_card"
+
 // PlayerAction contains command message from a player to a game.
 type PlayerAction struct {
 	Name   string      `json:"name"`

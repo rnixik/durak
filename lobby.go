@@ -200,29 +200,29 @@ func (l *Lobby) onJoinRoomCommand(c *Client, roomId uint64) {
 		l.broadcastEvent(roomInListUpdatedEvent)
 		log.Printf("Client %s joined room %d", c.Nickname(), roomId)
 	} else {
-		errEvent := &ClientCommandError{fmt.Sprintf("Room does not exists: %d", roomId)}
+		errEvent := &ClientCommandError{fmt.Sprintf("Room does not exist: %d", roomId)}
 		c.sendEvent(errEvent)
 	}
 }
 
 func (l *Lobby) onClientCommand(cc *ClientCommand) {
-	if cc.Type == "lobby" {
-		if cc.SubType == "join" {
+	if cc.Type == ClientCommandTypeLobby {
+		if cc.SubType == ClientCommandLobbySubTypeJoin {
 			var nickname string
 			if err := json.Unmarshal(cc.Data, &nickname); err != nil {
 				return
 			}
 			l.onJoinCommand(cc.client, nickname)
-		} else if cc.SubType == "create_room" {
+		} else if cc.SubType == ClientCommandLobbySubTypeCreateRoom {
 			l.onCreateNewRoomCommand(cc.client)
-		} else if cc.SubType == "join_room" {
+		} else if cc.SubType == ClientCommandLobbySubTypeJoinRoom {
 			var roomId uint64
 			if err := json.Unmarshal(cc.Data, &roomId); err != nil {
 				return
 			}
 			l.onJoinRoomCommand(cc.client, roomId)
 		}
-	} else if cc.Type == "game" {
+	} else if cc.Type == ClientCommandTypeGame {
 		if cc.client.room == nil {
 			return
 		}
@@ -235,16 +235,16 @@ func (l *Lobby) onClientCommand(cc *ClientCommand) {
 			return
 		}
 
-		if cc.SubType == "use_card" {
+		if cc.SubType == ClientCommandGameSubTypeUseCard {
 			var useCard Card
 			if err := json.Unmarshal(cc.Data, &useCard); err != nil {
 				return
 			}
-			actionData := &UseCardActionData{Card: &useCard}
-			playerAction := &PlayerAction{Name: "user_card", Data: actionData, player: player}
+			actionData := UseCardActionData{Card: &useCard}
+			playerAction := &PlayerAction{Name: PlayerActionNameUseCard, Data: actionData, player: player}
 			game.playerActions <- playerAction
 		}
-	} else if cc.Type == "room" {
+	} else if cc.Type == ClientCommandTypeRoom {
 		if cc.client.room == nil {
 			return
 		}

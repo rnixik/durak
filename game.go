@@ -225,6 +225,7 @@ func (g *Game) sendFirstAttackerEvent() {
 
 func (g *Game) begin() {
 	g.prepare()
+	g.status = GameStatusPlaying
 	for {
 		select {
 		case action, ok := <-g.playerActions:
@@ -237,15 +238,24 @@ func (g *Game) begin() {
 	}
 }
 
+func (g *Game) canPlayerUseCard(player *Player, card *Card) bool {
+	if g.status != GameStatusPlaying {
+		return false
+	}
+	return true
+}
+
 func (g *Game) useCard(player *Player, data UseCardActionData) {
 	log.Printf("useCard: %#v", data)
 }
 
 func (g *Game) onClientAction(action *PlayerAction) {
-	if action.Name == "use_card" {
+	if action.Name == ClientCommandGameSubTypeUseCard {
 		data, ok := action.Data.(UseCardActionData)
 		if ok {
 			g.useCard(action.player, data)
+		} else {
+			log.Printf("Cannot cast to UseCardActionData: %#v", action.Data)
 		}
 	}
 }
