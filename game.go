@@ -13,7 +13,9 @@ const (
 
 // States of the game.
 const (
-	GameStateDealing = "dealing"
+	GameStateDealing    = "dealing"
+	GameStateAttacking  = "attacking"
+	GameStateThrowingIn = "throwing_in"
 )
 
 var (
@@ -52,6 +54,7 @@ type Game struct {
 	firstAttackerReasonCard       *Card
 	attackerIndex                 int
 	defenderIndex                 int
+	battleground                  []*Card
 }
 
 func newGame(id uint64, room *Room, players []*Player) *Game {
@@ -106,16 +109,27 @@ func (g *Game) deal() {
 	g.trumpSuit = lastCard.Suit
 }
 
-func (g *Game) sendDealEvent() {
+func (g *Game) getGameStateInfo() *GameStateInfo {
 	handSizes := make([]int, len(g.players))
 	for i, p := range g.players {
 		handSizes[i] = len(p.cards)
 	}
 
+	gsi := &GameStateInfo{
+		YourHand:     make([]*Card, 0),
+		HandsSizes:   handSizes,
+		PileSize:     len(g.pile.cards),
+		Battleground: g.battleground,
+	}
+
+	return gsi
+}
+
+func (g *Game) sendDealEvent() {
+	gsi := g.getGameStateInfo()
+
 	de := GameDealEvent{
-		YourHand:                      make([]*Card, 0),
-		HandsSizes:                    handSizes,
-		PileSize:                      len(g.pile.cards),
+		GameStateInfo:                 gsi,
 		TrumpSuit:                     g.trumpSuit,
 		TrumpCard:                     g.trumpCard,
 		TrumpCardIsInPile:             g.trumpCardIsInPile,
@@ -123,7 +137,7 @@ func (g *Game) sendDealEvent() {
 	}
 
 	for _, p := range g.players {
-		de.YourHand = p.cards
+		de.GameStateInfo.YourHand = p.cards
 		p.sendEvent(de)
 	}
 }
@@ -238,22 +252,56 @@ func (g *Game) begin() {
 	}
 }
 
-func (g *Game) canPlayerUseCard(player *Player, card *Card) bool {
+func (g *Game) canPlayerAttackWithCard(player *Player, card *Card) bool {
 	if g.status != GameStatusPlaying {
 		return false
 	}
+	if g.defenderIndex == g.getPlayerIndex(player) {
+		return false
+	}
+	if len(g.battleground) == 0 && g.attackerIndex != g.getPlayerIndex(player) {
+		return false
+	}
+	if len(g.battleground) >= 6 {
+		return false
+	}
+
+	if len(g.battleground) > 0 && !g.hasBattlegroundSameValue(card) {
+		return false
+	}
+
 	return true
 }
 
-func (g *Game) useCard(player *Player, data UseCardActionData) {
-	log.Printf("useCard: %#v", data)
+func (g *Game) attack(player *Player, data AttackActionData) {
+	card := data.Card
+	log.Printf("attack card: %#v", card)
+	canAttack := g.canPlayerAttackWithCard(player, card)
+	if !canAttack {
+		log.Printf("Cannot use card")
+		return
+	}
+	g.battleground = append(g.battleground, card)
+	player.removeCard(card)
+
+	gameAttackEvent := GameAttackEvent{
+		GameStateInfo: g.getGameStateInfo(),
+		AttackerIndex: g.getPlayerIndex(player),
+		DefenderIndex: g.defenderIndex,
+		Card:          card,
+	}
+
+	for _, p := range g.players {
+		gameAttackEvent.GameStateInfo.YourHand = p.cards
+		p.sendEvent(gameAttackEvent)
+	}
 }
 
 func (g *Game) onClientAction(action *PlayerAction) {
-	if action.Name == ClientCommandGameSubTypeUseCard {
-		data, ok := action.Data.(UseCardActionData)
+	if action.Name == PlayerActionNameAttack {
+		data, ok := action.Data.(AttackActionData)
 		if ok {
-			g.useCard(action.player, data)
+			g.attack(action.player, data)
 		} else {
 			log.Printf("Cannot cast to UseCardActionData: %#v", action.Data)
 		}
@@ -305,4 +353,22 @@ func (g *Game) findPlayerOfClient(client *Client) *Player {
 		}
 	}
 	return nil
+}
+
+func (g *Game) getPlayerIndex(player *Player) int {
+	for index, p := range g.players {
+		if p.client.Id() == player.client.Id() {
+			return index
+		}
+	}
+	return -1
+}
+
+func (g *Game) hasBattlegroundSameValue(card *Card) bool {
+	for _, c := range g.battleground {
+		if c.Value == card.Value {
+			return true
+		}
+	}
+	return false
 }

@@ -120,14 +120,12 @@
                      v-on:click="attack"
                 >
                     <playing-card-battleground
-                            v-for="(card, index) in gameState.battleground"
+                            v-for="(card, index) in playingTable.battleground"
                             v-bind:card="card"
-                            v-bind:defending-card="gameState.defendingCards[index]"
-                            v-bind:highlighted="isYouDefender && gameState.pickedCard && !gameState.defendingCards[index]"
-                            v-on:use-card="defend(index)"
+                            v-bind:defending-card="playingTable.defendingCards[index]"
+                            v-bind:highlighted="isYouDefender && gameState.pickedCard && !playingTable.defendingCards[index]"
+                            v-on:use-card="defend(card)"
                     ></playing-card-battleground>
-
-
                 </div>
 
                 <div class="your-hand-holder">

@@ -235,13 +235,12 @@ func (l *Lobby) onClientCommand(cc *ClientCommand) {
 			return
 		}
 
-		if cc.SubType == ClientCommandGameSubTypeUseCard {
-			var useCard Card
-			if err := json.Unmarshal(cc.Data, &useCard); err != nil {
+		if cc.SubType == ClientCommandGameSubTypeAttack {
+			var attackActionData AttackActionData
+			if err := json.Unmarshal(cc.Data, &attackActionData); err != nil {
 				return
 			}
-			actionData := UseCardActionData{Card: &useCard}
-			playerAction := &PlayerAction{Name: PlayerActionNameUseCard, Data: actionData, player: player}
+			playerAction := &PlayerAction{Name: PlayerActionNameAttack, Data: attackActionData, player: player}
 			game.playerActions <- playerAction
 		}
 	} else if cc.Type == ClientCommandTypeRoom {

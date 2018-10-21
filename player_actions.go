@@ -1,6 +1,6 @@
 package main
 
-const PlayerActionNameUseCard = "use_card"
+const PlayerActionNameAttack = "attack"
 
 // PlayerAction contains command message from a player to a game.
 type PlayerAction struct {
@@ -9,7 +9,7 @@ type PlayerAction struct {
 	player *Player
 }
 
-// UseCardActionData contains data of command message to use card from a player to a game.
-type UseCardActionData struct {
+// AttackActionData contains data of command message to attack with card from a player to a game.
+type AttackActionData struct {
 	Card *Card `json:"card"`
 }

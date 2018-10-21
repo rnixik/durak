@@ -23,3 +23,13 @@ func newPlayer(client ClientSender, isActive bool) *Player {
 		client:   client,
 	}
 }
+
+func (p *Player) removeCard(card *Card) {
+	cards := make([]*Card, 0)
+	for _, c := range p.cards {
+		if !c.equals(card) {
+			cards = append(cards, c)
+		}
+	}
+	p.cards = cards
+}

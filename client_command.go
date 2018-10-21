@@ -8,8 +8,8 @@ const (
 	ClientCommandLobbySubTypeCreateRoom = "create_room"
 	ClientCommandLobbySubTypeJoinRoom   = "join_room"
 
-	ClientCommandTypeGame           = "game"
-	ClientCommandGameSubTypeUseCard = "use_card"
+	ClientCommandTypeGame          = "game"
+	ClientCommandGameSubTypeAttack = "attack"
 
 	ClientCommandTypeRoom = "room"
 )
