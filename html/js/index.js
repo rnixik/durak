@@ -1,173 +1,233 @@
 Vue.component('playing-card', {
-  template: '#playing-card-template',
-  props: {
-    card: {
-      type: Object,
-      required: true
+    template: '#playing-card-template',
+    props: {
+        card: {
+            type: Object,
+            required: true
+        }
+    },
+    computed: {
+        className: function () {
+            const replaces = {
+                'J': 'jack',
+                'Q': 'queen',
+                'K': 'king',
+                'A': 'ace',
+                '♣': 'clubs',
+                '♦': 'diamonds',
+                '♥': 'hearts',
+                '♠': 'spades',
+            };
+            let cssClass = this.card.value + '_of_' + this.card.suit;
+            for (let orig in replaces) {
+                cssClass = cssClass.replace(new RegExp(orig, "g"), replaces[orig]);
+            }
+            return cssClass;
+        }
     }
-  },
-  computed: {
-    className: function () {
-      const replaces = {
-        'J': 'jack',
-        'Q': 'queen',
-        'K': 'king',
-        'A': 'ace',
-        '♣': 'clubs',
-        '♦': 'diamonds',
-        '♥': 'hearts',
-        '♠': 'spades',
-      };
-      let cssClass = this.card.value + '_of_' + this.card.suit;
-      for (orig in replaces) {
-        cssClass = cssClass.replace(new RegExp(orig, "g"), replaces[orig]);
-      }
-      return cssClass;
-    }
-  }
 });
 
 Vue.component('playing-card-inhand', {
-  props: {
-    card: {
-      type: Object,
-      required: true
-    }
-  },
-  template: '#playing-card-inhand-template'
+    props: {
+        card: {
+            type: Object,
+            required: true
+        }
+    },
+    template: '#playing-card-inhand-template'
+});
+
+Vue.component('playing-card-battleground', {
+    props: {
+        card: {
+            type: Object,
+            required: true
+        },
+        defendingCard: {
+            type: Object
+        },
+        highlighted: {
+            type: Boolean
+        }
+    },
+    template: '#playing-card-battleground-template'
 });
 
 Vue.component('playing-card-back', {
-  template: '#playing-card-back-template'
+    template: '#playing-card-back-template'
 });
 
 
 Vue.component('opponent', {
-  template: '#opponent-template',
-  props: {
-    handSize: {
-      type: Number,
-      required: true
-    },
-    nickname: {
-      type: String,
-      required: true
-    },
-    isAttacker: {
-      type: Boolean
-    },
-    isDefender: {
-      type: Boolean
+    template: '#opponent-template',
+    props: {
+        handSize: {
+            type: Number,
+            required: true
+        },
+        nickname: {
+            type: String,
+            required: true
+        },
+        isAttacker: {
+            type: Boolean
+        },
+        isDefender: {
+            type: Boolean
+        }
     }
-  }
 });
 
 Vue.component('deck', {
-  template: '#deck-template',
-  props: {
-    deckSize: {
-      type: Number,
-      required: true
-    },
-    trumpCard: {
-      type: Object,
-      required: true
-    },
-    trumpSuit: {
-      type: String,
-      required: true
+    template: '#deck-template',
+    props: {
+        deckSize: {
+            type: Number,
+            required: true
+        },
+        trumpCard: {
+            type: Object,
+            required: true
+        },
+        trumpSuit: {
+            type: String,
+            required: true
+        }
     }
-  }
 });
 
 function App() {
     var app = this;
 
     this.vue = new Vue({
-      el: '#app',
-      data: {
-        clientsInfo: {
-          yourId: '',
-          yourNickname: '',
-          yourRoomId: '',
-          clients: []
+        el: '#app',
+        data: {
+            clientsInfo: {
+                yourId: '',
+                yourNickname: '',
+                yourRoomId: '',
+                clients: []
+            },
+            commandError: {},
+            rooms: [],
+            room: {},
+            wantToPlay: true,
+            playersInRoom: 0,
+            game: {
+                players: [],
+                yourPlayerIndex: null
+            },
+            playingTable: {
+                handsSizes: [],
+                pileSize: 0,
+                trumpCard: null,
+                trumpCardIsInPile: false,
+                trumpCardIsOwnedByPlayerIndex: -1,
+                trumpSuit: null,
+                yourHand: []
+            },
+            gameState: {
+                attackerIndex: -1,
+                defenderIndex: -1,
+                firstAttackerReasonCard: null,
+                pickedCard: null,
+                battleground: [
+                    {value: 7, suit: '♦'},
+                    {value: 7, suit: '♦'},
+                    {value: 7, suit: '♦'},
+                    {value: 7, suit: '♦'},
+                    {value: 7, suit: '♦'},
+                    {value: 7, suit: '♦'}
+                ],
+                defendingCards: {
+                    1: {value: 10, suit: '♦'},
+                    5: {value: 10, suit: '♦'},
+                }
+            }
         },
-        commandError: {},
-        rooms: [],
-        room: {},
-        wantToPlay: true,
-        playersInRoom: 0,
-        game: {
-          players: [],
-          yourPlayerIndex: null
+        methods: {
+            createRoom: function (event) {
+                if (event) {
+                    event.preventDefault();
+                }
+                app.commandCreateRoom();
+            },
+            joinRoom: function (roomId, event) {
+                if (event) {
+                    event.preventDefault();
+                }
+                app.commandJoinRoom(roomId);
+                app.vue.clientsInfo.yourRoomId = roomId;
+            },
+            markWantToPlay: function () {
+                app.commandWantToPlay();
+                this.wantToPlay = true;
+            },
+            markWantToSpectate: function () {
+                app.commandWantToSpectate();
+                this.wantToPlay = false;
+            },
+            setPlayerStatus: function (memberId, status) {
+                app.commandSetPlayerStatus(memberId, status);
+            },
+            startGame: function () {
+                app.commandStartGame();
+            },
+            useCard: function (card) {
+                if (app.vue.gameState.pickedCard == card) {
+                    app.vue.gameState.pickedCard = null
+                } else {
+                    app.vue.gameState.pickedCard = card;
+                }
+                //app.commandUseCard(card.value, card.suit);
+            },
+            attack: () => {
+                if (!app.vue.isYouAttacker || !app.vue.gameState.pickedCard) {
+                    return;
+                }
+                for (let i = 0; i < app.vue.playingTable.yourHand.length; i += 1) {
+                    const cardInHand = app.vue.playingTable.yourHand[i];
+                    if (cardInHand === app.vue.gameState.pickedCard) {
+                        app.vue.playingTable.yourHand.splice(i, 1);
+                        app.vue.gameState.battleground.push(cardInHand);
+                        app.vue.gameState.pickedCard = null;
+                        break;
+                    }
+                }
+            },
+            defend: (attackingCardIndex) => {
+                if (!app.vue.isYouDefender || !app.vue.gameState.pickedCard) {
+                    return;
+                }
+                for (let i = 0; i < app.vue.playingTable.yourHand.length; i += 1) {
+                    const cardInHand = app.vue.playingTable.yourHand[i];
+                    if (cardInHand === app.vue.gameState.pickedCard) {
+                        app.vue.playingTable.yourHand.splice(i, 1);
+                        break;
+                    }
+                }
+                app.vue.gameState.defendingCards[attackingCardIndex] = app.vue.gameState.pickedCard;
+                app.vue.gameState.pickedCard = null;
+            }
         },
-        playingTable: {
-          handsSizes: [],
-          pileSize: 0,
-          trumpCard: null,
-          trumpCardIsInPile: false,
-          trumpCardIsOwnedByPlayerIndex: -1,
-          trumpSuit: null,
-          yourHand: []
-        },
-        gameState: {
-          attackerIndex: -1,
-          defenderIndex: -1,
-          firstAttackerReasonCard: null
+        computed: {
+            isYouAttacker: function () {
+                return this.gameState.attackerIndex === this.game.yourPlayerIndex;
+            },
+            isYouDefender: function () {
+                return this.gameState.defenderIndex === this.game.yourPlayerIndex;
+            },
+            attackerNickname: function () {
+                if (this.gameState.attackerIndex < 0) {
+                    return;
+                }
+                const atInd = this.gameState.attackerIndex;
+                if (!this.game.players[atInd]) {
+                    return;
+                }
+                return this.game.players[atInd].name;
+            }
         }
-      },
-      methods: {
-        createRoom: function (event) {
-          if (event) { 
-            event.preventDefault();
-          }
-          app.commandCreateRoom();
-        },
-        joinRoom: function (roomId, event) {
-          if (event) { 
-            event.preventDefault();
-          }
-          app.commandJoinRoom(roomId);
-          app.vue.clientsInfo.yourRoomId = roomId;
-        },
-        markWantToPlay: function () {
-          app.commandWantToPlay();
-          this.wantToPlay = true;
-        },
-        markWantToSpectate: function () {
-          app.commandWantToSpectate();
-          this.wantToPlay = false;
-        },
-        setPlayerStatus: function (memberId, status) {
-          app.commandSetPlayerStatus(memberId, status);
-        },
-        startGame: function () {
-          app.commandStartGame();
-        },
-        useCard: function (card) {
-          console.log('kekus');
-          console.log(card);
-          app.commandUseCard(card.value, card.suit);
-        }
-      },
-      computed: {
-        isYouAttacker: function () {
-          return this.gameState.attackerIndex === this.game.yourPlayerIndex;
-        },
-        isYouDefender: function () {
-          return this.gameState.defenderIndex === this.game.yourPlayerIndex;
-        },
-        attackerNickname: function () {
-          if (this.gameState.attackerIndex < 0) {
-            return;
-          }
-          const atInd = this.gameState.attackerIndex;
-          if (!this.game.players[atInd]) {
-            return;
-          }
-          return this.game.players[atInd].name;
-        }
-      }
     });
 
     this.onMessage = function (msg) {
@@ -181,7 +241,7 @@ function App() {
             }
         }
         if (!methodFound) {
-          console.warn("Method not found for event", msg);
+            console.warn("Method not found for event", msg);
         }
         console.log(msg.name, msg.data);
     };
@@ -192,12 +252,12 @@ function App() {
         app.vue.clientsInfo.clients = data.clients;
         app.vue.rooms = data.rooms;
         if (data.rooms.length === 0) {
-          // auto create
-          app.commandCreateRoom();
+            // auto create
+            app.commandCreateRoom();
         } else if (data.rooms.length === 1 && data.rooms[0].members_num === 1) {
-          // auto join
-          app.commandJoinRoom(data.rooms[0].id);
-          app.vue.clientsInfo.yourRoomId = data.rooms[0].id;
+            // auto join
+            app.commandJoinRoom(data.rooms[0].id);
+            app.vue.clientsInfo.yourRoomId = data.rooms[0].id;
         }
     };
 
@@ -218,16 +278,16 @@ function App() {
     this.onRoomInListUpdatedEvent = function (data) {
         const index = app.getRoomIndexById(data.room.id);
         if (index > -1) {
-          Vue.set(app.vue.rooms, index, data.room);
+            Vue.set(app.vue.rooms, index, data.room);
         }
     }
 
     this.onRoomInListRemovedEvent = function (data) {
         const index = app.getRoomIndexById(data.room_id);
         if (index > -1) {
-          app.vue.rooms.splice(index, 1);
+            app.vue.rooms.splice(index, 1);
         } else {
-          console.warn("Can't remove room", data.room_id);
+            console.warn("Can't remove room", data.room_id);
         }
     }
 
@@ -251,7 +311,7 @@ function App() {
     this.onClientCreatedRoomEvent = function (data) {
         app.vue.rooms.push(data.room);
         if (data.room.owner_id === app.vue.clientsInfo.yourId) {
-          app.vue.clientsInfo.yourRoomId = data.room.id;
+            app.vue.clientsInfo.yourRoomId = data.room.id;
         }
     }
 
@@ -261,14 +321,14 @@ function App() {
         }
         const memberIndex = app.getRoomMemberIndexById(data.member.id);
         if (memberIndex > -1) {
-          Vue.set(app.vue.room.members, memberIndex, data.member);
+            Vue.set(app.vue.room.members, memberIndex, data.member);
         }
     }
 
     this.onRoomMemberChangedPlayerStatusEvent = function (data) {
         const memberIndex = app.getRoomMemberIndexById(data.member.id);
         if (memberIndex > -1) {
-          Vue.set(app.vue.room.members, memberIndex, data.member);
+            Vue.set(app.vue.room.members, memberIndex, data.member);
         }
         app.updatePlayersInRoomCounter();
     }
@@ -328,43 +388,45 @@ function App() {
     }
 
     this.getRoomIndexById = function (roomId) {
-      for (let i = 0; i < app.vue.rooms.length; i++) {
-        if (app.vue.rooms[i].id === roomId) {
-          return i;
+        for (let i = 0; i < app.vue.rooms.length; i++) {
+            if (app.vue.rooms[i].id === roomId) {
+                return i;
+            }
         }
-      }
-      return -1;
+        return -1;
     }
 
     this.getRoomMemberIndexById = function (memberId) {
-      if (!app.vue.room) {
-        console.warn("No room for event");
-        return -1;
-      }
-      for (let i = 0; i < app.vue.room.members.length; i++) {
-        if (app.vue.room.members[i].id === memberId) {
-          return i;
+        if (!app.vue.room) {
+            console.warn("No room for event");
+            return -1;
         }
-      }
-      return -1;
+        for (let i = 0; i < app.vue.room.members.length; i++) {
+            if (app.vue.room.members[i].id === memberId) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     this.updatePlayersInRoomCounter = function () {
-      let playersNum = 0;
-      for (let i = 0; i < app.vue.room.members.length; i++) {
-        if (app.vue.room.members[i].is_player) {
-          playersNum++;
+        let playersNum = 0;
+        for (let i = 0; i < app.vue.room.members.length; i++) {
+            if (app.vue.room.members[i].is_player) {
+                playersNum++;
+            }
         }
-      }
-      app.vue.playersInRoom = playersNum;
+        app.vue.playersInRoom = playersNum;
     }
 
     this.camelize = function (str) {
-      return str.replace(/(_)(.)/g, function($1, $2, $3) { return $3.toUpperCase(); })
+        return str.replace(/(_)(.)/g, function ($1, $2, $3) {
+            return $3.toUpperCase();
+        })
     }
 }
 
-(function(){
-  var app = new App();
-  OnIncomingMessage = app.onMessage;
+(function () {
+    var app = new App();
+    OnIncomingMessage = app.onMessage;
 })();

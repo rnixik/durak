@@ -115,11 +115,27 @@
                     ></opponent>
                 </div>
 
+                <div class="battleground"
+                     v-bind:class="{ 'battleground-attack-area-active': isYouAttacker && gameState.pickedCard }"
+                     v-on:click="attack"
+                >
+                    <playing-card-battleground
+                            v-for="(card, index) in gameState.battleground"
+                            v-bind:card="card"
+                            v-bind:defending-card="gameState.defendingCards[index]"
+                            v-bind:highlighted="isYouDefender && gameState.pickedCard && !gameState.defendingCards[index]"
+                            v-on:use-card="defend(index)"
+                    ></playing-card-battleground>
+
+
+                </div>
+
                 <div class="your-hand-holder">
                     <div v-if="playingTable.yourHand.length" class="your-hand" v-bind:style="{width: playingTable.yourHand.length * 140 + 'px'}">
                         <playing-card-inhand v-on:use-card="useCard"
                         v-for="(yourCard, index) in playingTable.yourHand"
                         v-bind:card="yourCard"
+                        v-bind:class="{ 'playing-card-picked': gameState.pickedCard === yourCard}"
                         v-bind:style="{
                           left: index*(Math.min(playingTable.yourHand.length/6 * -40), -70) + 'px', 
                           transform: 'rotate(' + (index+0.5-playingTable.yourHand.length/2) * 3 + 'deg)',
@@ -161,16 +177,27 @@
             <playing-card v-bind:card="card" @click.native="$emit('use-card', card)"></playing-card>
         </script>
 
+        <script type="text/x-template" id="playing-card-battleground-template">
+            <div class="battleground-card">
+                <playing-card
+                        v-bind:card="card"
+                        @click.native="$emit('use-card', card)"
+                        v-bind:class="{ 'highlighted': highlighted }"
+                ></playing-card>
+                <playing-card v-bind:card="defendingCard" v-if="defendingCard" class="battleground-defending-card"></playing-card>
+            </div>
+        </script>
+
         <script type="text/x-template" id="opponent-template">
             <div class="opponent">
                 <div 
-                  class="opponet__nickname" 
+                  class="opponent__nickname"
                   v-bind:style="{'z-index': handSize}"
                 >{{ nickname }}</div>
-                <div class="opponet__attack-state" v-bind:style="{'z-index': handSize}" v-if="isAttacker" title="Attacker">⚔</div>
-                <div class="opponet__attack-state opponet__attack-state_defender" v-bind:style="{'z-index': handSize}" v-if="isDefender" title="Defender">🛡</div>
-                <div class="opponet__card-num" v-bind:style="{'z-index': handSize}">{{ handSize }}</div>
-                <div class="opponet__hand" v-bind:style="{width: handSize * 65 + 'px'}">
+                <div class="opponent__attack-state" v-bind:style="{'z-index': handSize}" v-if="isAttacker" title="Attacker">⚔</div>
+                <div class="opponent__attack-state opponent__attack-state_defender" v-bind:style="{'z-index': handSize}" v-if="isDefender" title="Defender">🛡</div>
+                <div class="opponent__card-num" v-bind:style="{'z-index': handSize}">{{ handSize }}</div>
+                <div class="opponent__hand" v-bind:style="{width: handSize * 65 + 'px'}">
                     <playing-card-back 
                       v-for="index in handSize"
                       v-bind:style="{
