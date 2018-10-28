@@ -17,24 +17,36 @@ func (c *Card) getValueIndex() int {
 }
 
 func (c *Card) gt(otherCard *Card) bool {
+	if c.Suit != otherCard.Suit {
+		return false
+	}
 	thisIndex := c.getValueIndex()
 	otherIndex := otherCard.getValueIndex()
 	return thisIndex > otherIndex
 }
 
 func (c *Card) gte(otherCard *Card) bool {
+	if c.Suit != otherCard.Suit {
+		return false
+	}
 	thisIndex := c.getValueIndex()
 	otherIndex := otherCard.getValueIndex()
 	return thisIndex >= otherIndex
 }
 
 func (c *Card) lt(otherCard *Card) bool {
+	if c.Suit != otherCard.Suit {
+		return false
+	}
 	thisIndex := c.getValueIndex()
 	otherIndex := otherCard.getValueIndex()
 	return thisIndex < otherIndex
 }
 
 func (c *Card) lte(otherCard *Card) bool {
+	if c.Suit != otherCard.Suit {
+		return false
+	}
 	thisIndex := c.getValueIndex()
 	otherIndex := otherCard.getValueIndex()
 	return thisIndex <= otherIndex

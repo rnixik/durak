@@ -55,15 +55,18 @@ type Game struct {
 	attackerIndex                 int
 	defenderIndex                 int
 	battleground                  []*Card
+	defendingCards                map[int]*Card
 }
 
 func newGame(id uint64, room *Room, players []*Player) *Game {
 	return &Game{
-		id:            id,
-		room:          room,
-		playerActions: make(chan *PlayerAction),
-		status:        GameStatusPreparing,
-		players:       players,
+		id:             id,
+		room:           room,
+		playerActions:  make(chan *PlayerAction),
+		status:         GameStatusPreparing,
+		players:        players,
+		battleground:   make([]*Card, 0),
+		defendingCards: make(map[int]*Card, 0),
 	}
 }
 
@@ -116,10 +119,11 @@ func (g *Game) getGameStateInfo() *GameStateInfo {
 	}
 
 	gsi := &GameStateInfo{
-		YourHand:     make([]*Card, 0),
-		HandsSizes:   handSizes,
-		PileSize:     len(g.pile.cards),
-		Battleground: g.battleground,
+		YourHand:       make([]*Card, 0),
+		HandsSizes:     handSizes,
+		PileSize:       len(g.pile.cards),
+		Battleground:   g.battleground,
+		DefendingCards: g.defendingCards,
 	}
 
 	return gsi
@@ -256,6 +260,9 @@ func (g *Game) canPlayerAttackWithCard(player *Player, card *Card) bool {
 	if g.status != GameStatusPlaying {
 		return false
 	}
+	if !player.hasCard(card) {
+		return false
+	}
 	if g.defenderIndex == g.getPlayerIndex(player) {
 		return false
 	}
@@ -266,11 +273,33 @@ func (g *Game) canPlayerAttackWithCard(player *Player, card *Card) bool {
 		return false
 	}
 
-	if len(g.battleground) > 0 && !g.hasBattlegroundSameValue(card) {
+	if len(g.battleground) > 0 && (!g.hasBattlegroundSameValue(card) && !g.hasDefendingCardsSameValue(card)) {
 		return false
 	}
 
 	return true
+}
+
+func (g *Game) canPlayerDefendWithCard(player *Player, attackingCard *Card, defendingCard *Card) bool {
+	if g.status != GameStatusPlaying {
+		return false
+	}
+	if !player.hasCard(defendingCard) {
+		return false
+	}
+	if g.defenderIndex != g.getPlayerIndex(player) {
+		return false
+	}
+	if !g.hasBattlegroundCard(attackingCard) {
+		return false
+	}
+	if g.trumpSuit != defendingCard.Suit && g.trumpSuit == attackingCard.Suit {
+		return false
+	}
+	if g.trumpSuit == defendingCard.Suit && g.trumpSuit != attackingCard.Suit {
+		return true
+	}
+	return defendingCard.gt(attackingCard)
 }
 
 func (g *Game) attack(player *Player, data AttackActionData) {
@@ -278,7 +307,7 @@ func (g *Game) attack(player *Player, data AttackActionData) {
 	log.Printf("attack card: %#v", card)
 	canAttack := g.canPlayerAttackWithCard(player, card)
 	if !canAttack {
-		log.Printf("Cannot use card")
+		log.Printf("Cannot use card to attack")
 		return
 	}
 	g.battleground = append(g.battleground, card)
@@ -297,13 +326,39 @@ func (g *Game) attack(player *Player, data AttackActionData) {
 	}
 }
 
+func (g *Game) defend(player *Player, data DefendActionData) {
+	canDefend := g.canPlayerDefendWithCard(player, data.AttackingCard, data.DefendingCard)
+	if !canDefend {
+		log.Printf("Cannot use card to defend")
+		return
+	}
+	attackingIndex := g.getBattlegroundCardIndex(data.AttackingCard)
+	g.defendingCards[attackingIndex] = data.DefendingCard
+	player.removeCard(data.DefendingCard)
+
+	gameAttackEvent := GameDefendEvent{
+		GameStateInfo: g.getGameStateInfo(),
+		DefenderIndex: g.getPlayerIndex(player),
+		AttackingCard: data.AttackingCard,
+		DefendingCard: data.DefendingCard,
+	}
+
+	for _, p := range g.players {
+		gameAttackEvent.GameStateInfo.YourHand = p.cards
+		p.sendEvent(gameAttackEvent)
+	}
+}
+
 func (g *Game) onClientAction(action *PlayerAction) {
 	if action.Name == PlayerActionNameAttack {
 		data, ok := action.Data.(AttackActionData)
 		if ok {
 			g.attack(action.player, data)
-		} else {
-			log.Printf("Cannot cast to UseCardActionData: %#v", action.Data)
+		}
+	} else if action.Name == PlayerActionNameDefend {
+		data, ok := action.Data.(DefendActionData)
+		if ok {
+			g.defend(action.player, data)
 		}
 	}
 }
@@ -371,4 +426,31 @@ func (g *Game) hasBattlegroundSameValue(card *Card) bool {
 		}
 	}
 	return false
+}
+
+func (g *Game) hasDefendingCardsSameValue(card *Card) bool {
+	for _, c := range g.defendingCards {
+		if c.Value == card.Value {
+			return true
+		}
+	}
+	return false
+}
+
+func (g *Game) hasBattlegroundCard(card *Card) bool {
+	for _, c := range g.battleground {
+		if c.equals(card) {
+			return true
+		}
+	}
+	return false
+}
+
+func (g *Game) getBattlegroundCardIndex(card *Card) int {
+	for index, c := range g.battleground {
+		if c.equals(card) {
+			return index
+		}
+	}
+	return -1
 }

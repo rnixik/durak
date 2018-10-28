@@ -8,10 +8,11 @@ type GamePlayersEvent struct {
 
 // GameStateInfo contains info about card for each player, cards in deck, card on battleground.
 type GameStateInfo struct {
-	YourHand     []*Card `json:"your_hand"`
-	HandsSizes   []int   `json:"hands_sizes"`
-	PileSize     int     `json:"pile_size"`
-	Battleground []*Card `json:"battleground"`
+	YourHand       []*Card       `json:"your_hand"`
+	HandsSizes     []int         `json:"hands_sizes"`
+	PileSize       int           `json:"pile_size"`
+	Battleground   []*Card       `json:"battleground"`
+	DefendingCards map[int]*Card `json:"defending_cards"`
 }
 
 // GameDealEvent contains info about game after the deal. It includes list of cards for each player.
@@ -46,4 +47,12 @@ type GameAttackEvent struct {
 	AttackerIndex int            `json:"attacker_index"`
 	DefenderIndex int            `json:"defender_index"`
 	Card          *Card          `json:"card"`
+}
+
+// GameDefendEvent contains info about defending card with other card
+type GameDefendEvent struct {
+	GameStateInfo *GameStateInfo `json:"game_state_info"`
+	DefenderIndex int            `json:"defender_index"`
+	AttackingCard *Card          `json:"attacking_card"`
+	DefendingCard *Card          `json:"defending_card"`
 }

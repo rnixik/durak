@@ -10,6 +10,7 @@ const (
 
 	ClientCommandTypeGame          = "game"
 	ClientCommandGameSubTypeAttack = "attack"
+	ClientCommandGameSubTypeDefend = "defend"
 
 	ClientCommandTypeRoom = "room"
 )

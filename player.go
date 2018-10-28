@@ -33,3 +33,12 @@ func (p *Player) removeCard(card *Card) {
 	}
 	p.cards = cards
 }
+
+func (p *Player) hasCard(card *Card) bool {
+	for _, c := range p.cards {
+		if c.equals(card) {
+			return true
+		}
+	}
+	return false
+}

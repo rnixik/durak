@@ -125,18 +125,8 @@ function App() {
                 trumpCardIsOwnedByPlayerIndex: -1,
                 trumpSuit: null,
                 yourHand: [],
-                battleground: [
-                    {value: 7, suit: '♦'},
-                    {value: 7, suit: '♦'},
-                    {value: 7, suit: '♦'},
-                    {value: 7, suit: '♦'},
-                    {value: 7, suit: '♦'},
-                    {value: 7, suit: '♦'}
-                ],
-                defendingCards: {
-                    1: {value: 10, suit: '♦'},
-                    5: {value: 10, suit: '♦'},
-                }
+                battleground: [],
+                defendingCards: {} // {1: {suit, value} }
             },
             gameState: {
                 attackerIndex: -1,
@@ -366,6 +356,13 @@ function App() {
         console.log('attack', data);
     };
 
+    this.onGameDefendEvent = (data) => {
+        if (data.game_state_info) {
+            app.updatePlayingTable(data.game_state_info);
+        }
+        console.log('defend', data);
+    };
+
     this.sendCommand = function (type, subType, data) {
         console.log("send", type, subType, data);
         WsConnection.send(JSON.stringify({type: type, sub_type: subType, data: data}));
@@ -400,7 +397,9 @@ function App() {
     };
 
     this.commandDefend = (attackingValue, attackingSuit, defendingValue, defendingSuit) => {
-        app.sendCommand('game', 'defend', {attackingValue, attackingSuit, defendingValue, defendingSuit});
+        const attackingCard = {value: attackingValue, suit: attackingSuit};
+        const defendingCard = {value: defendingValue, suit: defendingSuit};
+        app.sendCommand('game', 'defend', { attackingCard, defendingCard });
     };
 
     this.getRoomIndexById = function (roomId) {

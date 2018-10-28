@@ -23,7 +23,7 @@ func TestGtFalse(t *testing.T) {
 
 func TestGtTrue(t *testing.T) {
 	card := &Card{"9", "♦"}
-	otherCard := &Card{"8", "♠"}
+	otherCard := &Card{"8", "♦"}
 	got := card.gt(otherCard)
 	expected := true
 	if got != expected {
@@ -43,7 +43,7 @@ func TestGtWithEqual(t *testing.T) {
 
 func TestGte(t *testing.T) {
 	card := &Card{"9", "♦"}
-	otherCard := &Card{"9", "♠"}
+	otherCard := &Card{"9", "♦"}
 	got := card.gte(otherCard)
 	expected := true
 	if got != expected {
@@ -63,7 +63,7 @@ func TestGteFalse(t *testing.T) {
 
 func TestLtFalse(t *testing.T) {
 	card := &Card{"9", "♦"}
-	otherCard := &Card{"10", "♠"}
+	otherCard := &Card{"10", "♦"}
 	got := card.lt(otherCard)
 	expected := true
 	if got != expected {
@@ -93,7 +93,7 @@ func TestLtWithEqual(t *testing.T) {
 
 func TestLte(t *testing.T) {
 	card := &Card{"9", "♦"}
-	otherCard := &Card{"9", "♠"}
+	otherCard := &Card{"9", "♦"}
 	got := card.lte(otherCard)
 	expected := true
 	if got != expected {

@@ -223,31 +223,46 @@ func (l *Lobby) onClientCommand(cc *ClientCommand) {
 			l.onJoinRoomCommand(cc.client, roomId)
 		}
 	} else if cc.Type == ClientCommandTypeGame {
-		if cc.client.room == nil {
-			return
-		}
-		if cc.client.room.game == nil {
-			return
-		}
-		game := cc.client.room.game
-		player := game.findPlayerOfClient(cc.client)
-		if player == nil {
-			return
-		}
-
-		if cc.SubType == ClientCommandGameSubTypeAttack {
-			var attackActionData AttackActionData
-			if err := json.Unmarshal(cc.Data, &attackActionData); err != nil {
-				return
-			}
-			playerAction := &PlayerAction{Name: PlayerActionNameAttack, Data: attackActionData, player: player}
-			game.playerActions <- playerAction
-		}
+		l.dispatchGameEvent(cc)
 	} else if cc.Type == ClientCommandTypeRoom {
 		if cc.client.room == nil {
 			return
 		}
 		cc.client.room.onClientCommand(cc)
+	}
+}
+
+func (l *Lobby) dispatchGameEvent(cc *ClientCommand) {
+	if cc.client.room == nil {
+		return
+	}
+	if cc.client.room.game == nil {
+		return
+	}
+	game := cc.client.room.game
+	player := game.findPlayerOfClient(cc.client)
+	if player == nil {
+		return
+	}
+
+	var playerAction *PlayerAction
+
+	if cc.SubType == ClientCommandGameSubTypeAttack {
+		var attackActionData AttackActionData
+		if err := json.Unmarshal(cc.Data, &attackActionData); err != nil {
+			return
+		}
+		playerAction = &PlayerAction{Name: PlayerActionNameAttack, Data: attackActionData, player: player}
+	} else if cc.SubType == ClientCommandGameSubTypeDefend {
+		var defendActionData DefendActionData
+		if err := json.Unmarshal(cc.Data, &defendActionData); err != nil {
+			return
+		}
+		playerAction = &PlayerAction{Name: PlayerActionNameDefend, Data: defendActionData, player: player}
+	}
+
+	if playerAction != nil {
+		game.playerActions <- playerAction
 	}
 }
 
