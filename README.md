@@ -1,6 +1,6 @@
 # Durak - An online multiplayer card game
 
-[![Build Status](https://travis-ci.org/rnixik/durak.svg?branch=master)](https://travis-ci.org/rnixik/durak) [![Coverage Status](https://coveralls.io/repos/github/rnixik/durak/badge.svg?branch=master)](https://coveralls.io/github/rnixik/durak?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/rnixik/durak)](https://goreportcard.com/report/github.com/rnixik/durak)
+[![Build Status](https://travis-ci.org/rnixik/durak.svg?branch=master)](https://travis-ci.org/rnixik/durak) [![Go Report Card](https://goreportcard.com/badge/github.com/rnixik/durak)](https://goreportcard.com/report/github.com/rnixik/durak)
 
 Rules are described on [Wikipedia](https://en.wikipedia.org/wiki/Durak).
 This implementation is in progress.
@@ -13,7 +13,7 @@ This implementation is in progress.
 [x] Lobby: creating a game, joining a game, leaving a game, starting a game  
 [x] Basic visualizing of cards on client-side
 [ ] Game process and rules  
-[ ] i18n  
+[ ] I18n
 [ ] Observing started games, joining by an url  
 [ ] Simple AI  
 [ ] Advanced visualizing of cards on client-side: animations, drag'n'drops  
