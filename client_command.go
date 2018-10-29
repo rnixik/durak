@@ -8,9 +8,11 @@ const (
 	ClientCommandLobbySubTypeCreateRoom = "create_room"
 	ClientCommandLobbySubTypeJoinRoom   = "join_room"
 
-	ClientCommandTypeGame          = "game"
-	ClientCommandGameSubTypeAttack = "attack"
-	ClientCommandGameSubTypeDefend = "defend"
+	ClientCommandTypeGame            = "game"
+	ClientCommandGameSubTypeAttack   = "attack"
+	ClientCommandGameSubTypeDefend   = "defend"
+	ClientCommandGameSubTypePickUp   = "pick_up"
+	ClientCommandGameSubTypeComplete = "complete"
 
 	ClientCommandTypeRoom = "room"
 )

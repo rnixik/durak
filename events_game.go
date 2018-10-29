@@ -9,6 +9,8 @@ type GamePlayersEvent struct {
 // GameStateInfo contains info about card for each player, cards in deck, card on battleground.
 type GameStateInfo struct {
 	YourHand       []*Card       `json:"your_hand"`
+	CanYouPickUp   bool          `json:"can_you_pickup"`
+	CanYouComplete bool          `json:"can_you_complete"`
 	HandsSizes     []int         `json:"hands_sizes"`
 	PileSize       int           `json:"pile_size"`
 	Battleground   []*Card       `json:"battleground"`

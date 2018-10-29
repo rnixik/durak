@@ -264,3 +264,15 @@ body {
     left: 20px;
     top: 20px;
 }
+.decisions__btn {
+    font-size: 22px;
+}
+.battleground-container {
+    width: 765px;
+    position: relative;
+}
+.battleground-container__decisions {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+}

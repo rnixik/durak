@@ -2,6 +2,8 @@ package main
 
 const PlayerActionNameAttack = "attack"
 const PlayerActionNameDefend = "defend"
+const PlayerActionNamePickUp = "pick_up"
+const PlayerActionNameComplete = "complete"
 
 // PlayerAction contains command message from a player to a game.
 type PlayerAction struct {

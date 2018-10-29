@@ -115,17 +115,24 @@
                     ></opponent>
                 </div>
 
-                <div class="battleground"
-                     v-bind:class="{ 'battleground-attack-area-active': isYouAttacker && gameState.pickedCard }"
-                     v-on:click="attack"
-                >
-                    <playing-card-battleground
-                            v-for="(card, index) in playingTable.battleground"
-                            v-bind:card="card"
-                            v-bind:defending-card="playingTable.defendingCards[index]"
-                            v-bind:highlighted="isYouDefender && gameState.pickedCard && !playingTable.defendingCards[index]"
-                            v-on:use-card="defend(card)"
-                    ></playing-card-battleground>
+                <div class="battleground-container">
+                    <div class="battleground"
+                         v-bind:class="{ 'battleground-attack-area-active': isYouAttacker && gameState.pickedCard }"
+                         v-on:click="attack"
+                    >
+                        <playing-card-battleground
+                                v-for="(card, index) in playingTable.battleground"
+                                v-bind:card="card"
+                                v-bind:defending-card="playingTable.defendingCards[index]"
+                                v-bind:highlighted="isYouDefender && gameState.pickedCard && !playingTable.defendingCards[index]"
+                                v-on:use-card="defend(card)"
+                        ></playing-card-battleground>
+                    </div>
+
+                    <div class="battleground-container__decisions decisions" v-if="playingTable.canYouPickup || playingTable.canYouComplete">
+                        <button v-on:click="pickUp" v-if="playingTable.canYouPickup" class="decisions__btn">Pick up ↧</button>
+                        <button v-on:click="complete" v-if="playingTable.canYouComplete" class="decisions__btn">Complete ✓</button>
+                    </div>
                 </div>
 
                 <div class="your-hand-holder">

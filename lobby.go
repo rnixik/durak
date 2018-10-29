@@ -259,6 +259,10 @@ func (l *Lobby) dispatchGameEvent(cc *ClientCommand) {
 			return
 		}
 		playerAction = &PlayerAction{Name: PlayerActionNameDefend, Data: defendActionData, player: player}
+	} else if cc.SubType == ClientCommandGameSubTypePickUp {
+		playerAction = &PlayerAction{Name: PlayerActionNamePickUp, player: player}
+	} else if cc.SubType == ClientCommandGameSubTypeComplete {
+		playerAction = &PlayerAction{Name: PlayerActionNameComplete, player: player}
 	}
 
 	if playerAction != nil {

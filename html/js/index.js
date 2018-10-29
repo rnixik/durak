@@ -125,6 +125,8 @@ function App() {
                 trumpCardIsOwnedByPlayerIndex: -1,
                 trumpSuit: null,
                 yourHand: [],
+                canYouPickup: false,
+                canYouComplete: false,
                 battleground: [],
                 defendingCards: {} // {1: {suit, value} }
             },
@@ -189,7 +191,13 @@ function App() {
                     app.vue.gameState.pickedCard.suit,
                 );
                 app.vue.gameState.pickedCard = null;
-            }
+            },
+            pickUp: () => {
+                app.commandPickUp();
+            },
+            complete: () => {
+                app.commandComplete();
+            },
         },
         computed: {
             isYouAttacker: function () {
@@ -400,6 +408,14 @@ function App() {
         const attackingCard = {value: attackingValue, suit: attackingSuit};
         const defendingCard = {value: defendingValue, suit: defendingSuit};
         app.sendCommand('game', 'defend', { attackingCard, defendingCard });
+    };
+
+    this.commandPickUp = () => {
+        app.sendCommand('game', 'pick_up');
+    };
+
+    this.commandComplete = () => {
+        app.sendCommand('game', 'complete');
     };
 
     this.getRoomIndexById = function (roomId) {

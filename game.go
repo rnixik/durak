@@ -112,28 +112,29 @@ func (g *Game) deal() {
 	g.trumpSuit = lastCard.Suit
 }
 
-func (g *Game) getGameStateInfo() *GameStateInfo {
-	handSizes := make([]int, len(g.players))
-	for i, p := range g.players {
-		handSizes[i] = len(p.cards)
-	}
-
+func (g *Game) getGameStateInfo(player *Player) *GameStateInfo {
 	gsi := &GameStateInfo{
 		YourHand:       make([]*Card, 0),
-		HandsSizes:     handSizes,
+		HandsSizes:     make([]int, len(g.players)),
 		PileSize:       len(g.pile.cards),
 		Battleground:   g.battleground,
 		DefendingCards: g.defendingCards,
+	}
+
+	for i, p := range g.players {
+		if p == player {
+			gsi.YourHand = p.cards
+			gsi.CanYouComplete = g.defenderIndex != g.getPlayerIndex(player) && len(g.battleground) > 0
+			gsi.CanYouPickUp = g.defenderIndex == g.getPlayerIndex(player) && len(g.battleground) > 0
+		}
+		gsi.HandsSizes[i] = len(p.cards)
 	}
 
 	return gsi
 }
 
 func (g *Game) sendDealEvent() {
-	gsi := g.getGameStateInfo()
-
 	de := GameDealEvent{
-		GameStateInfo:                 gsi,
 		TrumpSuit:                     g.trumpSuit,
 		TrumpCard:                     g.trumpCard,
 		TrumpCardIsInPile:             g.trumpCardIsInPile,
@@ -141,7 +142,7 @@ func (g *Game) sendDealEvent() {
 	}
 
 	for _, p := range g.players {
-		de.GameStateInfo.YourHand = p.cards
+		de.GameStateInfo = g.getGameStateInfo(p)
 		p.sendEvent(de)
 	}
 }
@@ -314,14 +315,13 @@ func (g *Game) attack(player *Player, data AttackActionData) {
 	player.removeCard(card)
 
 	gameAttackEvent := GameAttackEvent{
-		GameStateInfo: g.getGameStateInfo(),
 		AttackerIndex: g.getPlayerIndex(player),
 		DefenderIndex: g.defenderIndex,
 		Card:          card,
 	}
 
 	for _, p := range g.players {
-		gameAttackEvent.GameStateInfo.YourHand = p.cards
+		gameAttackEvent.GameStateInfo = g.getGameStateInfo(p)
 		p.sendEvent(gameAttackEvent)
 	}
 }
@@ -337,16 +337,23 @@ func (g *Game) defend(player *Player, data DefendActionData) {
 	player.removeCard(data.DefendingCard)
 
 	gameAttackEvent := GameDefendEvent{
-		GameStateInfo: g.getGameStateInfo(),
 		DefenderIndex: g.getPlayerIndex(player),
 		AttackingCard: data.AttackingCard,
 		DefendingCard: data.DefendingCard,
 	}
 
 	for _, p := range g.players {
-		gameAttackEvent.GameStateInfo.YourHand = p.cards
+		gameAttackEvent.GameStateInfo = g.getGameStateInfo(p)
 		p.sendEvent(gameAttackEvent)
 	}
+}
+
+func (g *Game) pickUp(player *Player) {
+	log.Printf("pick up")
+}
+
+func (g *Game) complete(player *Player) {
+	log.Printf("complete")
 }
 
 func (g *Game) onClientAction(action *PlayerAction) {
@@ -360,6 +367,12 @@ func (g *Game) onClientAction(action *PlayerAction) {
 		if ok {
 			g.defend(action.player, data)
 		}
+	} else if action.Name == PlayerActionNamePickUp {
+		g.pickUp(action.player)
+	} else if action.Name == PlayerActionNameComplete {
+		g.complete(action.player)
+	} else {
+		log.Printf("Unknown game action: %s", action.Name)
 	}
 }
 
