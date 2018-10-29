@@ -11,9 +11,9 @@ This implementation is in progress.
 [x] Pile of cards, shuffle, deal  
 [x] Lobby: creating a room, joining a room, leaving a room  
 [x] Lobby: creating a game, joining a game, leaving a game, starting a game  
-[x] Basic visualizing of cards on client-side
+[x] Basic visualizing of cards on client-side  
 [ ] Game process and rules  
-[ ] I18n
+[ ] I18n  
 [ ] Observing started games, joining by an url  
 [ ] Simple AI  
 [ ] Advanced visualizing of cards on client-side: animations, drag'n'drops  
