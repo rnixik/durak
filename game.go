@@ -418,7 +418,11 @@ func (g *Game) pickUp(player *Player) {
 		return
 	}
 	g.defenderPickUp = true
-	g.broadcastGameStateEvent()
+	if g.areAllPlayersCompleted() {
+		g.endRound()
+	} else {
+		g.broadcastGameStateEvent()
+	}
 }
 
 func (g *Game) canPlayerComplete(player *Player) bool {
@@ -456,13 +460,25 @@ func (g *Game) complete(player *Player) {
 }
 
 func (g *Game) endRound() {
+	g.resetPlayersCompleteStatuses()
 	g.roundDeal(g.attackerIndex, g.defenderIndex)
 	g.attackerIndex, g.defenderIndex = g.findNewAttacker(g.defenderPickUp)
-	g.resetPlayersCompleteStatuses()
 
-	g.discardPileSize = g.discardPileSize + len(g.battleground) + len(g.defendingCards)
+	if g.defenderPickUp {
+		defenderPlayer := g.players[g.defenderIndex]
+		for _, c := range g.battleground {
+			defenderPlayer.cards = append(defenderPlayer.cards, c)
+		}
+		for _, c := range g.defendingCards {
+			defenderPlayer.cards = append(defenderPlayer.cards, c)
+		}
+	} else {
+		g.discardPileSize = g.discardPileSize + len(g.battleground) + len(g.defendingCards)
+	}
+
 	g.battleground = make([]*Card, 0)
 	g.defendingCards = make(map[int]*Card, 0)
+	g.defenderPickUp = false
 
 	g.broadcastGameStateEvent()
 }
@@ -471,7 +487,6 @@ func (g *Game) resetPlayersCompleteStatuses() {
 	for _, p := range g.players {
 		p.IsCompleted = false
 	}
-	g.defenderPickUp = false
 }
 
 func (g *Game) broadcastGameStateEvent() {
@@ -597,7 +612,8 @@ func (g *Game) areAllAttackersCompleted() bool {
 
 func (g *Game) areAllPlayersCompleted() bool {
 	for _, p := range g.players {
-		if p.IsActive == true && !p.IsCompleted {
+		isDefenderAndPickUp := g.getPlayerIndex(p) == g.defenderIndex && g.defenderPickUp
+		if p.IsActive == true && !p.IsCompleted && !isDefenderAndPickUp {
 			return false
 		}
 	}
