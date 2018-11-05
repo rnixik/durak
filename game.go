@@ -8,19 +8,7 @@ import (
 const (
 	GameStatusPreparing = "preparing"
 	GameStatusPlaying   = "playing"
-	GameStatusFinished  = "finished"
-)
-
-// States of the game.
-const (
-	GameStateDealing    = "dealing"
-	GameStateAttacking  = "attacking"
-	GameStateThrowingIn = "throwing_in"
-)
-
-var (
-	cardValues = []string{"6", "7", "8", "9", "10", "J", "Q", "K", "A"}
-	cardSuits  = []string{"♣", "♦", "♥", "♠"}
+	GameStatusEnd       = "end"
 )
 
 // CardOnDesk represents a game card which was played.
@@ -30,22 +18,14 @@ type CardOnDesk struct {
 	BeatByCard   *Card `json:"beat_by_card"`
 }
 
-// Desk contains played cards.
-type Desk struct {
-	Cards []*CardOnDesk `json:"cards"`
-}
-
 // Game represents status, state, etc of the game.
 type Game struct {
-	playerActions chan *PlayerAction
-	owner         *Player
-	id            uint64
-	room          *Room
-	// playing, finished
-	status  string
-	players []*Player
-	// attack, throw_in
-	state                         string
+	playerActions                 chan *PlayerAction
+	owner                         *Player
+	id                            uint64
+	room                          *Room
+	status                        string
+	players                       []*Player
 	pile                          *Pile // deck actually :/
 	discardPileSize               int
 	trumpSuit                     string
@@ -464,8 +444,9 @@ func (g *Game) endRound() {
 	g.roundDeal(g.attackerIndex, g.defenderIndex)
 	g.attackerIndex, g.defenderIndex = g.findNewAttacker(g.defenderPickUp)
 
+	defenderPlayer := g.players[g.defenderIndex]
+
 	if g.defenderPickUp {
-		defenderPlayer := g.players[g.defenderIndex]
 		for _, c := range g.battleground {
 			defenderPlayer.cards = append(defenderPlayer.cards, c)
 		}
@@ -480,7 +461,18 @@ func (g *Game) endRound() {
 	g.defendingCards = make(map[int]*Card, 0)
 	g.defenderPickUp = false
 
-	g.broadcastGameStateEvent()
+	if !g.haveAttackersCards() {
+		// End of game
+		hasLoser := true
+		loserIndex := g.defenderIndex
+		if len(defenderPlayer.cards) == 0 {
+			hasLoser = false
+			loserIndex = -1
+		}
+		g.onGameEnded(hasLoser, loserIndex)
+	} else {
+		g.broadcastGameStateEvent()
+	}
 }
 
 func (g *Game) resetPlayersCompleteStatuses() {
@@ -525,8 +517,12 @@ func (g *Game) broadcastEvent(event interface{}) {
 	}
 }
 
-func (g *Game) onGameEnded(winnerIndex int) {
-	gameEndEvent := &GameEndEvent{winnerIndex}
+func (g *Game) onGameEnded(hasLoser bool, loserIndex int) {
+	g.status = GameStatusEnd
+	gameEndEvent := &GameEndEvent{
+		HasLoser:   hasLoser,
+		LoserIndex: loserIndex,
+	}
 	g.room.broadcastEvent(gameEndEvent, nil)
 	close(g.playerActions)
 	g.room.onGameEnded()
@@ -536,14 +532,8 @@ func (g *Game) onPlayerLeft(playerIndex int) {
 	gamePlayerLeft := &GamePlayerLeftEvent{playerIndex}
 	g.room.broadcastEvent(gamePlayerLeft, nil)
 
-	winnerIndex := -1
 	if len(g.players) == 2 {
-		if playerIndex == 0 {
-			winnerIndex = 1
-		} else {
-			winnerIndex = 0
-		}
-		g.onGameEnded(winnerIndex)
+		g.onGameEnded(true, playerIndex)
 	}
 }
 
@@ -618,6 +608,15 @@ func (g *Game) areAllPlayersCompleted() bool {
 		}
 	}
 	return true
+}
+
+func (g *Game) haveAttackersCards() bool {
+	for index, p := range g.players {
+		if p.IsActive == true && index != g.defenderIndex && len(p.cards) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (g *Game) adjustPlayerIndex(index int) int {

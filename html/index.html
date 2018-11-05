@@ -152,15 +152,23 @@
                 </div>
                 
                 <div class="game-state-holder">
-                    <span v-if="isYouAttacker">You are attacker!</span>
-                    <span v-if="!isYouAttacker && attackerNickname">{{ attackerNickname }} is attacker!</span>
-                    <span v-if="gameState.firstAttackerReasonCard">
-                        Reason: 
-                        <span v-bind:class="{'game-state__suit-red': gameState.firstAttackerReasonCard.suit == '♦' || gameState.firstAttackerReasonCard.suit == '♥'}">
-                            {{ gameState.firstAttackerReasonCard.value }}{{ gameState.firstAttackerReasonCard.suit }}
-                        </span>
+                    <span v-if="gameState.gameEnd">
+                        Game is over.
+                        <span v-if="gameState.loserIndex > -1">{{ loserNickname }} is loser!</span>
+                        <span v-if="gameState.loserIndex == -1">Draw!</span>
                     </span>
-                    <span v-if="isYouDefender">You are defender!</span>
+                    <span v-if="!gameState.gameEnd">
+                        <span v-if="isYouAttacker">You are attacker!</span>
+                        <span v-if="!isYouAttacker && attackerNickname">{{ attackerNickname }} is attacker!</span>
+                        <span v-if="gameState.firstAttackerReasonCard">
+                            Reason:
+                            <span v-bind:class="{'game-state__suit-red': gameState.firstAttackerReasonCard.suit == '♦' || gameState.firstAttackerReasonCard.suit == '♥'}">
+                                {{ gameState.firstAttackerReasonCard.value }}{{ gameState.firstAttackerReasonCard.suit }}
+                            </span>
+                        </span>
+                        <span v-if="isYouDefender">You are defender!</span>
+                    </span>
+
                 </div>
             </div>
 

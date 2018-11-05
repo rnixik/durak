@@ -43,11 +43,6 @@ type GamePlayerLeftEvent struct {
 	PlayerIndex int `json:"player_index"`
 }
 
-// GameEndEvent contains index of player who left the game
-type GameEndEvent struct {
-	WinnerIndex int `json:"winner_index"`
-}
-
 // GameAttackEvent contains info about attack with card
 type GameAttackEvent struct {
 	GameStateInfo *GameStateInfo `json:"game_state_info"`
@@ -67,4 +62,10 @@ type GameDefendEvent struct {
 // GameStateEvent contains info about state only
 type GameStateEvent struct {
 	GameStateInfo *GameStateInfo `json:"game_state_info"`
+}
+
+// GameEndEvent contains info about winner
+type GameEndEvent struct {
+	HasLoser   bool `json:"has_loser"`
+	LoserIndex int  `json:"loser_index"`
 }

@@ -137,7 +137,9 @@ function App() {
             },
             gameState: {
                 firstAttackerReasonCard: null,
-                pickedCard: null
+                pickedCard: null,
+                gameEnd: false,
+                loserIndex: -1
             }
         },
         methods: {
@@ -217,7 +219,17 @@ function App() {
                     return;
                 }
                 return this.game.players[atInd].name;
-            }
+            },
+            loserNickname: function () {
+                if (this.gameState.loserIndex < 0) {
+                    return;
+                }
+                const index = this.gameState.loserIndex;
+                if (!this.game.players[index]) {
+                    return;
+                }
+                return this.game.players[index].name;
+            },
         }
     });
 
@@ -379,6 +391,10 @@ function App() {
             app.vue.gameState.firstAttackerReasonCard = null;
         }
         console.log('state only', data);
+    };
+    this.onGameEndEvent = (data) => {
+        app.vue.gameState.gameEnd = true;
+        app.vue.gameState.loserIndex = data.loser_index;
     };
 
     this.sendCommand = function (type, subType, data) {
