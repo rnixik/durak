@@ -266,6 +266,7 @@ body {
 }
 .decisions__btn {
     font-size: 22px;
+    line-height: 22px;
 }
 .battleground-container {
     width: 765px;

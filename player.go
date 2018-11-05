@@ -2,10 +2,11 @@ package main
 
 // Player represents connected to a game client which can have cards.
 type Player struct {
-	Name     string `json:"name"`
-	IsActive bool   `json:"is_active"`
-	client   ClientSender
-	cards    []*Card
+	Name        string `json:"name"`
+	IsActive    bool   `json:"is_active"`
+	IsCompleted bool   `json:"is_completed"`
+	client      ClientSender
+	cards       []*Card
 }
 
 func (p *Player) sendEvent(event interface{}) {

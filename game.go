@@ -46,7 +46,8 @@ type Game struct {
 	players []*Player
 	// attack, throw_in
 	state                         string
-	pile                          *Pile
+	pile                          *Pile // deck actually :/
+	discardPileSize               int
 	trumpSuit                     string
 	trumpCard                     *Card
 	trumpCardIsInPile             bool
@@ -56,6 +57,7 @@ type Game struct {
 	defenderIndex                 int
 	battleground                  []*Card
 	defendingCards                map[int]*Card
+	defenderPickUp                bool
 }
 
 func newGame(id uint64, room *Room, players []*Player) *Game {
@@ -112,22 +114,50 @@ func (g *Game) deal() {
 	g.trumpSuit = lastCard.Suit
 }
 
+func (g *Game) dealToPlayer(player *Player) {
+	cardsLimit := 6
+	for cardIndex := len(player.cards); cardIndex < cardsLimit; cardIndex = cardIndex + 1 {
+		if len(player.cards) >= cardsLimit {
+			break
+		}
+		card, err := g.pile.getCard()
+		if err == nil {
+			player.cards = append(player.cards, card)
+		}
+	}
+}
+
+func (g *Game) roundDeal(firstIndex int, lastIndex int) {
+	g.dealToPlayer(g.players[firstIndex])
+	for index, p := range g.players {
+		if index != firstIndex && index != lastIndex {
+			g.dealToPlayer(p)
+		}
+	}
+	g.dealToPlayer(g.players[lastIndex])
+}
+
 func (g *Game) getGameStateInfo(player *Player) *GameStateInfo {
 	gsi := &GameStateInfo{
-		YourHand:       make([]*Card, 0),
-		HandsSizes:     make([]int, len(g.players)),
-		PileSize:       len(g.pile.cards),
-		Battleground:   g.battleground,
-		DefendingCards: g.defendingCards,
+		YourHand:         make([]*Card, 0),
+		HandsSizes:       make([]int, len(g.players)),
+		PileSize:         len(g.pile.cards),
+		DiscardPileSize:  g.discardPileSize,
+		Battleground:     g.battleground,
+		DefendingCards:   g.defendingCards,
+		CompletedPlayers: make(map[int]bool, 0),
+		AttackerIndex:    g.attackerIndex,
+		DefenderIndex:    g.defenderIndex,
 	}
 
 	for i, p := range g.players {
 		if p == player {
 			gsi.YourHand = p.cards
-			gsi.CanYouComplete = g.defenderIndex != g.getPlayerIndex(player) && len(g.battleground) > 0
-			gsi.CanYouPickUp = g.defenderIndex == g.getPlayerIndex(player) && len(g.battleground) > 0
+			gsi.CanYouComplete = g.canPlayerComplete(player)
+			gsi.CanYouPickUp = g.canPlayerPickUp(player)
 		}
 		gsi.HandsSizes[i] = len(p.cards)
+		gsi.CompletedPlayers[i] = p.IsCompleted
 	}
 
 	return gsi
@@ -218,6 +248,18 @@ func (g *Game) findFirstAttacker() (firstAttackerIndex int, defenderIndex int, l
 	return
 }
 
+func (g *Game) findNewAttacker(wasPickUp bool) (attackerIndex int, defenderIndex int) {
+	attackerIndex = g.attackerIndex + 1
+	defenderIndex = g.defenderIndex + 1
+
+	if wasPickUp {
+		attackerIndex = attackerIndex + 1
+		defenderIndex = defenderIndex + 1
+	}
+
+	return g.adjustPlayerIndex(attackerIndex), g.adjustPlayerIndex(defenderIndex)
+}
+
 func (g *Game) getNextPlayerIndex(playerIndex int) (nextPlayerIndex int) {
 	nextPlayerIndex = -1
 	if len(g.players) > playerIndex+1 {
@@ -275,6 +317,9 @@ func (g *Game) canPlayerAttackWithCard(player *Player, card *Card) bool {
 	}
 
 	if len(g.battleground) > 0 && (!g.hasBattlegroundSameValue(card) && !g.hasDefendingCardsSameValue(card)) {
+		return false
+	}
+	if player.IsCompleted {
 		return false
 	}
 
@@ -348,12 +393,94 @@ func (g *Game) defend(player *Player, data DefendActionData) {
 	}
 }
 
+func (g *Game) canPlayerPickUp(player *Player) bool {
+	if g.status != GameStatusPlaying {
+		return false
+	}
+	if g.defenderIndex != g.getPlayerIndex(player) {
+		return false
+	}
+
+	if len(g.battleground) == 0 {
+		return false
+	}
+	if g.defenderPickUp {
+		return false
+	}
+
+	return true
+}
+
 func (g *Game) pickUp(player *Player) {
 	log.Printf("pick up")
+	if !g.canPlayerPickUp(player) {
+		log.Printf("Can't pick up")
+		return
+	}
+	g.defenderPickUp = true
+	g.broadcastGameStateEvent()
+}
+
+func (g *Game) canPlayerComplete(player *Player) bool {
+	if g.status != GameStatusPlaying {
+		return false
+	}
+	if g.defenderIndex == g.getPlayerIndex(player) &&
+		(len(g.battleground) != len(g.defendingCards) || !g.areAllAttackersCompleted()) {
+		return false
+	}
+	if g.attackerIndex == g.getPlayerIndex(player) && len(g.battleground) == 0 {
+		return false
+	}
+	if player.IsCompleted {
+		return false
+	}
+
+	return true
 }
 
 func (g *Game) complete(player *Player) {
 	log.Printf("complete")
+	if !g.canPlayerComplete(player) {
+		log.Printf("Can't complete")
+		return
+	}
+
+	player.IsCompleted = true
+
+	if g.areAllPlayersCompleted() {
+		g.endRound()
+	} else {
+		g.broadcastGameStateEvent()
+	}
+}
+
+func (g *Game) endRound() {
+	g.roundDeal(g.attackerIndex, g.defenderIndex)
+	g.attackerIndex, g.defenderIndex = g.findNewAttacker(g.defenderPickUp)
+	g.resetPlayersCompleteStatuses()
+
+	g.discardPileSize = g.discardPileSize + len(g.battleground) + len(g.defendingCards)
+	g.battleground = make([]*Card, 0)
+	g.defendingCards = make(map[int]*Card, 0)
+
+	g.broadcastGameStateEvent()
+}
+
+func (g *Game) resetPlayersCompleteStatuses() {
+	for _, p := range g.players {
+		p.IsCompleted = false
+	}
+	g.defenderPickUp = false
+}
+
+func (g *Game) broadcastGameStateEvent() {
+	gameStateEvent := GameStateEvent{}
+
+	for _, p := range g.players {
+		gameStateEvent.GameStateInfo = g.getGameStateInfo(p)
+		p.sendEvent(gameStateEvent)
+	}
 }
 
 func (g *Game) onClientAction(action *PlayerAction) {
@@ -457,6 +584,43 @@ func (g *Game) hasBattlegroundCard(card *Card) bool {
 		}
 	}
 	return false
+}
+
+func (g *Game) areAllAttackersCompleted() bool {
+	for _, p := range g.players {
+		if p.IsActive == true && g.getPlayerIndex(p) != g.defenderIndex && !p.IsCompleted {
+			return false
+		}
+	}
+	return true
+}
+
+func (g *Game) areAllPlayersCompleted() bool {
+	for _, p := range g.players {
+		if p.IsActive == true && !p.IsCompleted {
+			return false
+		}
+	}
+	return true
+}
+
+func (g *Game) adjustPlayerIndex(index int) int {
+	activePlayersNum := 0
+	for _, p := range g.players {
+		if p.IsActive {
+			activePlayersNum += 1
+		}
+	}
+	if activePlayersNum < 2 {
+		return -1
+	}
+
+	index = index % len(g.players)
+	if !g.players[index].IsActive {
+		return g.adjustPlayerIndex(index + 1)
+	}
+
+	return index
 }
 
 func (g *Game) getBattlegroundCardIndex(card *Card) int {

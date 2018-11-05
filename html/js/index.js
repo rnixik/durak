@@ -120,22 +120,24 @@ function App() {
             playingTable: {
                 handsSizes: [],
                 pileSize: 0,
+                discardPileSize: 0,
                 trumpCard: null,
                 trumpCardIsInPile: false,
                 trumpCardIsOwnedByPlayerIndex: -1,
                 trumpSuit: null,
-                yourHand: [],
-                canYouPickup: false,
-                canYouComplete: false,
-                battleground: [],
-                defendingCards: {} // {1: {suit, value} }
-            },
-            gameState: {
                 attackerIndex: -1,
                 defenderIndex: -1,
+                yourHand: [],
+                canYouPickUp: false,
+                canYouComplete: false,
+                battleground: [],
+                defendingCards: {}, // {1: {suit, value} }
+                completedPlayers: {}, // {0: true, 1: false}
+                defenderPickUp: false
+            },
+            gameState: {
                 firstAttackerReasonCard: null,
-                pickedCard: null,
-
+                pickedCard: null
             }
         },
         methods: {
@@ -201,16 +203,16 @@ function App() {
         },
         computed: {
             isYouAttacker: function () {
-                return this.gameState.attackerIndex === this.game.yourPlayerIndex;
+                return this.playingTable.attackerIndex === this.game.yourPlayerIndex;
             },
             isYouDefender: function () {
-                return this.gameState.defenderIndex === this.game.yourPlayerIndex;
+                return this.playingTable.defenderIndex === this.game.yourPlayerIndex;
             },
             attackerNickname: function () {
-                if (this.gameState.attackerIndex < 0) {
+                if (this.playingTable.attackerIndex < 0) {
                     return;
                 }
-                const atInd = this.gameState.attackerIndex;
+                const atInd = this.playingTable.attackerIndex;
                 if (!this.game.players[atInd]) {
                     return;
                 }
@@ -352,8 +354,8 @@ function App() {
     };
 
     this.onGameFirstAttackerEvent = function (data) {
-        app.vue.gameState.attackerIndex = data.attacker_index;
-        app.vue.gameState.defenderIndex = data.defender_index;
+        app.vue.playingTable.attackerIndex = data.attacker_index;
+        app.vue.playingTable.defenderIndex = data.defender_index;
         app.vue.gameState.firstAttackerReasonCard = data.reason_card;
     };
 
@@ -369,6 +371,14 @@ function App() {
             app.updatePlayingTable(data.game_state_info);
         }
         console.log('defend', data);
+    };
+
+    this.onGameStateEvent = (data) => {
+        if (data.game_state_info) {
+            app.updatePlayingTable(data.game_state_info);
+            app.vue.gameState.firstAttackerReasonCard = null;
+        }
+        console.log('state only', data);
     };
 
     this.sendCommand = function (type, subType, data) {

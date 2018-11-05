@@ -91,7 +91,7 @@
 
             <div class="playing-table">
                 <div>
-                    Pile: {{ playingTable.pileSize }}, TrumpSuit: {{ playingTable.trumpSuit }}, 
+                    Pile: {{ playingTable.pileSize }}, TrumpSuit: {{ playingTable.trumpSuit }}, Discard Pile: {{ playingTable.discardPileSize }}
                     <span v-if="playingTable.trumpCard">TrumpCard: {{ playingTable.trumpCard.value }}{{ playingTable.trumpCard.suit }}</span>
                     Trump card is in pile: {{ playingTable.trumpCardIsInPile }}
                 </div>
@@ -110,8 +110,8 @@
                         v-if="handIndex != game.yourPlayerIndex"
                         v-bind:hand-size="handSize"  
                         v-bind:nickname="game.players[handIndex].name"
-                        v-bind:is-attacker="gameState.attackerIndex == handIndex"
-                        v-bind:is-defender="gameState.defenderIndex == handIndex"
+                        v-bind:is-attacker="playingTable.attackerIndex == handIndex"
+                        v-bind:is-defender="playingTable.defenderIndex == handIndex"
                     ></opponent>
                 </div>
 
@@ -129,8 +129,8 @@
                         ></playing-card-battleground>
                     </div>
 
-                    <div class="battleground-container__decisions decisions" v-if="playingTable.canYouPickup || playingTable.canYouComplete">
-                        <button v-on:click="pickUp" v-if="playingTable.canYouPickup" class="decisions__btn">Pick up ↧</button>
+                    <div class="battleground-container__decisions decisions" v-if="playingTable.canYouPickUp || playingTable.canYouComplete">
+                        <button v-on:click="pickUp" v-if="playingTable.canYouPickUp" class="decisions__btn">Pick up ↧</button>
                         <button v-on:click="complete" v-if="playingTable.canYouComplete" class="decisions__btn">Complete ✓</button>
                     </div>
                 </div>
