@@ -41,17 +41,17 @@
                     <div>Your nickname: {{clientsInfo.yourNickname}}</div>
                 </div>
 
-                <div>Clients: </div>
+                <div>{{ $t("lobby.clients") }}:</div>
                 <ol>
                     <li v-for="client in clientsInfo.clients">
                       {{ client.nickname }}#{{ client.id }} 
                     </li>
                 </ol>
 
-                <div>Rooms: </div>
+                <div>{{ $t("lobby.rooms") }}:</div>
                 <transition-group name="slide-fade" tag="ol">
                     <li v-for="room in rooms" v-bind:key="room.id">
-                      <strong v-if="room.id == clientsInfo.yourRoomId">--here--</strong>
+                      <strong v-if="room.id == clientsInfo.yourRoomId">--{{ $t("lobby.here") }}--</strong>
                       <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.members_num }}
                         <span v-if="room.game_status"> ({{ room.game_status }})</span></a>
                         <strong v-if="room.owner_id == clientsInfo.yourId">you are onwer</strong>
@@ -334,7 +334,9 @@
                 
             })();
         </script>
-        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+        <script src="js/vendor/vue.js"></script>
+        <script src="js/vendor/vue-i18n.js"></script>
+        <script src="js/messages.js"></script>
         <script src="js/index.js"></script>
   </body>
 </html>
