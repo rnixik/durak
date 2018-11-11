@@ -37,8 +37,8 @@
         <div id="app" class="app">
             <div class="game-info">
                 <div>
-                    <div>Your id: {{clientsInfo.yourId}}</div>
-                    <div>Your nickname: {{clientsInfo.yourNickname}}</div>
+                    <div>{{ $t("lobby.your_id") }}: {{clientsInfo.yourId}}</div>
+                    <div>{{ $t("lobby.your_nickname") }}: {{clientsInfo.yourNickname}}</div>
                 </div>
 
                 <div>{{ $t("lobby.clients") }}:</div>
@@ -54,12 +54,12 @@
                       <strong v-if="room.id == clientsInfo.yourRoomId">--{{ $t("lobby.here") }}--</strong>
                       <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.members_num }}
                         <span v-if="room.game_status"> ({{ room.game_status }})</span></a>
-                        <strong v-if="room.owner_id == clientsInfo.yourId">you are onwer</strong>
+                        <strong v-if="room.owner_id == clientsInfo.yourId">{{ $t("lobby.your_are_owner") }}</strong>
                     </li>
                 </transition-group>
 
                 <div v-if="room && room.id">
-                    <h2>Room - {{ room.name }} - {{ room.game_status }}</h2>
+                    <h2>{{ $t("lobby.room") }} - {{ room.name }} - {{ room.game_status ? $t(`lobby.game_status.${room.game_status}`) : '' }}</h2>
                     <transition-group name="slide-fade" tag="ol">
                         <li v-for="member in room.members" v-bind:key="member.id" v-bind:class="{ 'member-want-to-play': member.want_to_play, 'member-is-player': member.is_player }">
                           {{ member.nickname }}
