@@ -101,7 +101,7 @@
                 <div>
                     <opponent 
                         v-for="(handSize, handIndex) in playingTable.handsSizes"
-                        v-if="handIndex != game.yourPlayerIndex"
+                        v-if="handIndex != game.yourPlayerIndex && game.players[handIndex].is_active"
                         v-bind:hand-size="handSize"  
                         v-bind:nickname="game.players[handIndex].name"
                         v-bind:is-attacker="playingTable.attackerIndex == handIndex"
@@ -129,8 +129,8 @@
                     </div>
                 </div>
 
-                <div class="your-hand-holder">
-                    <div v-if="playingTable.yourHand.length" class="your-hand" v-bind:style="{width: playingTable.yourHand.length * 140 + 'px'}">
+                <div class="your-hand-holder" v-if="playingTable.yourHand && playingTable.yourHand.length" >
+                    <div class="your-hand" v-bind:style="{width: playingTable.yourHand.length * 140 + 'px'}">
                         <playing-card-inhand v-on:use-card="useCard"
                         v-for="(yourCard, index) in playingTable.yourHand"
                         v-bind:card="yourCard"
@@ -231,7 +231,7 @@
 
                     <playing-card
                       v-bind:card="trumpCard" 
-                      v-if="deckSize > 1"
+                      v-if="deckSize > 1 && trumpCard"
                     ></playing-card>
                 </div>
                 <div v-if="deckSize == 0" class="deck__empty">

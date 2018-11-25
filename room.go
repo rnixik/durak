@@ -107,6 +107,12 @@ func (r *Room) addClient(client *Client) {
 
 	roomJoinedEvent := RoomJoinedEvent{r.toRoomInfo()}
 	client.sendEvent(roomJoinedEvent)
+
+	if r.game != nil && r.game.status == GameStatusPlaying {
+		player := newPlayer(client, false)
+		r.game.players = append(r.game.players, player)
+		r.game.onLatePlayerJoin(player)
+	}
 }
 
 func (r *Room) broadcastEvent(event interface{}, exceptClient *Client) {

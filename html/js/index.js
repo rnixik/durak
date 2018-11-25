@@ -355,8 +355,8 @@ function App() {
         for (let property in playingTableData) {
             if (playingTableData.hasOwnProperty(property)) {
                 const camelizedProperty = this.camelize(property);
-                app.vue.playingTable[camelizedProperty] = playingTableData[property];
                 console.log("set playingTableData", camelizedProperty, playingTableData[property]);
+                app.vue.playingTable[camelizedProperty] = playingTableData[property];
             }
         }
     };

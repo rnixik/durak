@@ -115,6 +115,7 @@ func (g *Game) getGameStateInfo(player *Player) *GameStateInfo {
 		HandsSizes:       make([]int, len(g.players)),
 		PileSize:         len(g.pile.cards),
 		DiscardPileSize:  g.discardPileSize,
+		TrumpCard:        g.trumpCard,
 		Battleground:     g.battleground,
 		DefendingCards:   g.defendingCards,
 		CompletedPlayers: make(map[int]bool, 0),
@@ -371,6 +372,9 @@ func (g *Game) canPlayerPickUp(player *Player) bool {
 	if g.status != GameStatusPlaying {
 		return false
 	}
+	if !player.IsActive {
+		return false
+	}
 	if g.defenderIndex != g.getPlayerIndex(player) {
 		return false
 	}
@@ -401,6 +405,9 @@ func (g *Game) pickUp(player *Player) {
 
 func (g *Game) canPlayerComplete(player *Player) bool {
 	if g.status != GameStatusPlaying {
+		return false
+	}
+	if !player.IsActive {
 		return false
 	}
 	if g.defenderIndex == g.getPlayerIndex(player) &&
@@ -533,6 +540,14 @@ func (g *Game) onPlayerLeft(playerIndex int) {
 	if len(g.players) == 2 {
 		g.onGameEnded(true, playerIndex)
 	}
+}
+
+func (g *Game) onLatePlayerJoin(player *Player) {
+	g.sendPlayersEvent()
+
+	gameStateEvent := GameStateEvent{}
+	gameStateEvent.GameStateInfo = g.getGameStateInfo(player)
+	player.sendEvent(gameStateEvent)
 }
 
 func (g *Game) onClientRemoved(client *Client) {

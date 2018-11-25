@@ -14,6 +14,7 @@ type GameStateInfo struct {
 	HandsSizes       []int         `json:"hands_sizes"`
 	PileSize         int           `json:"pile_size"`
 	DiscardPileSize  int           `json:"discard_pile_size"`
+	TrumpCard        *Card         `json:"trump_card"`
 	Battleground     []*Card       `json:"battleground"`
 	DefendingCards   map[int]*Card `json:"defending_cards"`
 	CompletedPlayers map[int]bool  `json:"completed_players"`
