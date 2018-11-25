@@ -13,7 +13,7 @@ This implementation is in progress.
 [x] Lobby: creating a game, joining a game, leaving a game, starting a game  
 [x] Basic visualizing of cards on client-side  
 [x] Game process and rules  
-[ ] I18n  
+[x] I18n  
 [ ] Observing started games, joining by an url  
 [ ] Simple AI  
 [ ] Advanced visualizing of cards on client-side: animations, drag'n'drops  
