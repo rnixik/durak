@@ -62,7 +62,7 @@ func (g *Game) deal() {
 	lastPlayerIndex := -1
 	for cardIndex := 0; cardIndex < cardsLimit; cardIndex = cardIndex + 1 {
 		for playerIndex, p := range g.players {
-			if len(p.cards) >= cardsLimit {
+			if !p.IsActive || len(p.cards) >= cardsLimit {
 				break
 			}
 			card, err := g.pile.getCard()
@@ -87,6 +87,9 @@ func (g *Game) deal() {
 }
 
 func (g *Game) dealToPlayer(player *Player) {
+	if !player.IsActive {
+		return
+	}
 	cardsLimit := 6
 	for cardIndex := len(player.cards); cardIndex < cardsLimit; cardIndex = cardIndex + 1 {
 		if len(player.cards) >= cardsLimit {
@@ -197,8 +200,8 @@ func (g *Game) findFirstAttacker() (firstAttackerIndex int, defenderIndex int, l
 	for playerIndex, p := range g.players {
 		for _, c := range p.cards {
 			if c.Suit == g.trumpSuit && c.lte(lowestTrumpCard) {
-				firstAttackerIndex = playerIndex
-				defenderIndex = g.getNextPlayerIndex(firstAttackerIndex)
+				firstAttackerIndex = g.adjustPlayerIndex(playerIndex)
+				defenderIndex = g.adjustPlayerIndex(firstAttackerIndex + 1)
 				lowestTrumpCard = c
 			}
 		}
@@ -210,10 +213,13 @@ func (g *Game) findFirstAttacker() (firstAttackerIndex int, defenderIndex int, l
 
 	// fallback
 	for playerIndex, p := range g.players {
+		if !p.IsActive {
+			break
+		}
 		for _, c := range p.cards {
 			if c.lte(lowestTrumpCard) {
 				firstAttackerIndex = playerIndex
-				defenderIndex = g.getNextPlayerIndex(firstAttackerIndex)
+				defenderIndex = g.adjustPlayerIndex(firstAttackerIndex + 1)
 				lowestTrumpCard = c
 			}
 		}
@@ -231,19 +237,11 @@ func (g *Game) findNewAttacker(wasPickUp bool) (attackerIndex int, defenderIndex
 		defenderIndex = defenderIndex + 1
 	}
 
-	return g.adjustPlayerIndex(attackerIndex), g.adjustPlayerIndex(defenderIndex)
-}
+	attackerIndex, defenderIndex = g.adjustPlayerIndex(attackerIndex), g.adjustPlayerIndex(defenderIndex)
+	if attackerIndex == defenderIndex {
+		attackerIndex = g.adjustPlayerIndex(attackerIndex + 1)
+	}
 
-func (g *Game) getNextPlayerIndex(playerIndex int) (nextPlayerIndex int) {
-	nextPlayerIndex = -1
-	if len(g.players) > playerIndex+1 {
-		nextPlayerIndex = playerIndex + 1
-		return
-	}
-	if len(g.players) > 1 {
-		nextPlayerIndex = 0
-		return
-	}
 	return
 }
 
@@ -470,7 +468,7 @@ func (g *Game) endRound() {
 			hasLoser = false
 			loserIndex = -1
 		}
-		g.onGameEnded(hasLoser, loserIndex)
+		g.endGame(hasLoser, loserIndex)
 	} else {
 		g.broadcastGameStateEvent()
 	}
@@ -518,7 +516,7 @@ func (g *Game) broadcastEvent(event interface{}) {
 	}
 }
 
-func (g *Game) onGameEnded(hasLoser bool, loserIndex int) {
+func (g *Game) endGame(hasLoser bool, loserIndex int) {
 	if g.status != GameStatusPlaying {
 		return
 	}
@@ -538,7 +536,7 @@ func (g *Game) onPlayerLeft(playerIndex int) {
 	g.room.broadcastEvent(gamePlayerLeft, nil)
 
 	if len(g.players) == 2 {
-		g.onGameEnded(true, playerIndex)
+		g.endGame(true, playerIndex)
 	}
 }
 
@@ -616,7 +614,7 @@ func (g *Game) areAllAttackersCompleted() bool {
 func (g *Game) areAllPlayersCompleted() bool {
 	for _, p := range g.players {
 		isDefenderAndPickUp := g.getPlayerIndex(p) == g.defenderIndex && g.defenderPickUp
-		if p.IsActive == true && !p.IsCompleted && !isDefenderAndPickUp {
+		if p.IsActive && !p.IsCompleted && !isDefenderAndPickUp {
 			return false
 		}
 	}
@@ -625,7 +623,7 @@ func (g *Game) areAllPlayersCompleted() bool {
 
 func (g *Game) haveAttackersCards() bool {
 	for index, p := range g.players {
-		if p.IsActive == true && index != g.defenderIndex && len(p.cards) > 0 {
+		if p.IsActive && index != g.defenderIndex && len(p.cards) > 0 {
 			return true
 		}
 	}
