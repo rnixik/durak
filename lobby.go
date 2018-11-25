@@ -240,6 +240,10 @@ func (l *Lobby) dispatchGameEvent(cc *ClientCommand) {
 		return
 	}
 	game := cc.client.room.game
+	if game.status != GameStatusPlaying {
+		return
+	}
+
 	player := game.findPlayerOfClient(cc.client)
 	if player == nil {
 		return

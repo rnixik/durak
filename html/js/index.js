@@ -316,6 +316,9 @@ function App() {
     this.onClientCommandError = function (data) {
         app.vue.commandError = data;
         console.error(data.message);
+        window.setTimeout(() => {
+            app.vue.commandError = {};
+        }, 3000)
     };
 
     this.onClientCreatedRoomEvent = function (data) {

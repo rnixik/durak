@@ -11,13 +11,6 @@ const (
 	GameStatusEnd       = "end"
 )
 
-// CardOnDesk represents a game card which was played.
-type CardOnDesk struct {
-	Card         *Card `json:"card"`
-	SourcePlayer int64 `json:"source_player"`
-	BeatByCard   *Card `json:"beat_by_card"`
-}
-
 // Game represents status, state, etc of the game.
 type Game struct {
 	playerActions                 chan *PlayerAction
@@ -61,7 +54,6 @@ func (g *Game) sendPlayersEvent() {
 		pe.YourPlayerIndex = i
 		p.sendEvent(pe)
 	}
-	log.Println("end of pl event")
 }
 
 func (g *Game) deal() {
@@ -267,6 +259,7 @@ func (g *Game) sendFirstAttackerEvent() {
 func (g *Game) begin() {
 	g.prepare()
 	g.status = GameStatusPlaying
+	g.room.onGameStarted()
 	for {
 		select {
 		case action, ok := <-g.playerActions:
@@ -518,7 +511,11 @@ func (g *Game) broadcastEvent(event interface{}) {
 }
 
 func (g *Game) onGameEnded(hasLoser bool, loserIndex int) {
+	if g.status != GameStatusPlaying {
+		return
+	}
 	g.status = GameStatusEnd
+	g.broadcastGameStateEvent()
 	gameEndEvent := &GameEndEvent{
 		HasLoser:   hasLoser,
 		LoserIndex: loserIndex,

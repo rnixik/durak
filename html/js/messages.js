@@ -31,6 +31,8 @@ window.i18nMessages = {
             your_are_owner: 'вы создатель',
             game_status: {
                 preparing: 'Подготовка',
+                playing: 'Идёт игра',
+                end: 'Игра окончена',
             },
             mark_as_player: 'Отменить как игрока',
             mark_as_spectator: 'Отменить как зрителя',

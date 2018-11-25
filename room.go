@@ -261,8 +261,13 @@ func (r *Room) onClientCommand(cc *ClientCommand) {
 	}
 }
 
+func (r *Room) onGameStarted() {
+	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
+	r.broadcastEvent(roomUpdatedEvent, nil)
+	r.lobby.sendRoomUpdate(r)
+}
+
 func (r *Room) onGameEnded() {
-	r.game = nil
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
 	r.broadcastEvent(roomUpdatedEvent, nil)
 	r.lobby.sendRoomUpdate(r)
