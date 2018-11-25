@@ -233,8 +233,14 @@ func (g *Game) findNewAttacker(wasPickUp bool) (attackerIndex int, defenderIndex
 	defenderIndex = g.defenderIndex + 1
 
 	if wasPickUp {
-		attackerIndex = attackerIndex + 1
-		defenderIndex = defenderIndex + 1
+		if g.getActivePlayersNum() == 2 {
+			attackerIndex = g.attackerIndex
+			defenderIndex = g.defenderIndex
+		} else {
+			attackerIndex = attackerIndex + 1
+			defenderIndex = defenderIndex + 1
+		}
+
 	}
 
 	attackerIndex, defenderIndex = g.adjustPlayerIndex(attackerIndex), g.adjustPlayerIndex(defenderIndex)
@@ -441,7 +447,6 @@ func (g *Game) complete(player *Player) {
 func (g *Game) endRound() {
 	g.resetPlayersCompleteStatuses()
 	g.roundDeal(g.attackerIndex, g.defenderIndex)
-	g.attackerIndex, g.defenderIndex = g.findNewAttacker(g.defenderPickUp)
 
 	defenderPlayer := g.players[g.defenderIndex]
 
@@ -456,6 +461,7 @@ func (g *Game) endRound() {
 		g.discardPileSize = g.discardPileSize + len(g.battleground) + len(g.defendingCards)
 	}
 
+	g.attackerIndex, g.defenderIndex = g.findNewAttacker(g.defenderPickUp)
 	g.battleground = make([]*Card, 0)
 	g.defendingCards = make(map[int]*Card, 0)
 	g.defenderPickUp = false
@@ -630,13 +636,19 @@ func (g *Game) haveAttackersCards() bool {
 	return false
 }
 
-func (g *Game) adjustPlayerIndex(index int) int {
+func (g *Game) getActivePlayersNum() int {
 	activePlayersNum := 0
 	for _, p := range g.players {
 		if p.IsActive {
 			activePlayersNum += 1
 		}
 	}
+
+	return activePlayersNum
+}
+
+func (g *Game) adjustPlayerIndex(index int) int {
+	activePlayersNum := g.getActivePlayersNum()
 	if activePlayersNum < 2 {
 		return -1
 	}
