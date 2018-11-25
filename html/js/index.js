@@ -99,14 +99,8 @@ Vue.component('deck', {
 function App() {
     const app = this;
 
-    // kazupon/vue-i18n does not support multiple fallback
-    let locale = 'en';
-    if (navigator.language && navigator.language.substr(0, 2).toLowerCase() === 'ru') {
-        locale = 'ru';
-    }
-
     const i18n = new VueI18n({
-        locale: locale,
+        locale: window.CURRENT_LOCALE,
         fallbackLocale: 'en',
         messages: window.i18nMessages,
     });

@@ -18,20 +18,20 @@
   <body>
         <div id="login" style="position: fixed; left: 0px; top: 0px; width: 1920px; height: 100%; z-index: 10; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjEwMPRyoQAAAGBJREFUOE9jCN9a9Z8SDDbAe0UuVklc4siYZBegG4rVAJAiYmwHYeoYQKxibJg2YYCO8bkQwwBSvYM3DIgxjGgvIBuGzCbKC+gGIGOiXIAPU88AdCci83F5C0RT6IKq/wD0s4G1BdrsJAAAAABJRU5ErkJggg==');">
 
-            <h1 style="text-align: center; font-size: 44px; font-weight: bold; margin-top: 64px; margin-bottom: 0;">DURAK</h1>
+            <h1 style="text-align: center; font-size: 44px; font-weight: bold; margin-top: 64px; margin-bottom: 0; text-transform: capitalize;" data-t="durak">DURAK</h1>
 
-            <h2 style="text-align: center; font-size: 20px; font-weight: bold; color: #333; margin-top: 10px; margin-bottom: 40px;">An online multiplayer card game</h2>
+            <h2 style="text-align: center; font-size: 20px; font-weight: bold; color: #333; margin-top: 10px; margin-bottom: 40px;" data-t="an_online_multiplayer_card_game">An online multiplayer card game</h2>
   
 
             <div id="nickh" style="display: flex; align-items: center; justify-content: center;">
-                <label for="nick" style="margin-right: 8px;">Nickname:</label> <input id="nick" style="width:190px; background: none; border: none; border-bottom: 1px solid black; margin-right: 8px;" placeholder="Nickname" maxlength="20">
-                <button id="play" style="cursor: pointer; font-weight: bold; text-shadow: 2px 4px 3px rgba(0,0,0,0.3);">Play</button>
+                <label for="nick" style="margin-right: 8px;" data-t="nickname">Nickname:</label> <input id="nick" style="width:190px; background: none; border: none; border-bottom: 1px solid black; margin-right: 8px;" maxlength="20">
+                <button id="play" style="cursor: pointer; font-weight: bold; text-shadow: 2px 4px 3px rgba(0,0,0,0.3);" data-t="play">Play</button>
             </div>
 
 
-            <div id="ws-not-found" style="display: none; color: #700; text-align: center; font-size: 18px; font-weight: bold;">Sorry, you can't play because you device does not support WebSockets</div>
+            <div id="ws-not-found" style="display: none; color: #700; text-align: center; font-size: 18px; font-weight: bold;" data-t="websockets_are_not_supported">Sorry, you can't play because you device does not support WebSockets</div>
 
-            <div id="disconnected" style="display: none; color: #FFDF00; text-align: center; font-size: 18px; font-weight: bold;">Disconnected</div>
+            <div id="disconnected" style="display: none; color: #FFDF00; text-align: center; font-size: 18px; font-weight: bold;" data-t="disconnected">Disconnected</div>
         </div>
 
         <div id="app" class="app">
@@ -242,43 +242,44 @@
             </div>
         </script>
 
-       
-
+        <script src="js/messages.js"></script>
         <script>
-            var loginElement = document.getElementById('login');
-
-            (function(){
-
-                function updatedLoginWidth() {
-                    var width = window.innerWidth;
+            const loginElement = document.getElementById('login');
+            (() => {
+                const updatedLoginWidth = () => {
+                    const width = window.innerWidth;
                     loginElement.style.width = width + 'px';
-                }
-                window.onresize = function(event) {
+                };
+                window.onresize = () => {
                     updatedLoginWidth();
                 };
                 updatedLoginWidth();
 
+                // kazupon/vue-i18n does not support multiple fallback
+                window.CURRENT_LOCALE = 'en';
+                if (navigator.language && navigator.language.substr(0, 2).toLowerCase() === 'ru') {
+                    window.CURRENT_LOCALE = 'ru';
+                }
 
-                var playBtn = document.getElementById('play');
+                const playBtn = document.getElementById('play');
 
-                playBtn.addEventListener('click', function (event) {
-                    var nickname = document.getElementById('nick').value;
-
-                    var date = new Date;
+                playBtn.addEventListener('click', () => {
+                    const nickname = document.getElementById('nick').value;
+                    const date = new Date;
                     date.setDate(date.getDate() + 180);
                     document.cookie = "nickname=" + nickname + "; path=/; expires=" + date.toUTCString();
 
                     wsConnect(nickname);
                 });
 
-                function getCookie(name) {
-                  var matches = document.cookie.match(new RegExp(
+                const getCookie = (name) => {
+                  const matches = document.cookie.match(new RegExp(
                     "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
                   ));
                   return matches ? decodeURIComponent(matches[1]) : undefined;
-                }
+                };
 
-                var cookieNickname = getCookie("nickname");
+                const cookieNickname = getCookie("nickname");
                 if (cookieNickname) {
                     document.getElementById('nick').value = cookieNickname;
                 } else {
@@ -291,15 +292,14 @@
                     document.getElementById('play').style.display = "none";
                 }
 
-
-                function wsConnect(nickname) {
+                const wsConnect = (nickname) => {
                     WsConnection = new WebSocket("ws://" + document.location.host + "/ws");
                     WsConnection.onopen = function () {
                         loginElement.style.display = "none";
                         document.getElementById('disconnected').style.display = "none";
                         WsConnection.send(JSON.stringify({type: 'lobby', sub_type: 'join', data: nickname}));
-                    }
-                    WsConnection.onclose = function (evt) {
+                    };
+                    WsConnection.onclose = () => {
                         loginElement.style.display = "block";
                         document.getElementById('disconnected').style.display = "block";
                         window.setTimeout(function(){
@@ -307,9 +307,9 @@
                         }, 3000);
                     };
                     WsConnection.onmessage = function (evt) {
-                        var messages = evt.data.split('\n');
-                        for (var i = 0; i < messages.length; i++) {
-                            var json;
+                        const messages = evt.data.split('\n');
+                        for (let i = 0; i < messages.length; i++) {
+                            let json;
                             try {
                                 json = JSON.parse(messages[i]);
                             } catch (ex) {
@@ -323,14 +323,26 @@
                     };
                 };
 
+                // i18n
+                if (window.i18nMessages[window.CURRENT_LOCALE]) {
+                    const translations = window.i18nMessages[window.CURRENT_LOCALE].login;
+                    const elementsToTranslate = document.querySelectorAll('#login [data-t]');
+                    for (let i = 0; i < elementsToTranslate.length; i += 1) {
+                        const transKey = elementsToTranslate[i].getAttribute('data-t');
+                        if (transKey && translations[transKey]) {
+                            elementsToTranslate[i].innerHTML = translations[transKey];
+                        } else {
+                            console.warn("Not found translation for login key: ", transKey);
+                        }
+                    }
+                }
+
                 // TODO: remove debug
-                wsConnect(document.getElementById('nick').value);
-                
+                // wsConnect(document.getElementById('nick').value);
             })();
         </script>
         <script src="js/vendor/vue.js"></script>
         <script src="js/vendor/vue-i18n.js"></script>
-        <script src="js/messages.js"></script>
         <script src="js/index.js"></script>
   </body>
 </html>

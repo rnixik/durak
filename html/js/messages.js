@@ -1,10 +1,26 @@
 window.i18nMessages = {
     en: {
+        login: {
+            durak: 'Durak',
+            an_online_multiplayer_card_game: 'An online multiplayer card game',
+            nickname: 'nickname',
+            play: 'Play',
+            websockets_are_not_supported: 'Sorry, you can\'t play because you device does not support WebSockets',
+            disconnected: 'Disconnected',
+        },
         lobby: {
             clients: 'Clients',
         }
     },
     ru: {
+        login: {
+            durak: 'Дурак',
+            an_online_multiplayer_card_game: 'Многопользовательская карточная онлайн игра',
+            nickname: 'Псевдоним',
+            play: 'Играть',
+            websockets_are_not_supported: 'Извините, вы не сможете играть, потому что ваше устройство не поддерживает WebSocket',
+            disconnected: 'Отключены',
+        },
         lobby: {
             clients: 'Клиенты',
             your_nickname: 'Ваш псевдоним',
@@ -37,6 +53,6 @@ window.i18nMessages = {
             defender: 'Обороняющийся',
             game_is_over: 'Игра окончена',
         },
-        error: 'Ошибка'
+        error: 'Ошибка',
     },
 };
