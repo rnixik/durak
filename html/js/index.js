@@ -211,31 +211,39 @@ function App() {
             },
         },
         computed: {
-            areYouAttacker: function () {
-                return this.playingTable.attackerIndex === this.game.yourPlayerIndex;
+            areYouAttacker: () => {
+                return app.vue.playingTable.attackerIndex === app.vue.game.yourPlayerIndex;
             },
-            areYouDefender: function () {
-                return this.playingTable.defenderIndex === this.game.yourPlayerIndex;
+            areYouDefender: () => {
+                return app.vue.playingTable.defenderIndex === app.vue.game.yourPlayerIndex;
             },
-            attackerNickname: function () {
-                if (this.playingTable.attackerIndex < 0) {
-                    return;
-                }
-                const atInd = this.playingTable.attackerIndex;
-                if (!this.game.players[atInd]) {
-                    return;
-                }
-                return this.game.players[atInd].name;
+            areBeaten: () => {
+                return app.vue.playingTable.canYouComplete && app.vue.playingTable.canYouPickUp;
             },
-            loserNickname: function () {
-                if (this.gameState.loserIndex < 0) {
+            isWaitingForOthers: () => {
+                return app.vue.playingTable.battleground.length
+                    && !app.vue.playingTable.canYouComplete
+                    && !app.vue.playingTable.canYouPickUp;
+            },
+            attackerNickname: () => {
+                if (app.vue.playingTable.attackerIndex < 0) {
                     return;
                 }
-                const index = this.gameState.loserIndex;
-                if (!this.game.players[index]) {
+                const atInd = app.vue.playingTable.attackerIndex;
+                if (!app.vue.game.players[atInd]) {
                     return;
                 }
-                return this.game.players[index].name;
+                return app.vue.game.players[atInd].name;
+            },
+            loserNickname: () => {
+                if (app.vue.gameState.loserIndex < 0) {
+                    return;
+                }
+                const index = app.vue.gameState.loserIndex;
+                if (!app.vue.game.players[index]) {
+                    return;
+                }
+                return app.vue.game.players[index].name;
             },
         }
     });

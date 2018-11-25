@@ -155,6 +155,7 @@
                         <span v-if="areYouAttacker">{{ $t('game.you_are_attacker') }}!</span>
                         <span v-if="!areYouAttacker && attackerNickname"><i>{{ attackerNickname }}</i> {{ $t('game.is_attacker') }}!</span>
                         <span v-if="areYouAttacker && playingTable.defenderPickUp">{{ $t('game.defender_pick_up') }}</span>
+                        <span v-if="isWaitingForOthers">{{ $t('game.waiting_for_other_players') }}</span>
                         <span v-if="gameState.firstAttackerReasonCard">
                             {{ $t('game.reason') }}:
                             <span v-bind:class="{'game-state__suit-red': gameState.firstAttackerReasonCard.suit == '♦' || gameState.firstAttackerReasonCard.suit == '♥'}">
@@ -162,6 +163,7 @@
                             </span>
                         </span>
                         <span v-if="areYouDefender">{{ $t('game.you_are_defender') }}!</span>
+                        <span v-if="areBeaten">{{ $t('game.beaten') }}!</span>
                     </span>
 
                 </div>
