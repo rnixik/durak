@@ -185,14 +185,14 @@ function App() {
                 }
             },
             attack: () => {
-                if (!app.vue.isYouAttacker || !app.vue.gameState.pickedCard) {
+                if (!app.vue.areYouAttacker || !app.vue.gameState.pickedCard) {
                     return;
                 }
                 app.commandAttack(app.vue.gameState.pickedCard.value, app.vue.gameState.pickedCard.suit);
                 app.vue.gameState.pickedCard = null;
             },
             defend: (attackingCard) => {
-                if (!app.vue.isYouDefender || !app.vue.gameState.pickedCard) {
+                if (!app.vue.areYouDefender || !app.vue.gameState.pickedCard) {
                     return;
                 }
                 app.commandDefend(
@@ -211,10 +211,10 @@ function App() {
             },
         },
         computed: {
-            isYouAttacker: function () {
+            areYouAttacker: function () {
                 return this.playingTable.attackerIndex === this.game.yourPlayerIndex;
             },
-            isYouDefender: function () {
+            areYouDefender: function () {
                 return this.playingTable.defenderIndex === this.game.yourPlayerIndex;
             },
             attackerNickname: function () {

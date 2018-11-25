@@ -118,6 +118,7 @@ func (g *Game) getGameStateInfo(player *Player) *GameStateInfo {
 		Battleground:     g.battleground,
 		DefendingCards:   g.defendingCards,
 		CompletedPlayers: make(map[int]bool, 0),
+		DefenderPickUp:   g.defenderPickUp,
 		AttackerIndex:    g.attackerIndex,
 		DefenderIndex:    g.defenderIndex,
 	}
