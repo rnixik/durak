@@ -5,6 +5,15 @@ import (
 	"reflect"
 )
 
+const (
+	errorNeedOneMorePlayer                  = "need_one_more_player"
+	errorNumberOfPlayersExceededLimit       = "number_of_players_exceeded_limit"
+	errorGameHasBeenAlreadyStarted          = "game_has_been_already_started"
+	errorYouCanCreateOneRoomOnly            = "you_can_create_one_room_only"
+	errorRoomDoesNotExist                   = "room_does_not_exist"
+	errorCantChangeStatusGameHasBeenStarted = "cant_change_status_game_has_been_started"
+)
+
 // JSONEvent represents a message to clients with some event.
 type JSONEvent struct {
 	Name string      `json:"name"`

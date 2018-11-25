@@ -134,7 +134,7 @@ func (l *Lobby) onClientLeft(client *Client) {
 func (l *Lobby) onCreateNewRoomCommand(c *Client) {
 	_, roomExists := l.rooms[c]
 	if roomExists {
-		errEvent := &ClientCommandError{"You can create 1 room only"}
+		errEvent := &ClientCommandError{errorYouCanCreateOneRoomOnly}
 		c.sendEvent(errEvent)
 		return
 	}
@@ -200,7 +200,7 @@ func (l *Lobby) onJoinRoomCommand(c *Client, roomId uint64) {
 		l.broadcastEvent(roomInListUpdatedEvent)
 		log.Printf("Client %s joined room %d", c.Nickname(), roomId)
 	} else {
-		errEvent := &ClientCommandError{fmt.Sprintf("Room does not exist: %d", roomId)}
+		errEvent := &ClientCommandError{errorRoomDoesNotExist}
 		c.sendEvent(errEvent)
 	}
 }

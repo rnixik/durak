@@ -161,7 +161,7 @@ func (r *Room) changeMemberWantStatus(client *Client, wantToPlay bool) {
 
 func (r *Room) onWantToPlayCommand(client *Client) {
 	if r.game != nil {
-		errEvent := &ClientCommandError{"Can't change status: game has been started"}
+		errEvent := &ClientCommandError{errorCantChangeStatusGameHasBeenStarted}
 		client.sendEvent(errEvent)
 		return
 	}
@@ -170,7 +170,7 @@ func (r *Room) onWantToPlayCommand(client *Client) {
 
 func (r *Room) onWantToSpectateCommand(client *Client) {
 	if r.game != nil {
-		errEvent := &ClientCommandError{"Can't change status: game has been started"}
+		errEvent := &ClientCommandError{errorCantChangeStatusGameHasBeenStarted}
 		client.sendEvent(errEvent)
 		return
 	}
@@ -180,7 +180,7 @@ func (r *Room) onWantToSpectateCommand(client *Client) {
 
 func (r *Room) onSetPlayerStatusCommand(c *Client, memberId uint64, playerStatus bool) {
 	if r.game != nil {
-		errEvent := &ClientCommandError{"Can't change status: game has been started"}
+		errEvent := &ClientCommandError{errorCantChangeStatusGameHasBeenStarted}
 		c.sendEvent(errEvent)
 		return
 	}
@@ -209,17 +209,17 @@ func (r *Room) setPlayerStatus(memberId uint64, playerStatus bool) {
 func (r *Room) onStartGameCommand(c *Client) {
 	pls := r.getPlayers()
 	if len(pls) < 2 {
-		errEvent := &ClientCommandError{"Need 1 more player"}
+		errEvent := &ClientCommandError{errorNeedOneMorePlayer}
 		c.sendEvent(errEvent)
 		return
 	}
 	if len(pls) > MaxPlayersInRoom {
-		errEvent := &ClientCommandError{"Number of players exceeded limit"}
+		errEvent := &ClientCommandError{errorNumberOfPlayersExceededLimit}
 		c.sendEvent(errEvent)
 		return
 	}
 	if r.game != nil {
-		errEvent := &ClientCommandError{"Game has been already started"}
+		errEvent := &ClientCommandError{errorGameHasBeenAlreadyStarted}
 		c.sendEvent(errEvent)
 		return
 	}

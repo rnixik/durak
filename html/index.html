@@ -71,7 +71,7 @@
                     </transition-group>
                 </div>
 
-                <div class="command-error" v-if="commandError.message">{{ $t('error') }}: {{ commandError.message }}</div>
+                <div class="command-error" v-if="commandError.message">{{ $t('error') }}: {{ $t(`errors.${commandError.message}`) }}</div>
             
 
                 <button v-on:click="createRoom">{{ $t('lobby.create_new_room') }}</button><br>

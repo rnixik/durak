@@ -53,6 +53,14 @@ window.i18nMessages = {
             defender: 'Обороняющийся',
             game_is_over: 'Игра окончена',
         },
+        errors: {
+            need_one_more_player: 'Нужен ещё один игрок',
+            number_of_players_exceeded_limit: 'Превышен лимит игроков',
+            game_has_been_already_started: 'Игра уже начата',
+            you_can_create_one_room_only: 'Вы можете создавать только одну комнату',
+            room_does_not_exist: 'Комната не существует',
+            cant_change_status_game_has_been_started: 'Нельзя изменить статус: игра уже началась',
+        },
         error: 'Ошибка',
     },
 };
