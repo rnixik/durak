@@ -365,6 +365,7 @@ function App() {
     };
 
     this.onGameDealEvent = function (data) {
+        app.vue.gameState.gameEnd = false;
         if (data.game_state_info) {
             app.updatePlayingTable(data.game_state_info);
         }
