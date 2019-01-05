@@ -40,7 +40,8 @@ type GameFirstAttackerEvent struct {
 
 // GamePlayerLeftEvent contains index of player who left the game
 type GamePlayerLeftEvent struct {
-	PlayerIndex int `json:"playerIndex"`
+	PlayerIndex int  `json:"playerIndex"`
+	IsAfk       bool `json:"isAfk"`
 }
 
 // GameAttackEvent contains info about attack with card

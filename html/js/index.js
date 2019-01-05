@@ -111,6 +111,7 @@ function App() {
                 clients: []
             },
             commandError: {},
+            infoMessage: {},
             rooms: [],
             room: {},
             wantToPlay: true,
@@ -409,9 +410,31 @@ function App() {
         }
         console.log('state only', data);
     };
+
     this.onGameEndEvent = (data) => {
         app.vue.gameState.gameEnd = true;
         app.vue.gameState.loserIndex = data.loserIndex;
+    };
+
+    this.onGamePlayerLeftEvent = (data) => {
+        let playerName = '';
+        if (app.vue.game.players[data.playerIndex]) {
+            playerName = app.vue.game.players[data.playerIndex].name;
+        }
+
+        if (data.isAfk) {
+            app.showInfoMessage('player_left_afk', { playerName });
+        } else {
+            app.showInfoMessage('player_left', { playerName });
+        }
+    };
+
+    this.showInfoMessage = (messageId, parameters) => {
+        app.vue.infoMessage = { messageId, parameters };
+        console.info(messageId);
+        window.setTimeout(() => {
+            app.vue.infoMessage = {};
+        }, 10000);
     };
 
     this.sendCommand = (type, subType, data) => {

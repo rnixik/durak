@@ -15,6 +15,10 @@ body {
     color: #a20000;
 }
 
+.info-message {
+    color: #0000a2;
+}
+
 .slide-fade-enter-active {
     transition: all .3s ease;
 }

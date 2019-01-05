@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 )
 
 // Statuses of the game.
@@ -9,6 +10,8 @@ const (
 	GameStatusPreparing = "preparing"
 	GameStatusPlaying   = "playing"
 	GameStatusEnd       = "end"
+
+	AfkTimeoutSeconds = 120
 )
 
 // Game represents status, state, etc of the game.
@@ -30,6 +33,7 @@ type Game struct {
 	battleground                  []*Card
 	defendingCards                map[int]*Card
 	defenderPickUp                bool
+	afkTimers                     map[int]*time.Timer
 }
 
 func newGame(room *Room, players []*Player) *Game {
@@ -40,6 +44,7 @@ func newGame(room *Room, players []*Player) *Game {
 		players:        players,
 		battleground:   make([]*Card, 0),
 		defendingCards: make(map[int]*Card, 0),
+		afkTimers:      make(map[int]*time.Timer, 0),
 	}
 }
 
@@ -345,6 +350,8 @@ func (g *Game) attack(player *Player, data AttackActionData) {
 		gameAttackEvent.GameStateInfo = g.getGameStateInfo(p)
 		p.sendEvent(gameAttackEvent)
 	}
+
+	g.restartAfkTimers(g.defenderIndex)
 }
 
 func (g *Game) defend(player *Player, data DefendActionData) {
@@ -367,6 +374,8 @@ func (g *Game) defend(player *Player, data DefendActionData) {
 		gameAttackEvent.GameStateInfo = g.getGameStateInfo(p)
 		p.sendEvent(gameAttackEvent)
 	}
+
+	g.restartAfkTimers(g.defenderIndex)
 }
 
 func (g *Game) canPlayerPickUp(player *Player) bool {
@@ -402,6 +411,8 @@ func (g *Game) pickUp(player *Player) {
 	} else {
 		g.broadcastGameStateEvent()
 	}
+
+	g.restartAfkTimers(g.defenderIndex)
 }
 
 func (g *Game) canPlayerComplete(player *Player) bool {
@@ -472,8 +483,10 @@ func (g *Game) endRound() {
 			loserIndex = -1
 		}
 		g.endGame(hasLoser, loserIndex)
+		g.restartAfkTimers(-1)
 	} else {
 		g.broadcastGameStateEvent()
+		g.restartAfkTimers(g.attackerIndex)
 	}
 }
 
@@ -534,8 +547,8 @@ func (g *Game) endGame(hasLoser bool, loserIndex int) {
 	g.room.onGameEnded()
 }
 
-func (g *Game) onActivePlayerLeft(playerIndex int) {
-	gamePlayerLeft := &GamePlayerLeftEvent{playerIndex}
+func (g *Game) onActivePlayerLeft(playerIndex int, isAfk bool) {
+	gamePlayerLeft := &GamePlayerLeftEvent{playerIndex, isAfk}
 	g.room.broadcastEvent(gamePlayerLeft, nil)
 
 	if g.getActivePlayersNum() == 2 {
@@ -554,10 +567,35 @@ func (g *Game) onLatePlayerJoin(player *Player) {
 func (g *Game) onClientRemoved(client *Client) {
 	for index, p := range g.players {
 		if p.client.Id() == client.Id() && p.IsActive {
-			g.onActivePlayerLeft(index)
+			g.onActivePlayerLeft(index, false)
 			return
 		}
 	}
+}
+
+func (g *Game) restartAfkTimers(waitingPlayerIndex int) {
+	for plIndex, timer := range g.afkTimers {
+		timer.Stop()
+		delete(g.afkTimers, plIndex)
+	}
+
+	if waitingPlayerIndex < 0 {
+		return
+	}
+
+	timer, ok := g.afkTimers[waitingPlayerIndex]
+	if ok {
+		log.Println("stopping timer", waitingPlayerIndex)
+		timer.Stop()
+	}
+
+	timer = time.AfterFunc(time.Second*AfkTimeoutSeconds, func() {
+		log.Println("time after func", waitingPlayerIndex)
+		delete(g.afkTimers, waitingPlayerIndex)
+		g.onActivePlayerLeft(waitingPlayerIndex, true)
+	})
+
+	g.afkTimers[waitingPlayerIndex] = timer
 }
 
 func (g *Game) findPlayerOfClient(client *Client) *Player {

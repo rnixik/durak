@@ -70,5 +70,9 @@ window.i18nMessages = {
             errorGameAlreadyDeleted: 'Игра уже удалена',
         },
         error: 'Ошибка',
+        info_messages: {
+            player_left: 'Игрок {playerName} покинул игру',
+            player_left_afk: 'Игрок {playerName} покинул игру, потому что долго не предпринимал никаких действий'
+        },
     },
 };
