@@ -252,17 +252,17 @@ func (r *Room) onStartGameCommand(c *Client) {
 
 func (r *Room) onClientCommand(cc *ClientCommand) {
 	log.Println(cc.SubType)
-	if cc.SubType == "want_to_play" {
+	if cc.SubType == ClientCommandRoomSubTypeWantToPlay {
 		r.onWantToPlayCommand(cc.client)
-	} else if cc.SubType == "want_to_spectate" {
+	} else if cc.SubType == ClientCommandRoomSubTypeWantToSpectate {
 		r.onWantToSpectateCommand(cc.client)
-	} else if cc.SubType == "set_player_status" {
+	} else if cc.SubType == ClientCommandRoomSubTypeSetPlayerStatus {
 		var statusData RoomSetPlayerStatusCommandData
 		if err := json.Unmarshal(cc.Data, &statusData); err != nil {
 			return
 		}
 		r.onSetPlayerStatusCommand(cc.client, statusData.MemberId, statusData.Status)
-	} else if cc.SubType == "start_game" {
+	} else if cc.SubType == ClientCommandRoomSubTypeStartGame {
 		r.onStartGameCommand(cc.client)
 	}
 }

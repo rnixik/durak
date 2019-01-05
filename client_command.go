@@ -5,8 +5,8 @@ import "encoding/json"
 const (
 	ClientCommandTypeLobby              = "lobby"
 	ClientCommandLobbySubTypeJoin       = "join"
-	ClientCommandLobbySubTypeCreateRoom = "create_room"
-	ClientCommandLobbySubTypeJoinRoom   = "join_room"
+	ClientCommandLobbySubTypeCreateRoom = "createRoom"
+	ClientCommandLobbySubTypeJoinRoom   = "joinRoom"
 
 	ClientCommandTypeGame            = "game"
 	ClientCommandGameSubTypeAttack   = "attack"
@@ -14,7 +14,11 @@ const (
 	ClientCommandGameSubTypePickUp   = "pick_up"
 	ClientCommandGameSubTypeComplete = "complete"
 
-	ClientCommandTypeRoom = "room"
+	ClientCommandTypeRoom                   = "room"
+	ClientCommandRoomSubTypeWantToPlay      = "wantToPlay"
+	ClientCommandRoomSubTypeWantToSpectate  = "wantToSpectate"
+	ClientCommandRoomSubTypeSetPlayerStatus = "setPlayerStatus"
+	ClientCommandRoomSubTypeStartGame       = "startGame"
 )
 
 // ClientCommand is a command message from connected client.

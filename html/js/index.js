@@ -124,12 +124,12 @@ function App() {
                 players: [],
                 yourPlayerIndex: null
             },
-            playingTable: {
+            gameStateInfo: {
                 handsSizes: [],
-                pileSize: 0,
+                deckSize: 0,
                 discardPileSize: 0,
                 trumpCard: null,
-                trumpCardIsInPile: false,
+                trumpCardIsInDeck: false,
                 trumpCardIsOwnedByPlayerIndex: -1,
                 trumpSuit: null,
                 attackerIndex: -1,
@@ -212,24 +212,24 @@ function App() {
         },
         computed: {
             areYouAttacker: () => {
-                return app.vue.playingTable.attackerIndex === app.vue.game.yourPlayerIndex;
+                return app.vue.gameStateInfo.attackerIndex === app.vue.game.yourPlayerIndex;
             },
             areYouDefender: () => {
-                return app.vue.playingTable.defenderIndex === app.vue.game.yourPlayerIndex;
+                return app.vue.gameStateInfo.defenderIndex === app.vue.game.yourPlayerIndex;
             },
             areBeaten: () => {
-                return app.vue.playingTable.canYouComplete && app.vue.playingTable.canYouPickUp;
+                return app.vue.gameStateInfo.canYouComplete && app.vue.gameStateInfo.canYouPickUp;
             },
             isWaitingForOthers: () => {
-                return app.vue.playingTable.battleground.length
-                    && !app.vue.playingTable.canYouComplete
-                    && !app.vue.playingTable.canYouPickUp;
+                return app.vue.gameStateInfo.battleground.length
+                    && !app.vue.gameStateInfo.canYouComplete
+                    && !app.vue.gameStateInfo.canYouPickUp;
             },
             attackerNickname: () => {
-                if (app.vue.playingTable.attackerIndex < 0) {
+                if (app.vue.gameStateInfo.attackerIndex < 0) {
                     return;
                 }
-                const atInd = app.vue.playingTable.attackerIndex;
+                const atInd = app.vue.gameStateInfo.attackerIndex;
                 if (!app.vue.game.players[atInd]) {
                     return;
                 }
@@ -265,14 +265,14 @@ function App() {
     };
 
     this.onClientJoinedEvent = function (data) {
-        app.vue.clientsInfo.yourId = data.your_id;
-        app.vue.clientsInfo.yourNickname = data.your_nickname;
+        app.vue.clientsInfo.yourId = data.yourId;
+        app.vue.clientsInfo.yourNickname = data.yourNickname;
         app.vue.clientsInfo.clients = data.clients;
         app.vue.rooms = data.rooms;
         if (data.rooms.length === 0) {
             // auto create
             app.commandCreateRoom();
-        } else if (data.rooms.length === 1 && data.rooms[0].members_num === 1) {
+        } else if (data.rooms.length === 1 && data.rooms[0].membersNum === 1) {
             // auto join
             app.commandJoinRoom(data.rooms[0].id);
             app.vue.clientsInfo.yourRoomId = data.rooms[0].id;
@@ -331,14 +331,14 @@ function App() {
 
     this.onClientCreatedRoomEvent = function (data) {
         app.vue.rooms.push(data.room);
-        if (data.room.owner_id === app.vue.clientsInfo.yourId) {
+        if (data.room.ownerId === app.vue.clientsInfo.yourId) {
             app.vue.clientsInfo.yourRoomId = data.room.id;
         }
     };
 
     this.onRoomMemberChangedStatusEvent = function (data) {
         if (data.member.id === app.vue.clientsInfo.yourId) {
-            app.vue.wantToPlay = data.member.want_to_play;
+            app.vue.wantToPlay = data.member.wantToPlay;
         }
         const memberIndex = app.getRoomMemberIndexById(data.member.id);
         if (memberIndex > -1) {
@@ -356,64 +356,64 @@ function App() {
 
     this.onGamePlayersEvent = function (data) {
         app.vue.game.players = data.players;
-        app.vue.game.yourPlayerIndex = data.your_player_index;
+        app.vue.game.yourPlayerIndex = data.yourPlayerIndex;
     };
 
-    this.updatePlayingTable = (playingTableData) => {
-        for (let property in playingTableData) {
-            if (playingTableData.hasOwnProperty(property)) {
+    this.updategameStateInfo = (gameStateInfoData) => {
+        for (let property in gameStateInfoData) {
+            if (gameStateInfoData.hasOwnProperty(property)) {
                 const camelizedProperty = this.camelize(property);
-                console.log("set playingTableData", camelizedProperty, playingTableData[property]);
-                app.vue.playingTable[camelizedProperty] = playingTableData[property];
+                console.log("set gameStateInfoData", camelizedProperty, gameStateInfoData[property]);
+                app.vue.gameStateInfo[camelizedProperty] = gameStateInfoData[property];
             }
         }
     };
 
     this.onGameDealEvent = function (data) {
         app.vue.gameState.gameEnd = false;
-        if (data.game_state_info) {
-            app.updatePlayingTable(data.game_state_info);
+        if (data.gameStateInfo) {
+            app.updategameStateInfo(data.gameStateInfo);
         }
         // TODO: refactor
         for (let property in data) {
             if (data.hasOwnProperty(property)) {
                 const camelizedProperty = this.camelize(property);
-                app.vue.playingTable[camelizedProperty] = data[property];
+                app.vue.gameStateInfo[camelizedProperty] = data[property];
                 console.log("set", camelizedProperty, data[property]);
             }
         }
     };
 
     this.onGameFirstAttackerEvent = function (data) {
-        app.vue.playingTable.attackerIndex = data.attacker_index;
-        app.vue.playingTable.defenderIndex = data.defender_index;
-        app.vue.gameState.firstAttackerReasonCard = data.reason_card;
+        app.vue.gameStateInfo.attackerIndex = data.attackerIndex;
+        app.vue.gameStateInfo.defenderIndex = data.defenderIndex;
+        app.vue.gameState.firstAttackerReasonCard = data.reasonCard;
     };
 
     this.onGameAttackEvent = (data) => {
-        if (data.game_state_info) {
-            app.updatePlayingTable(data.game_state_info);
+        if (data.gameStateInfo) {
+            app.updategameStateInfo(data.gameStateInfo);
         }
         console.log('attack', data);
     };
 
     this.onGameDefendEvent = (data) => {
-        if (data.game_state_info) {
-            app.updatePlayingTable(data.game_state_info);
+        if (data.gameStateInfo) {
+            app.updategameStateInfo(data.gameStateInfo);
         }
         console.log('defend', data);
     };
 
     this.onGameStateEvent = (data) => {
-        if (data.game_state_info) {
-            app.updatePlayingTable(data.game_state_info);
+        if (data.gameStateInfo) {
+            app.updategameStateInfo(data.gameStateInfo);
             app.vue.gameState.firstAttackerReasonCard = null;
         }
         console.log('state only', data);
     };
     this.onGameEndEvent = (data) => {
         app.vue.gameState.gameEnd = true;
-        app.vue.gameState.loserIndex = data.loser_index;
+        app.vue.gameState.loserIndex = data.loserIndex;
     };
 
     this.sendCommand = function (type, subType, data) {
@@ -422,27 +422,27 @@ function App() {
     };
 
     this.commandJoinRoom = function (roomId) {
-        app.sendCommand('lobby', 'join_room', roomId);
+        app.sendCommand('lobby', 'joinRoom', roomId);
     };
 
     this.commandCreateRoom = function (roomId) {
-        app.sendCommand('lobby', 'create_room', null);
+        app.sendCommand('lobby', 'createRoom', null);
     };
 
     this.commandWantToPlay = function () {
-        app.sendCommand('room', 'want_to_play', null);
+        app.sendCommand('room', 'wantToPlay', null);
     };
 
     this.commandWantToSpectate = function () {
-        app.sendCommand('room', 'want_to_spectate', null);
+        app.sendCommand('room', 'wantToSpectate', null);
     };
 
     this.commandSetPlayerStatus = function (memberId, status) {
-        app.sendCommand('room', 'set_player_status', {member_id: memberId, status: status});
+        app.sendCommand('room', 'setPlayerStatus', {memberId: memberId, status: status});
     };
 
     this.commandStartGame = function () {
-        app.sendCommand('room', 'start_game', null);
+        app.sendCommand('room', 'startGame', null);
     };
 
     this.commandAttack = (value, suit) => {
@@ -488,7 +488,7 @@ function App() {
     this.updatePlayersInRoomCounter = function () {
         let playersNum = 0;
         for (let i = 0; i < app.vue.room.members.length; i++) {
-            if (app.vue.room.members[i].is_player) {
+            if (app.vue.room.members[i].isPlayer) {
                 playersNum++;
             }
         }

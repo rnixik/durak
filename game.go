@@ -19,7 +19,7 @@ type Game struct {
 	room                          *Room
 	status                        string
 	players                       []*Player
-	pile                          *Pile // deck actually :/
+	deck                          *Deck
 	discardPileSize               int
 	trumpSuit                     string
 	trumpCard                     *Card
@@ -65,7 +65,7 @@ func (g *Game) deal() {
 			if !p.IsActive || len(p.cards) >= cardsLimit {
 				break
 			}
-			card, err := g.pile.getCard()
+			card, err := g.deck.getCard()
 			if err == nil {
 				p.cards = append(p.cards, card)
 				lastCard = card
@@ -73,8 +73,8 @@ func (g *Game) deal() {
 			}
 		}
 	}
-	if len(g.pile.cards) > 0 {
-		lastCard = g.pile.cards[0]
+	if len(g.deck.cards) > 0 {
+		lastCard = g.deck.cards[0]
 		g.trumpCardIsInPile = true
 		g.trumpCardIsOwnedByPlayerIndex = -1
 	} else {
@@ -95,7 +95,7 @@ func (g *Game) dealToPlayer(player *Player) {
 		if len(player.cards) >= cardsLimit {
 			break
 		}
-		card, err := g.pile.getCard()
+		card, err := g.deck.getCard()
 		if err == nil {
 			player.cards = append(player.cards, card)
 		}
@@ -116,7 +116,7 @@ func (g *Game) getGameStateInfo(player *Player) *GameStateInfo {
 	gsi := &GameStateInfo{
 		YourHand:         make([]*Card, 0),
 		HandsSizes:       make([]int, len(g.players)),
-		PileSize:         len(g.pile.cards),
+		DeckSize:         len(g.deck.cards),
 		DiscardPileSize:  g.discardPileSize,
 		TrumpCard:        g.trumpCard,
 		Battleground:     g.battleground,
@@ -144,7 +144,7 @@ func (g *Game) sendDealEvent() {
 	de := GameDealEvent{
 		TrumpSuit:                     g.trumpSuit,
 		TrumpCard:                     g.trumpCard,
-		TrumpCardIsInPile:             g.trumpCardIsInPile,
+		TrumpCardIsInDeck:             g.trumpCardIsInPile,
 		TrumpCardIsOwnedByPlayerIndex: g.trumpCardIsOwnedByPlayerIndex,
 	}
 
@@ -167,9 +167,9 @@ func (g *Game) dumpHands() {
 }
 
 func (g *Game) dumpPile() {
-	log.Printf("Pile has cards: %d\n", len(g.pile.cards))
+	log.Printf("Pile has cards: %d\n", len(g.deck.cards))
 	str := ""
-	for _, card := range g.pile.cards {
+	for _, card := range g.deck.cards {
 		str += card.Value + card.Suit + " "
 	}
 	log.Printf("%s", str)
@@ -181,8 +181,8 @@ func (g *Game) dump() {
 
 func (g *Game) prepare() {
 	g.sendPlayersEvent()
-	g.pile = newPile()
-	g.pile.shuffle()
+	g.deck = newDeck()
+	g.deck.shuffle()
 	g.deal()
 	g.sendDealEvent()
 	g.attackerIndex, g.defenderIndex, g.firstAttackerReasonCard = g.findFirstAttacker()

@@ -2,33 +2,33 @@ package main
 
 import "testing"
 
-func TestNewPile(t *testing.T) {
-	pile := newPile()
-	got := len(pile.cards)
+func TestNewDeck(t *testing.T) {
+	deck := newDeck()
+	got := len(deck.cards)
 	expected := 36
 	if got != expected {
-		t.Errorf("TestNewPile expected: %v, got: %v", expected, got)
+		t.Errorf("TestNewDeck expected: %v, got: %v", expected, got)
 	}
 }
 
 func TestShuffle(t *testing.T) {
-	pile := newPile()
-	card1 := pile.cards[0]
-	card2 := pile.cards[1]
-	card3 := pile.cards[2]
-	pile.shuffle()
-	scard1 := pile.cards[0]
-	scard2 := pile.cards[1]
-	scard3 := pile.cards[2]
+	deck := newDeck()
+	card1 := deck.cards[0]
+	card2 := deck.cards[1]
+	card3 := deck.cards[2]
+	deck.shuffle()
+	scard1 := deck.cards[0]
+	scard2 := deck.cards[1]
+	scard3 := deck.cards[2]
 	if card1.equals(scard1) && card2.equals(scard2) && card3.equals(scard3) {
 		t.Errorf("TestShuffle: it was expected that at least one of first 3 cards was moved somewhere")
-		t.Logf("Pile: %s", pile.asString())
+		t.Logf("Deck: %s", deck.asString())
 	}
 }
 
 func TestGetCard(t *testing.T) {
-	pile := newPile()
-	card, err := pile.getCard()
+	deck := newDeck()
+	card, err := deck.getCard()
 	if err != nil {
 		t.Fatalf("TestGetCard got error: %s", err)
 	}
@@ -40,19 +40,19 @@ func TestGetCard(t *testing.T) {
 	}
 }
 
-func TestGetCardOnEmptyPile(t *testing.T) {
-	pile := newPile()
-	pile.cards = pile.cards[:0]
-	_, err := pile.getCard()
+func TestGetCardOnEmptyDeck(t *testing.T) {
+	deck := newDeck()
+	deck.cards = deck.cards[:0]
+	_, err := deck.getCard()
 	if err == nil {
 		t.Errorf("TestGetCard must be error")
 	}
 }
 
 func TestAsString(t *testing.T) {
-	pile := newPile()
-	pile.cards = pile.cards[:4]
-	got := pile.asString()
+	deck := newDeck()
+	deck.cards = deck.cards[:4]
+	got := deck.asString()
 	expected := "6♣ 6♦ 6♥ 6♠"
 	if got != expected {
 		t.Errorf("TestAsString expected: %v, got: %v", expected, got)

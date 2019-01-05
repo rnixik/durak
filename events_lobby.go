@@ -3,10 +3,10 @@ package main
 // RoomInList contains short info about room in the lobby.
 type RoomInList struct {
 	Id         uint64 `json:"id"`
-	OwnerId    uint64 `json:"owner_id"`
+	OwnerId    uint64 `json:"ownerId"`
 	Name       string `json:"name"`
-	GameStatus string `json:"game_status"`
-	MembersNum int    `json:"members_num"`
+	GameStatus string `json:"gameStatus"`
+	MembersNum int    `json:"membersNum"`
 }
 
 // ClientInList contains short info about client in the lobby.
@@ -17,8 +17,8 @@ type ClientInList struct {
 
 // ClientJoinedEvent contains info for the just connected client.
 type ClientJoinedEvent struct {
-	YourId       uint64          `json:"your_id"`
-	YourNickname string          `json:"your_nickname"`
+	YourId       uint64          `json:"yourId"`
+	YourNickname string          `json:"yourNickname"`
 	Clients      []*ClientInList `json:"clients"`
 	Rooms        []*RoomInList   `json:"rooms"`
 }

@@ -52,20 +52,20 @@
                 <transition-group name="slide-fade" tag="ol">
                     <li v-for="room in rooms" v-bind:key="room.id">
                       <strong v-if="room.id == clientsInfo.yourRoomId">--{{ $t("lobby.here") }}--</strong>
-                      <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.members_num }}
-                        <span v-if="room.game_status"> ({{ $t(`lobby.game_status.${room.game_status}`) }})</span></a>
-                        <strong v-if="room.owner_id == clientsInfo.yourId">{{ $t("lobby.your_are_owner") }}</strong>
+                      <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.membersNum }}
+                        <span v-if="room.gameStatus"> ({{ $t(`lobby.game_status.${room.gameStatus}`) }})</span></a>
+                        <strong v-if="room.ownerId == clientsInfo.yourId">{{ $t("lobby.your_are_owner") }}</strong>
                     </li>
                 </transition-group>
 
                 <div v-if="room && room.id">
-                    <h2>{{ $t("lobby.room") }} - {{ room.name }} - {{ room.game_status ? $t(`lobby.game_status.${room.game_status}`) : '' }}</h2>
+                    <h2>{{ $t("lobby.room") }} - {{ room.name }} - {{ room.gameStatus ? $t(`lobby.game_status.${room.gameStatus}`) : '' }}</h2>
                     <transition-group name="slide-fade" tag="ol">
-                        <li v-for="member in room.members" v-bind:key="member.id" v-bind:class="{ 'member-want-to-play': member.want_to_play, 'member-is-player': member.is_player }">
+                        <li v-for="member in room.members" v-bind:key="member.id" v-bind:class="{ 'member-want-to-play': member.wantToPlay, 'member-is-player': member.isPlayer }">
                           {{ member.nickname }}
-                          <span v-if="room.owner_id == clientsInfo.yourId">
-                            <button v-if="member.want_to_play && !member.is_player && playersInRoom < room.max_players && !room.game_status" v-on:click="setPlayerStatus(member.id, true)">{{ $t('lobby.mark_as_player') }}</button>
-                            <button v-if="member.is_player && !room.game_status" v-on:click="setPlayerStatus(member.id, false)">{{ $t('lobby.mark_as_spectator') }}</button>
+                          <span v-if="room.ownerId == clientsInfo.yourId">
+                            <button v-if="member.wantToPlay && !member.isPlayer && playersInRoom < room.maxPlayers && !room.gameStatus" v-on:click="setPlayerStatus(member.id, true)">{{ $t('lobby.mark_as_player') }}</button>
+                            <button v-if="member.isPlayer && !room.gameStatus" v-on:click="setPlayerStatus(member.id, false)">{{ $t('lobby.mark_as_spectator') }}</button>
                           </span>
                         </li>
                     </transition-group>
@@ -75,12 +75,12 @@
             
 
                 <button v-on:click="createRoom">{{ $t('lobby.create_new_room') }}</button><br>
-                <button v-if="!room.game_status" v-on:click="markWantToPlay" v-bind:class="{ 'want-btn-active': wantToPlay }">{{ $t('lobby.want_to_play') }}</button>
-                <button v-if="!room.game_status" v-on:click="markWantToSpectate" v-bind:class="{ 'want-btn-active': !wantToPlay }">{{ $t('lobby.want_to_spectate') }}</button><br>
-                <button v-if="room.owner_id == clientsInfo.yourId && !room.game_status" v-on:click="startGame">{{ $t('lobby.start_game') }}</button>
+                <button v-if="!room.gameStatus" v-on:click="markWantToPlay" v-bind:class="{ 'want-btn-active': wantToPlay }">{{ $t('lobby.want_to_play') }}</button>
+                <button v-if="!room.gameStatus" v-on:click="markWantToSpectate" v-bind:class="{ 'want-btn-active': !wantToPlay }">{{ $t('lobby.want_to_spectate') }}</button><br>
+                <button v-if="room.ownerId == clientsInfo.yourId && !room.gameStatus" v-on:click="startGame">{{ $t('lobby.start_game') }}</button>
 
-                <div v-if="room && room.game_status">
-                    <h2>{{ $t('lobby.game') }}: {{ $t(`lobby.game_status.${room.game_status}`) }}</h2>
+                <div v-if="room && room.gameStatus">
+                    <h2>{{ $t('lobby.game') }}: {{ $t(`lobby.game_status.${room.gameStatus}`) }}</h2>
                     <ol>
                         <li v-for="player in game.players">
                           {{ player.name }}
@@ -89,23 +89,23 @@
                 </div>
             </div>
 
-            <div class="playing-table" v-if="room.game_status">
+            <div class="playing-table" v-if="room.gameStatus">
                 <div>
                     <deck 
-                        v-bind:deck-size="playingTable.pileSize"
-                        v-bind:trump-card="playingTable.trumpCard"
-                        v-bind:trump-suit="playingTable.trumpSuit"
+                        v-bind:deck-size="gameStateInfo.deckSize"
+                        v-bind:trump-card="gameStateInfo.trumpCard"
+                        v-bind:trump-suit="gameStateInfo.trumpSuit"
                     ></deck>
                 </div>
 
                 <div>
                     <opponent 
-                        v-for="(handSize, handIndex) in playingTable.handsSizes"
+                        v-for="(handSize, handIndex) in gameStateInfo.handsSizes"
                         v-if="handIndex != game.yourPlayerIndex && game.players[handIndex].is_active"
                         v-bind:hand-size="handSize"  
                         v-bind:nickname="game.players[handIndex].name"
-                        v-bind:is-attacker="playingTable.attackerIndex == handIndex"
-                        v-bind:is-defender="playingTable.defenderIndex == handIndex"
+                        v-bind:is-attacker="gameStateInfo.attackerIndex == handIndex"
+                        v-bind:is-defender="gameStateInfo.defenderIndex == handIndex"
                     ></opponent>
                 </div>
 
@@ -115,30 +115,30 @@
                          v-on:click="attack"
                     >
                         <playing-card-battleground
-                                v-for="(card, index) in playingTable.battleground"
+                                v-for="(card, index) in gameStateInfo.battleground"
                                 v-bind:card="card"
-                                v-bind:defending-card="playingTable.defendingCards[index]"
-                                v-bind:highlighted="areYouDefender && gameState.pickedCard && !playingTable.defendingCards[index]"
+                                v-bind:defending-card="gameStateInfo.defendingCards[index]"
+                                v-bind:highlighted="areYouDefender && gameState.pickedCard && !gameStateInfo.defendingCards[index]"
                                 v-on:use-card="defend(card)"
                         ></playing-card-battleground>
                     </div>
 
-                    <div class="battleground-container__decisions decisions" v-if="playingTable.canYouPickUp || playingTable.canYouComplete">
-                        <button v-on:click="pickUp" v-if="playingTable.canYouPickUp" class="decisions__btn">{{ $t('game.pick_up') }} ↧</button>
-                        <button v-on:click="complete" v-if="playingTable.canYouComplete" class="decisions__btn">{{ $t('game.complete') }} ✓</button>
+                    <div class="battleground-container__decisions decisions" v-if="gameStateInfo.canYouPickUp || gameStateInfo.canYouComplete">
+                        <button v-on:click="pickUp" v-if="gameStateInfo.canYouPickUp" class="decisions__btn">{{ $t('game.pick_up') }} ↧</button>
+                        <button v-on:click="complete" v-if="gameStateInfo.canYouComplete" class="decisions__btn">{{ $t('game.complete') }} ✓</button>
                     </div>
                 </div>
 
-                <div class="your-hand-holder" v-if="playingTable.yourHand && playingTable.yourHand.length" >
-                    <div class="your-hand" v-bind:style="{width: playingTable.yourHand.length * 140 + 'px'}">
+                <div class="your-hand-holder" v-if="gameStateInfo.yourHand && gameStateInfo.yourHand.length" >
+                    <div class="your-hand" v-bind:style="{width: gameStateInfo.yourHand.length * 140 + 'px'}">
                         <playing-card-inhand v-on:use-card="useCard"
-                        v-for="(yourCard, index) in playingTable.yourHand"
+                        v-for="(yourCard, index) in gameStateInfo.yourHand"
                         v-bind:card="yourCard"
                         v-bind:class="{ 'playing-card-picked': gameState.pickedCard === yourCard}"
                         v-bind:style="{
-                          left: index*(Math.max(Math.min(playingTable.yourHand.length / 6 * -40, -50), -120)) + 'px',
-                          transform: 'rotate(' + (index + 0.5 - Math.min(playingTable.yourHand.length/2, 10)) * 3 + 'deg)',
-                          bottom: Math.abs(index+0.5-playingTable.yourHand.length/2) * Math.abs(index+0.5-playingTable.yourHand.length/2) * (6/playingTable.yourHand.length * -2.1) + 'px'
+                          left: index*(Math.max(Math.min(gameStateInfo.yourHand.length / 6 * -40, -50), -120)) + 'px',
+                          transform: 'rotate(' + (index + 0.5 - Math.min(gameStateInfo.yourHand.length/2, 10)) * 3 + 'deg)',
+                          bottom: Math.abs(index+0.5-gameStateInfo.yourHand.length/2) * Math.abs(index+0.5-gameStateInfo.yourHand.length/2) * (6/gameStateInfo.yourHand.length * -2.1) + 'px'
                         }"
                         ></playing-card-inhand>
                     </div>
@@ -154,7 +154,7 @@
                     <span v-if="!gameState.gameEnd">
                         <span v-if="areYouAttacker">{{ $t('game.you_are_attacker') }}!</span>
                         <span v-if="!areYouAttacker && attackerNickname"><i>{{ attackerNickname }}</i> {{ $t('game.is_attacker') }}!</span>
-                        <span v-if="areYouAttacker && playingTable.defenderPickUp">{{ $t('game.defender_pick_up') }}</span>
+                        <span v-if="areYouAttacker && gameStateInfo.defenderPickUp">{{ $t('game.defenderPickUp') }}</span>
                         <span v-if="isWaitingForOthers">{{ $t('game.waiting_for_other_players') }}</span>
                         <span v-if="gameState.firstAttackerReasonCard">
                             {{ $t('game.reason') }}:

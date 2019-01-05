@@ -51,7 +51,7 @@ window.i18nMessages = {
             is_attacker: 'ходит',
             reason: 'Причина',
             you_are_defender: 'Вы защищаетесь',
-            defender_pick_up: 'Обороняющийся принимает',
+            defenderPickUp: 'Обороняющийся принимает',
             beaten: 'Бито',
             waiting_for_other_players: 'Ожидание других игроков',
             attacker: 'Атакующий',

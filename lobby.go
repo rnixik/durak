@@ -160,7 +160,7 @@ func (l *Lobby) getRoomById(roomId uint64) (room *Room, err error) {
 			return r, nil
 		}
 	}
-	return nil, fmt.Errorf("Room not found by id = %d", roomId)
+	return nil, fmt.Errorf("room not found by id = %d", roomId)
 }
 
 func (l *Lobby) onLeftRoom(c *Client, room *Room) {
