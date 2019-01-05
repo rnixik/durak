@@ -140,7 +140,6 @@ func (g *Game) getGameStateInfo(player *Player) *GameStateInfo {
 
 func (g *Game) sendDealEvent() {
 	de := GameDealEvent{
-		TrumpSuit:                     g.trumpSuit,
 		TrumpCard:                     g.trumpCard,
 		TrumpCardIsInDeck:             g.trumpCardIsInPile,
 		TrumpCardIsOwnedByPlayerIndex: g.trumpCardIsOwnedByPlayerIndex,

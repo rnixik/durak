@@ -101,7 +101,6 @@
             <deck
                     v-bind:deck-size="gameStateInfo.deckSize"
                     v-bind:trump-card="gameStateInfo.trumpCard"
-                    v-bind:trump-suit="gameStateInfo.trumpSuit"
             ></deck>
         </div>
 
@@ -249,13 +248,15 @@
             ></playing-card-back>
 
             <playing-card
+                    v-bind:class="{'deck__last-card': deckSize === 1}"
                     v-bind:card="trumpCard"
-                    v-if="deckSize > 1 && trumpCard"
+                    v-if="deckSize > 0 && trumpCard"
             ></playing-card>
         </div>
-        <div v-if="deckSize == 0" class="deck__empty">
-            <div class="deck__trump-suit" v-bind:class="{'deck__suit-red': trumpSuit == '♦' || trumpSuit == '♥'}">
-                {{ trumpSuit }}
+
+        <div v-if="deckSize == 0 && trumpCard" class="deck__empty">
+            <div class="deck__trump-suit" v-bind:class="{'deck__suit-red': trumpCard.suit == '♦' || trumpCard.suit == '♥'}">
+                {{ trumpCard.suit }}
             </div>
         </div>
     </div>

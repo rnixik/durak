@@ -88,10 +88,6 @@ Vue.component('deck', {
         trumpCard: {
             type: Object,
             required: true
-        },
-        trumpSuit: {
-            type: String,
-            required: true
         }
     }
 });
@@ -130,7 +126,6 @@ function App() {
                 trumpCard: null,
                 trumpCardIsInDeck: false,
                 trumpCardIsOwnedByPlayerIndex: -1,
-                trumpSuit: null,
                 attackerIndex: -1,
                 defenderIndex: -1,
                 yourHand: [],

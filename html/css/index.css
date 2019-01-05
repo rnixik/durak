@@ -185,6 +185,11 @@ body {
     z-index: 1;
 }
 
+.deck .deck__last-card.playing-card-box {
+    /* no translate for last one */
+    transform: rotate(90deg) translateY(-15%);
+}
+
 .deck__empty {
     width: 65px;
     height: 94px;
