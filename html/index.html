@@ -1,157 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <title>Durak - An online multiplayer card game</title>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <script>
-        var WsConnection;
-        var OnIncomingMessage = function(){};
-        var WsDisconnect = function(){
-            if (WsConnection) {
-                WsConnection.close(1000, "Deliberate disconnection");
-            }
-        };
-    </script>
-    <link href="css/cards-svg-data.css" rel="stylesheet" media="all" />
-    <link href="css/index.css" rel="stylesheet" media="all" />
-  </head>
-  <body>
-        <div id="login" style="position: fixed; left: 0px; top: 0px; width: 1920px; height: 100%; z-index: 10; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjEwMPRyoQAAAGBJREFUOE9jCN9a9Z8SDDbAe0UuVklc4siYZBegG4rVAJAiYmwHYeoYQKxibJg2YYCO8bkQwwBSvYM3DIgxjGgvIBuGzCbKC+gGIGOiXIAPU88AdCci83F5C0RT6IKq/wD0s4G1BdrsJAAAAABJRU5ErkJggg==');">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <link href="css/cards-svg-data.css" rel="stylesheet" media="all"/>
+    <link href="css/index.css" rel="stylesheet" media="all"/>
+</head>
+<body>
+<div id="login"
+     style="position: fixed; left: 0px; top: 0px; width: 1920px; height: 100%; z-index: 10; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjEwMPRyoQAAAGBJREFUOE9jCN9a9Z8SDDbAe0UuVklc4siYZBegG4rVAJAiYmwHYeoYQKxibJg2YYCO8bkQwwBSvYM3DIgxjGgvIBuGzCbKC+gGIGOiXIAPU88AdCci83F5C0RT6IKq/wD0s4G1BdrsJAAAAABJRU5ErkJggg==');">
 
-            <h1 style="text-align: center; font-size: 44px; font-weight: bold; margin-top: 64px; margin-bottom: 0; text-transform: capitalize;" data-t="durak">DURAK</h1>
+    <h1 style="text-align: center; font-size: 44px; font-weight: bold; margin-top: 64px; margin-bottom: 0; text-transform: capitalize;"
+        data-t="durak">DURAK</h1>
 
-            <h2 style="text-align: center; font-size: 20px; font-weight: bold; color: #333; margin-top: 10px; margin-bottom: 40px;" data-t="an_online_multiplayer_card_game">An online multiplayer card game</h2>
-  
-
-            <div id="nickh" style="display: flex; align-items: center; justify-content: center;">
-                <label for="nick" style="margin-right: 8px;" data-t="nickname">Nickname:</label> <input id="nick" style="width:190px; background: none; border: none; border-bottom: 1px solid black; margin-right: 8px;" maxlength="20">
-                <button id="play" style="cursor: pointer; font-weight: bold; text-shadow: 2px 4px 3px rgba(0,0,0,0.3);" data-t="play">Play</button>
-            </div>
+    <h2 style="text-align: center; font-size: 20px; font-weight: bold; color: #333; margin-top: 10px; margin-bottom: 40px;"
+        data-t="an_online_multiplayer_card_game">An online multiplayer card game</h2>
 
 
-            <div id="ws-not-found" style="display: none; color: #700; text-align: center; font-size: 18px; font-weight: bold;" data-t="websockets_are_not_supported">Sorry, you can't play because you device does not support WebSockets</div>
+    <div id="nickh" style="display: flex; align-items: center; justify-content: center;">
+        <label for="nick" style="margin-right: 8px;" data-t="nickname">Nickname:</label> <input id="nick"
+                                                                                                style="width:190px; background: none; border: none; border-bottom: 1px solid black; margin-right: 8px;"
+                                                                                                maxlength="20">
+        <button id="play" style="cursor: pointer; font-weight: bold; text-shadow: 2px 4px 3px rgba(0,0,0,0.3);"
+                data-t="play">Play
+        </button>
+    </div>
 
-            <div id="disconnected" style="display: none; color: #FFDF00; text-align: center; font-size: 18px; font-weight: bold;" data-t="disconnected">Disconnected</div>
+
+    <div id="ws-not-found" style="display: none; color: #700; text-align: center; font-size: 18px; font-weight: bold;"
+         data-t="websockets_are_not_supported">Sorry, you can't play because you device does not support WebSockets
+    </div>
+
+    <div id="disconnected"
+         style="display: none; color: #FFDF00; text-align: center; font-size: 18px; font-weight: bold;"
+         data-t="disconnected">Disconnected
+    </div>
+</div>
+
+<div id="app" class="app">
+    <div class="game-info">
+        <div>
+            <div>{{ $t("lobby.your_id") }}: {{clientsInfo.yourId}}</div>
+            <div>{{ $t("lobby.your_nickname") }}: {{clientsInfo.yourNickname}}</div>
         </div>
 
-        <div id="app" class="app">
-            <div class="game-info">
-                <div>
-                    <div>{{ $t("lobby.your_id") }}: {{clientsInfo.yourId}}</div>
-                    <div>{{ $t("lobby.your_nickname") }}: {{clientsInfo.yourNickname}}</div>
-                </div>
+        <div>{{ $t("lobby.clients") }}:</div>
+        <ol>
+            <li v-for="client in clientsInfo.clients">
+                {{ client.nickname }}#{{ client.id }}
+            </li>
+        </ol>
 
-                <div>{{ $t("lobby.clients") }}:</div>
-                <ol>
-                    <li v-for="client in clientsInfo.clients">
-                      {{ client.nickname }}#{{ client.id }} 
-                    </li>
-                </ol>
+        <div>{{ $t("lobby.rooms") }}:</div>
+        <transition-group name="slide-fade" tag="ol">
+            <li v-for="room in rooms" bind:key="room.id">
+                <strong v-if="room.id == clientsInfo.yourRoomId">--{{ $t("lobby.here") }}--</strong>
+                <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.membersNum }}
+                    <span v-if="room.gameStatus"> ({{ $t(`lobby.game_status.${room.gameStatus}`) }})</span></a>
+                <strong v-if="room.ownerId == clientsInfo.yourId">{{ $t("lobby.your_are_owner") }}</strong>
+            </li>
+        </transition-group>
 
-                <div>{{ $t("lobby.rooms") }}:</div>
-                <transition-group name="slide-fade" tag="ol">
-                    <li v-for="room in rooms" v-bind:key="room.id">
-                      <strong v-if="room.id == clientsInfo.yourRoomId">--{{ $t("lobby.here") }}--</strong>
-                      <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.membersNum }}
-                        <span v-if="room.gameStatus"> ({{ $t(`lobby.game_status.${room.gameStatus}`) }})</span></a>
-                        <strong v-if="room.ownerId == clientsInfo.yourId">{{ $t("lobby.your_are_owner") }}</strong>
-                    </li>
-                </transition-group>
-
-                <div v-if="room && room.id">
-                    <h2>{{ $t("lobby.room") }} - {{ room.name }} - {{ room.gameStatus ? $t(`lobby.game_status.${room.gameStatus}`) : '' }}</h2>
-                    <transition-group name="slide-fade" tag="ol">
-                        <li v-for="member in room.members" v-bind:key="member.id" v-bind:class="{ 'member-want-to-play': member.wantToPlay, 'member-is-player': member.isPlayer }">
-                          {{ member.nickname }}
-                          <span v-if="room.ownerId == clientsInfo.yourId">
-                            <button v-if="member.wantToPlay && !member.isPlayer && playersInRoom < room.maxPlayers && !room.gameStatus" v-on:click="setPlayerStatus(member.id, true)">{{ $t('lobby.mark_as_player') }}</button>
-                            <button v-if="member.isPlayer && !room.gameStatus" v-on:click="setPlayerStatus(member.id, false)">{{ $t('lobby.mark_as_spectator') }}</button>
+        <div v-if="room && room.id">
+            <h2>{{ $t("lobby.room") }} - {{ room.name }}
+                - {{ room.gameStatus ? $t(`lobby.game_status.${room.gameStatus}`) : '' }}</h2>
+            <transition-group name="slide-fade" tag="ol">
+                <li v-for="member in room.members" v-bind:key="member.id"
+                    v-bind:class="{ 'member-want-to-play': member.wantToPlay, 'member-is-player': member.isPlayer }">
+                    {{ member.nickname }}
+                    <span v-if="room.ownerId == clientsInfo.yourId">
+                            <button v-if="member.wantToPlay && !member.isPlayer && playersInRoom < room.maxPlayers && !room.gameStatus"
+                                    v-on:click="setPlayerStatus(member.id, true)">{{ $t('lobby.mark_as_player') }}</button>
+                            <button v-if="member.isPlayer && !room.gameStatus"
+                                    v-on:click="setPlayerStatus(member.id, false)">{{ $t('lobby.mark_as_spectator') }}</button>
                           </span>
-                        </li>
-                    </transition-group>
-                </div>
+                </li>
+            </transition-group>
+        </div>
 
-                <div class="command-error" v-if="commandError.message">{{ $t('error') }}: {{ $t(`errors.${commandError.message}`) }}</div>
-            
+        <div class="command-error"
+             v-if="commandError.message">{{ $t('error') }}: {{ $t(`errors.${commandError.message}`) }}</div>
 
-                <button v-on:click="createRoom">{{ $t('lobby.create_new_room') }}</button><br>
-                <button v-if="!room.gameStatus" v-on:click="markWantToPlay" v-bind:class="{ 'want-btn-active': wantToPlay }">{{ $t('lobby.want_to_play') }}</button>
-                <button v-if="!room.gameStatus" v-on:click="markWantToSpectate" v-bind:class="{ 'want-btn-active': !wantToPlay }">{{ $t('lobby.want_to_spectate') }}</button><br>
-                <button v-if="room.ownerId == clientsInfo.yourId && !room.gameStatus" v-on:click="startGame">{{ $t('lobby.start_game') }}</button>
 
-                <div v-if="room && room.gameStatus">
-                    <h2>{{ $t('lobby.game') }}: {{ $t(`lobby.game_status.${room.gameStatus}`) }}</h2>
-                    <ol>
-                        <li v-for="player in game.players">
-                          {{ player.name }}
-                        </li>
-                    </ol>
-                </div>
+        <button v-on:click="createRoom">{{ $t('lobby.create_new_room') }}</button>
+        <br>
+        <button v-if="!room.gameStatus" v-on:click="markWantToPlay"
+                v-bind:class="{ 'want-btn-active': wantToPlay }">{{ $t('lobby.want_to_play') }}</button>
+        <button v-if="!room.gameStatus" v-on:click="markWantToSpectate"
+                v-bind:class="{ 'want-btn-active': !wantToPlay }">{{ $t('lobby.want_to_spectate') }}</button>
+        <br>
+        <button v-if="room.ownerId == clientsInfo.yourId && !room.gameStatus"
+                v-on:click="startGame">{{ $t('lobby.start_game') }}</button>
+
+        <div v-if="room && room.gameStatus">
+            <h2>{{ $t('lobby.game') }}: {{ $t(`lobby.game_status.${room.gameStatus}`) }}</h2>
+            <ol>
+                <li v-for="player in game.players">
+                    {{ player.name }}
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="playing-table" v-if="room.gameStatus">
+        <div>
+            <deck
+                    v-bind:deck-size="gameStateInfo.deckSize"
+                    v-bind:trump-card="gameStateInfo.trumpCard"
+                    v-bind:trump-suit="gameStateInfo.trumpSuit"
+            ></deck>
+        </div>
+
+        <div>
+            <opponent
+                    v-for="(handSize, handIndex) in gameStateInfo.handsSizes"
+                    v-if="handIndex != game.yourPlayerIndex && game.players[handIndex].is_active"
+                    v-bind:hand-size="handSize"
+                    v-bind:nickname="game.players[handIndex].name"
+                    v-bind:is-attacker="gameStateInfo.attackerIndex == handIndex"
+                    v-bind:is-defender="gameStateInfo.defenderIndex == handIndex"
+            ></opponent>
+        </div>
+
+        <div class="battleground-container">
+            <div class="battleground"
+                 v-bind:class="{ 'battleground-attack-area-active': areYouAttacker && gameState.pickedCard }"
+                 v-on:click="attack"
+            >
+                <playing-card-battleground
+                        v-for="(card, index) in gameStateInfo.battleground"
+                        v-bind:card="card"
+                        v-bind:defending-card="gameStateInfo.defendingCards[index]"
+                        v-bind:highlighted="areYouDefender && gameState.pickedCard && !gameStateInfo.defendingCards[index]"
+                        v-on:use-card="defend(card)"
+                ></playing-card-battleground>
             </div>
 
-            <div class="playing-table" v-if="room.gameStatus">
-                <div>
-                    <deck 
-                        v-bind:deck-size="gameStateInfo.deckSize"
-                        v-bind:trump-card="gameStateInfo.trumpCard"
-                        v-bind:trump-suit="gameStateInfo.trumpSuit"
-                    ></deck>
-                </div>
+            <div class="battleground-container__decisions decisions"
+                 v-if="gameStateInfo.canYouPickUp || gameStateInfo.canYouComplete">
+                <button v-on:click="pickUp" v-if="gameStateInfo.canYouPickUp"
+                        class="decisions__btn">{{ $t('game.pick_up') }} ↧
+                </button>
+                <button v-on:click="complete" v-if="gameStateInfo.canYouComplete"
+                        class="decisions__btn">{{ $t('game.complete') }} ✓
+                </button>
+            </div>
+        </div>
 
-                <div>
-                    <opponent 
-                        v-for="(handSize, handIndex) in gameStateInfo.handsSizes"
-                        v-if="handIndex != game.yourPlayerIndex && game.players[handIndex].is_active"
-                        v-bind:hand-size="handSize"  
-                        v-bind:nickname="game.players[handIndex].name"
-                        v-bind:is-attacker="gameStateInfo.attackerIndex == handIndex"
-                        v-bind:is-defender="gameStateInfo.defenderIndex == handIndex"
-                    ></opponent>
-                </div>
-
-                <div class="battleground-container">
-                    <div class="battleground"
-                         v-bind:class="{ 'battleground-attack-area-active': areYouAttacker && gameState.pickedCard }"
-                         v-on:click="attack"
-                    >
-                        <playing-card-battleground
-                                v-for="(card, index) in gameStateInfo.battleground"
-                                v-bind:card="card"
-                                v-bind:defending-card="gameStateInfo.defendingCards[index]"
-                                v-bind:highlighted="areYouDefender && gameState.pickedCard && !gameStateInfo.defendingCards[index]"
-                                v-on:use-card="defend(card)"
-                        ></playing-card-battleground>
-                    </div>
-
-                    <div class="battleground-container__decisions decisions" v-if="gameStateInfo.canYouPickUp || gameStateInfo.canYouComplete">
-                        <button v-on:click="pickUp" v-if="gameStateInfo.canYouPickUp" class="decisions__btn">{{ $t('game.pick_up') }} ↧</button>
-                        <button v-on:click="complete" v-if="gameStateInfo.canYouComplete" class="decisions__btn">{{ $t('game.complete') }} ✓</button>
-                    </div>
-                </div>
-
-                <div class="your-hand-holder" v-if="gameStateInfo.yourHand && gameStateInfo.yourHand.length" >
-                    <div class="your-hand" v-bind:style="{width: gameStateInfo.yourHand.length * 140 + 'px'}">
-                        <playing-card-inhand v-on:use-card="useCard"
-                        v-for="(yourCard, index) in gameStateInfo.yourHand"
-                        v-bind:card="yourCard"
-                        v-bind:class="{ 'playing-card-picked': gameState.pickedCard === yourCard}"
-                        v-bind:style="{
+        <div class="your-hand-holder" v-if="gameStateInfo.yourHand && gameStateInfo.yourHand.length">
+            <div class="your-hand" v-bind:style="{width: gameStateInfo.yourHand.length * 140 + 'px'}">
+                <playing-card-inhand v-on:use-card="useCard"
+                                     v-for="(yourCard, index) in gameStateInfo.yourHand"
+                                     v-bind:card="yourCard"
+                                     v-bind:class="{ 'playing-card-picked': gameState.pickedCard === yourCard}"
+                                     v-bind:style="{
                           left: index*(Math.max(Math.min(gameStateInfo.yourHand.length / 6 * -40, -50), -120)) + 'px',
                           transform: 'rotate(' + (index + 0.5 - Math.min(gameStateInfo.yourHand.length/2, 10)) * 3 + 'deg)',
                           bottom: Math.abs(index+0.5-gameStateInfo.yourHand.length/2) * Math.abs(index+0.5-gameStateInfo.yourHand.length/2) * (6/gameStateInfo.yourHand.length * -2.1) + 'px'
                         }"
-                        ></playing-card-inhand>
-                    </div>
+                ></playing-card-inhand>
+            </div>
 
-                </div>
-                
-                <div class="game-state-holder">
+        </div>
+
+        <div class="game-state-holder">
                     <span v-if="gameState.gameEnd">
                         {{ $t('game.game_is_over') }}
                         <span v-if="gameState.loserIndex > -1"><i>{{ loserNickname }}</i> {{ $t('game.is_looser') }}!</span>
                         <span v-if="gameState.loserIndex == -1">{{ $t('game.draw') }}!</span>
                     </span>
-                    <span v-if="!gameState.gameEnd">
+            <span v-if="!gameState.gameEnd">
                         <span v-if="areYouAttacker">{{ $t('game.you_are_attacker') }}!</span>
                         <span v-if="!areYouAttacker && attackerNickname"><i>{{ attackerNickname }}</i> {{ $t('game.is_attacker') }}!</span>
                         <span v-if="areYouAttacker && gameStateInfo.defenderPickUp">{{ $t('game.defenderPickUp') }}</span>
@@ -166,185 +184,192 @@
                         <span v-if="areBeaten">{{ $t('game.beaten') }}!</span>
                     </span>
 
-                </div>
-            </div>
         </div>
+    </div>
+</div>
 
-        <script type="text/x-template" id="playing-card-template">
-            <div class="playing-card-box">
-                <div class="playing-card" v-bind:class="'icon-' + className"></div>
-            </div>
-        </script>
+<script type="text/x-template" id="playing-card-template">
+    <div class="playing-card-box">
+        <div class="playing-card" v-bind:class="'icon-' + className"></div>
+    </div>
+</script>
 
-        <script type="text/x-template" id="playing-card-back-template">
-            <div class="playing-card-back-box">
-                <div class="playing-card-back"></div>
-            </div>
-        </script>
+<script type="text/x-template" id="playing-card-back-template">
+    <div class="playing-card-back-box">
+        <div class="playing-card-back"></div>
+    </div>
+</script>
 
-        <script type="text/x-template" id="playing-card-inhand-template">
-            <playing-card v-bind:card="card" @click.native="$emit('use-card', card)"></playing-card>
-        </script>
+<script type="text/x-template" id="playing-card-inhand-template">
+    <playing-card v-bind:card="card" @click.native="$emit('use-card', card)"></playing-card>
+</script>
 
-        <script type="text/x-template" id="playing-card-battleground-template">
-            <div class="battleground-card">
-                <playing-card
-                        v-bind:card="card"
-                        @click.native="$emit('use-card', card)"
-                        v-bind:class="{ 'highlighted': highlighted }"
-                ></playing-card>
-                <playing-card v-bind:card="defendingCard" v-if="defendingCard" class="battleground-defending-card"></playing-card>
-            </div>
-        </script>
+<script type="text/x-template" id="playing-card-battleground-template">
+    <div class="battleground-card">
+        <playing-card
+                v-bind:card="card"
+                @click.native="$emit('use-card', card)"
+                v-bind:class="{ 'highlighted': highlighted }"
+        ></playing-card>
+        <playing-card v-bind:card="defendingCard" v-if="defendingCard"
+                      class="battleground-defending-card"></playing-card>
+    </div>
+</script>
 
-        <script type="text/x-template" id="opponent-template">
-            <div class="opponent">
-                <div 
-                  class="opponent__nickname"
-                  v-bind:style="{'z-index': handSize}"
-                >{{ nickname }}</div>
-                <div class="opponent__attack-state" v-bind:style="{'z-index': handSize}" v-if="isAttacker" v-bind:title="$t('game.attacker')">⚔</div>
-                <div class="opponent__attack-state opponent__attack-state_defender" v-bind:style="{'z-index': handSize}" v-if="isDefender" v-bind:title="$t('game.defender')">🛡</div>
-                <div class="opponent__card-num" v-bind:style="{'z-index': handSize}">{{ handSize }}</div>
-                <div class="opponent__hand" v-bind:style="{width: handSize * 65 + 'px'}">
-                    <playing-card-back 
-                      v-for="index in handSize"
-                      v-bind:style="{
+<script type="text/x-template" id="opponent-template">
+    <div class="opponent">
+        <div
+                class="opponent__nickname"
+                v-bind:style="{'z-index': handSize}"
+        >{{ nickname }}</div>
+        <div class="opponent__attack-state" v-bind:style="{'z-index': handSize}" v-if="isAttacker"
+             v-bind:title="$t('game.attacker')">⚔
+        </div>
+        <div class="opponent__attack-state opponent__attack-state_defender" v-bind:style="{'z-index': handSize}"
+             v-if="isDefender" v-bind:title="$t('game.defender')">🛡
+        </div>
+        <div class="opponent__card-num" v-bind:style="{'z-index': handSize}">{{ handSize }}</div>
+        <div class="opponent__hand" v-bind:style="{width: handSize * 65 + 'px'}">
+            <playing-card-back
+                    v-for="index in handSize"
+                    v-bind:style="{
                           left: ( (index-1) * (-65 + 45/(handSize-1)) ) + 'px',
                           'z-index': handSize-index
                         }"
-                    ></playing-card-back>
-                </div>
-            </div>
-        </script>
+            ></playing-card-back>
+        </div>
+    </div>
+</script>
 
-        <script type="text/x-template" id="deck-template">
-            <div class="deck">
-                <div class="deck__cards" v-if="deckSize > 0" v-bind:style="{width: deckSize * 65 + 'px'}">
-                    <playing-card-back 
-                      v-for="index in deckSize"
-                      v-if="index != deckSize"
-                      v-bind:style="{
+<script type="text/x-template" id="deck-template">
+    <div class="deck">
+        <div class="deck__cards" v-if="deckSize > 0" v-bind:style="{width: deckSize * 65 + 'px'}">
+            <playing-card-back
+                    v-for="index in deckSize"
+                    v-if="index != deckSize"
+                    v-bind:style="{
                           left: ((index-1) * -65) + 'px',
                           bottom: (-20 + (index-1) * 0.5) + 'px',
                           'z-index': 2
                         }"
-                    ></playing-card-back>
+            ></playing-card-back>
 
-                    <playing-card
-                      v-bind:card="trumpCard" 
-                      v-if="deckSize > 1 && trumpCard"
-                    ></playing-card>
-                </div>
-                <div v-if="deckSize == 0" class="deck__empty">
-                    <div class="deck__trump-suit" v-bind:class="{'deck__suit-red': trumpSuit == '♦' || trumpSuit == '♥'}">
-                        {{ trumpSuit }}
-                    </div>
-                </div>
+            <playing-card
+                    v-bind:card="trumpCard"
+                    v-if="deckSize > 1 && trumpCard"
+            ></playing-card>
+        </div>
+        <div v-if="deckSize == 0" class="deck__empty">
+            <div class="deck__trump-suit" v-bind:class="{'deck__suit-red': trumpSuit == '♦' || trumpSuit == '♥'}">
+                {{ trumpSuit }}
             </div>
-        </script>
+        </div>
+    </div>
+</script>
 
-        <script src="js/messages.js"></script>
-        <script>
-            const loginElement = document.getElementById('login');
-            (() => {
-                const updatedLoginWidth = () => {
-                    const width = window.innerWidth;
-                    loginElement.style.width = width + 'px';
-                };
-                window.onresize = () => {
-                    updatedLoginWidth();
-                };
-                updatedLoginWidth();
+<script src="js/messages.js"></script>
+<script>
+    const loginElement = document.getElementById('login');
+    (() => {
+        const updatedLoginWidth = () => {
+            const width = window.innerWidth;
+            loginElement.style.width = width + 'px';
+        };
+        window.onresize = () => {
+            updatedLoginWidth();
+        };
+        updatedLoginWidth();
 
-                // kazupon/vue-i18n does not support multiple fallback
-                window.CURRENT_LOCALE = 'en';
-                if (navigator.language && navigator.language.substr(0, 2).toLowerCase() === 'ru') {
-                    window.CURRENT_LOCALE = 'ru';
-                }
+        // kazupon/vue-i18n does not support multiple fallback
+        window.CURRENT_LOCALE = 'en';
+        if (navigator.language && navigator.language.substr(0, 2).toLowerCase() === 'ru') {
+            window.CURRENT_LOCALE = 'ru';
+        }
 
-                const playBtn = document.getElementById('play');
+        const playBtn = document.getElementById('play');
 
-                playBtn.addEventListener('click', () => {
-                    const nickname = document.getElementById('nick').value;
-                    const date = new Date;
-                    date.setDate(date.getDate() + 180);
-                    document.cookie = "nickname=" + nickname + "; path=/; expires=" + date.toUTCString();
+        playBtn.addEventListener('click', () => {
+            const nickname = document.getElementById('nick').value;
+            const date = new Date;
+            date.setDate(date.getDate() + 180);
+            document.cookie = "nickname=" + nickname + "; path=/; expires=" + date.toUTCString();
 
-                    wsConnect(nickname);
-                });
+            wsConnect(nickname);
+        });
 
-                const getCookie = (name) => {
-                  const matches = document.cookie.match(new RegExp(
-                    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-                  ));
-                  return matches ? decodeURIComponent(matches[1]) : undefined;
-                };
+        const getCookie = (name) => {
+            const matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        };
 
-                const cookieNickname = getCookie("nickname");
-                if (cookieNickname) {
-                    document.getElementById('nick').value = cookieNickname;
-                } else {
-                    document.getElementById('nick').value = Math.random().toString(36).substring(7);
-                }
+        const cookieNickname = getCookie("nickname");
+        if (cookieNickname) {
+            document.getElementById('nick').value = cookieNickname;
+        } else {
+            document.getElementById('nick').value = Math.random().toString(36).substring(7);
+        }
 
-                if (!window["WebSocket"]) {
-                    document.getElementById('ws-not-found').style.display = "block";
-                    document.getElementById('nickh').style.display = "none";
-                    document.getElementById('play').style.display = "none";
-                }
+        if (!window["WebSocket"]) {
+            document.getElementById('ws-not-found').style.display = "block";
+            document.getElementById('nickh').style.display = "none";
+            document.getElementById('play').style.display = "none";
+        }
 
-                const wsConnect = (nickname) => {
-                    WsConnection = new WebSocket("ws://" + document.location.host + "/ws");
-                    WsConnection.onopen = function () {
-                        loginElement.style.display = "none";
-                        document.getElementById('disconnected').style.display = "none";
-                        WsConnection.send(JSON.stringify({type: 'lobby', sub_type: 'join', data: nickname}));
-                    };
-                    WsConnection.onclose = () => {
-                        loginElement.style.display = "block";
-                        document.getElementById('disconnected').style.display = "block";
-                        window.setTimeout(function(){
-                            location.reload();
-                        }, 3000);
-                    };
-                    WsConnection.onmessage = function (evt) {
-                        const messages = evt.data.split('\n');
-                        for (let i = 0; i < messages.length; i++) {
-                            let json;
-                            try {
-                                json = JSON.parse(messages[i]);
-                            } catch (ex) {
-                                console.warn("Json parse error", evt.data, ex);
-                            }
-                            if (json) {
-                                OnIncomingMessage(json, evt);
-                            }
-                        }
-                        
-                    };
-                };
-
-                // i18n
-                if (window.i18nMessages[window.CURRENT_LOCALE]) {
-                    const translations = window.i18nMessages[window.CURRENT_LOCALE].login;
-                    const elementsToTranslate = document.querySelectorAll('#login [data-t]');
-                    for (let i = 0; i < elementsToTranslate.length; i += 1) {
-                        const transKey = elementsToTranslate[i].getAttribute('data-t');
-                        if (transKey && translations[transKey]) {
-                            elementsToTranslate[i].innerHTML = translations[transKey];
-                        } else {
-                            console.warn("Not found translation for login key: ", transKey);
-                        }
+        const wsConnect = (nickname) => {
+            const WsConnection = new WebSocket("ws://" + document.location.host + "/ws");
+            WsConnection.onopen = function () {
+                loginElement.style.display = "none";
+                document.getElementById('disconnected').style.display = "none";
+                WsConnection.send(JSON.stringify({type: 'lobby', sub_type: 'join', data: nickname}));
+            };
+            WsConnection.onclose = () => {
+                loginElement.style.display = "block";
+                document.getElementById('disconnected').style.display = "block";
+                window.setTimeout(function () {
+                    location.reload();
+                }, 3000);
+            };
+            WsConnection.onmessage = function (evt) {
+                const messages = evt.data.split('\n');
+                for (let i = 0; i < messages.length; i++) {
+                    let json;
+                    try {
+                        json = JSON.parse(messages[i]);
+                    } catch (ex) {
+                        console.warn("Json parse error", evt.data, ex);
+                    }
+                    if (json && window.OnIncomingMessage) {
+                        window.OnIncomingMessage(json, evt);
                     }
                 }
 
-                // TODO: remove debug
-                // wsConnect(document.getElementById('nick').value);
-            })();
-        </script>
-        <script src="js/vendor/vue.js"></script>
-        <script src="js/vendor/vue-i18n.js"></script>
-        <script src="js/index.js"></script>
-  </body>
+            };
+
+            window.WsConnection = WsConnection;
+        };
+
+        // i18n
+        if (window.i18nMessages[window.CURRENT_LOCALE]) {
+            const translations = window.i18nMessages[window.CURRENT_LOCALE].login;
+            const elementsToTranslate = document.querySelectorAll('#login [data-t]');
+            for (let i = 0; i < elementsToTranslate.length; i += 1) {
+                const transKey = elementsToTranslate[i].getAttribute('data-t');
+                if (transKey && translations[transKey]) {
+                    elementsToTranslate[i].innerHTML = translations[transKey];
+                } else {
+                    console.warn("Not found translation for login key: ", transKey);
+                }
+            }
+        }
+
+        // TODO: remove debug
+        // wsConnect(document.getElementById('nick').value);
+    })();
+</script>
+<script src="js/vendor/vue.js"></script>
+<script src="js/vendor/vue-i18n.js"></script>
+<script src="js/index.js"></script>
+</body>
 </html>

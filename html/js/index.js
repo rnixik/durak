@@ -418,7 +418,7 @@ function App() {
 
     this.sendCommand = function (type, subType, data) {
         console.log("send", type, subType, data);
-        WsConnection.send(JSON.stringify({type: type, sub_type: subType, data: data}));
+        window.WsConnection.send(JSON.stringify({type: type, sub_type: subType, data: data}));
     };
 
     this.commandJoinRoom = function (roomId) {
@@ -503,6 +503,6 @@ function App() {
 }
 
 (function () {
-    var app = new App();
-    OnIncomingMessage = app.onMessage;
+    const app = new App();
+    window.OnIncomingMessage = app.onMessage;
 })();
