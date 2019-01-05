@@ -12,6 +12,8 @@ const (
 	errorYouCanCreateOneRoomOnly            = "you_can_create_one_room_only"
 	errorRoomDoesNotExist                   = "room_does_not_exist"
 	errorCantChangeStatusGameHasBeenStarted = "cant_change_status_game_has_been_started"
+	errorYouShouldBeOwner                   = "you_should_be_owner"
+	errorGameAlreadyDeleted                 = "game_already_deleted"
 )
 
 // JSONEvent represents a message to clients with some event.

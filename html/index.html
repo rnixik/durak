@@ -53,11 +53,11 @@
 
         <div>{{ $t("lobby.rooms") }}:</div>
         <transition-group name="slide-fade" tag="ol">
-            <li v-for="room in rooms" bind:key="room.id">
-                <strong v-if="room.id == clientsInfo.yourRoomId">--{{ $t("lobby.here") }}--</strong>
-                <a href="#" v-on:click="joinRoom(room.id, $event)">{{ room.name }}#{{ room.id }}: {{ room.membersNum }}
-                    <span v-if="room.gameStatus"> ({{ $t(`lobby.game_status.${room.gameStatus}`) }})</span></a>
-                <strong v-if="room.ownerId == clientsInfo.yourId">{{ $t("lobby.your_are_owner") }}</strong>
+            <li v-for="r in rooms" v-bind:key="r.id">
+                <strong v-if="room && r.id == room.id">--{{ $t("lobby.here") }}--</strong>
+                <a href="#" v-on:click="joinRoom(r.id, $event)">{{ r.name }}#{{ r.id }}: {{ r.membersNum }}
+                    <span v-if="r.gameStatus"> ({{ $t(`lobby.game_status.${r.gameStatus}`) }})</span></a>
+                <strong v-if="r.ownerId == clientsInfo.yourId">{{ $t("lobby.your_are_owner") }}</strong>
             </li>
         </transition-group>
 
@@ -92,14 +92,8 @@
         <button v-if="room.ownerId == clientsInfo.yourId && !room.gameStatus"
                 v-on:click="startGame">{{ $t('lobby.start_game') }}</button>
 
-        <div v-if="room && room.gameStatus">
-            <h2>{{ $t('lobby.game') }}: {{ $t(`lobby.game_status.${room.gameStatus}`) }}</h2>
-            <ol>
-                <li v-for="player in game.players">
-                    {{ player.name }}
-                </li>
-            </ol>
-        </div>
+        <button v-if="room.ownerId == clientsInfo.yourId && room.gameStatus === 'end'"
+                v-on:click="deleteGame">{{ $t('lobby.complete_game') }}</button>
     </div>
 
     <div class="playing-table" v-if="room.gameStatus">
@@ -322,7 +316,7 @@
             WsConnection.onopen = function () {
                 loginElement.style.display = "none";
                 document.getElementById('disconnected').style.display = "none";
-                WsConnection.send(JSON.stringify({type: 'lobby', sub_type: 'join', data: nickname}));
+                WsConnection.send(JSON.stringify({type: 'lobby', subType: 'join', data: nickname}));
             };
             WsConnection.onclose = () => {
                 loginElement.style.display = "block";

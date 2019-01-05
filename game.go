@@ -15,7 +15,6 @@ const (
 type Game struct {
 	playerActions                 chan *PlayerAction
 	owner                         *Player
-	id                            uint64
 	room                          *Room
 	status                        string
 	players                       []*Player
@@ -33,9 +32,8 @@ type Game struct {
 	defenderPickUp                bool
 }
 
-func newGame(id uint64, room *Room, players []*Player) *Game {
+func newGame(room *Room, players []*Player) *Game {
 	return &Game{
-		id:             id,
 		room:           room,
 		playerActions:  make(chan *PlayerAction),
 		status:         GameStatusPreparing,
@@ -537,11 +535,11 @@ func (g *Game) endGame(hasLoser bool, loserIndex int) {
 	g.room.onGameEnded()
 }
 
-func (g *Game) onPlayerLeft(playerIndex int) {
+func (g *Game) onActivePlayerLeft(playerIndex int) {
 	gamePlayerLeft := &GamePlayerLeftEvent{playerIndex}
 	g.room.broadcastEvent(gamePlayerLeft, nil)
 
-	if len(g.players) == 2 {
+	if g.getActivePlayersNum() == 2 {
 		g.endGame(true, playerIndex)
 	}
 }
@@ -556,8 +554,8 @@ func (g *Game) onLatePlayerJoin(player *Player) {
 
 func (g *Game) onClientRemoved(client *Client) {
 	for index, p := range g.players {
-		if p.client.Id() == client.Id() {
-			g.onPlayerLeft(index)
+		if p.client.Id() == client.Id() && p.IsActive {
+			g.onActivePlayerLeft(index)
 			return
 		}
 	}

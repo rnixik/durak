@@ -3,13 +3,10 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"sync/atomic"
 )
 
 // MaxPlayersInRoom limits maximum number of players in room
 const MaxPlayersInRoom = 2
-
-var lastGameId uint64
 
 // RoomMember represents connected to a room client.
 type RoomMember struct {
@@ -34,9 +31,6 @@ func newRoom(roomId uint64, owner *Client, lobby *Lobby) *Room {
 	members[ownerInRoom] = true
 	room := &Room{roomId, ownerInRoom, members, nil, lobby}
 	owner.room = room
-
-	roomJoinedEvent := RoomJoinedEvent{room.toRoomInfo()}
-	owner.sendEvent(roomJoinedEvent)
 
 	return room
 }
@@ -116,10 +110,10 @@ func (r *Room) addClient(client *Client) {
 }
 
 func (r *Room) broadcastEvent(event interface{}, exceptClient *Client) {
-	json, _ := eventToJSON(event)
+	eventJson, _ := eventToJSON(event)
 	for m := range r.members {
 		if exceptClient == nil || m.client.Id() != exceptClient.Id() {
-			m.client.sendMessage(json)
+			m.client.sendMessage(eventJson)
 		}
 	}
 }
@@ -238,11 +232,28 @@ func (r *Room) onStartGameCommand(c *Client) {
 		}
 	}
 
-	atomic.AddUint64(&lastGameId, 1)
-	lastGameIdSafe := atomic.LoadUint64(&lastGameId)
-
-	r.game = newGame(lastGameIdSafe, r, players)
+	r.game = newGame(r, players)
 	go r.game.begin()
+
+	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
+	r.broadcastEvent(roomUpdatedEvent, nil)
+
+	r.lobby.sendRoomUpdate(r)
+}
+
+func (r *Room) onDeleteGameCommand(c *Client) {
+	if r.owner.client.Id() != c.Id() {
+		errEvent := &ClientCommandError{errorYouShouldBeOwner}
+		c.sendEvent(errEvent)
+		return
+	}
+	if r.game == nil {
+		errEvent := &ClientCommandError{errorGameAlreadyDeleted}
+		c.sendEvent(errEvent)
+		return
+	}
+
+	r.game = nil
 
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
 	r.broadcastEvent(roomUpdatedEvent, nil)
@@ -252,18 +263,21 @@ func (r *Room) onStartGameCommand(c *Client) {
 
 func (r *Room) onClientCommand(cc *ClientCommand) {
 	log.Println(cc.SubType)
-	if cc.SubType == ClientCommandRoomSubTypeWantToPlay {
+	switch cc.SubType {
+	case ClientCommandRoomSubTypeWantToPlay:
 		r.onWantToPlayCommand(cc.client)
-	} else if cc.SubType == ClientCommandRoomSubTypeWantToSpectate {
+	case ClientCommandRoomSubTypeWantToSpectate:
 		r.onWantToSpectateCommand(cc.client)
-	} else if cc.SubType == ClientCommandRoomSubTypeSetPlayerStatus {
+	case ClientCommandRoomSubTypeSetPlayerStatus:
 		var statusData RoomSetPlayerStatusCommandData
 		if err := json.Unmarshal(cc.Data, &statusData); err != nil {
 			return
 		}
 		r.onSetPlayerStatusCommand(cc.client, statusData.MemberId, statusData.Status)
-	} else if cc.SubType == ClientCommandRoomSubTypeStartGame {
+	case ClientCommandRoomSubTypeStartGame:
 		r.onStartGameCommand(cc.client)
+	case ClientCommandRoomSubTypeDeleteGame:
+		r.onDeleteGameCommand(cc.client)
 	}
 }
 

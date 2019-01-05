@@ -40,6 +40,7 @@ window.i18nMessages = {
             want_to_play: 'Хочу играть',
             want_to_spectate: 'Хочу смотреть',
             start_game: 'Начать игру',
+            complete_game: 'Завершить игру',
             game: 'Игра',
         },
         game: {
@@ -65,6 +66,8 @@ window.i18nMessages = {
             you_can_create_one_room_only: 'Вы можете создавать только одну комнату',
             room_does_not_exist: 'Комната не существует',
             cant_change_status_game_has_been_started: 'Нельзя изменить статус: игра уже началась',
+            you_should_be_owner: 'Вы должны быть создателем',
+            errorGameAlreadyDeleted: 'Игра уже удалена',
         },
         error: 'Ошибка',
     },

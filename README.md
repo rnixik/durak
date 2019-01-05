@@ -14,7 +14,7 @@ This implementation is in progress.
 [x] Basic visualizing of cards on client-side  
 [x] Game process and rules  
 [x] I18n  
-[ ] Observing started games, joining by an url  
+[x] Observing started games, joining by an url  
 [ ] Simple AI  
 [ ] Advanced visualizing of cards on client-side: animations, drag'n'drops  
 [ ] Full structured log of games  

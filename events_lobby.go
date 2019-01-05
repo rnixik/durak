@@ -41,7 +41,7 @@ type ClientCreatedRoomEvent struct {
 
 // RoomInListRemovedEvent contains id of the room which was removed from lobby
 type RoomInListRemovedEvent struct {
-	RoomId uint64 `json:"room_id"`
+	RoomId uint64 `json:"roomId"`
 }
 
 // RoomInListUpdatedEvent contains info about room which was changed

@@ -11,7 +11,7 @@ const (
 	ClientCommandTypeGame            = "game"
 	ClientCommandGameSubTypeAttack   = "attack"
 	ClientCommandGameSubTypeDefend   = "defend"
-	ClientCommandGameSubTypePickUp   = "pick_up"
+	ClientCommandGameSubTypePickUp   = "pickUp"
 	ClientCommandGameSubTypeComplete = "complete"
 
 	ClientCommandTypeRoom                   = "room"
@@ -19,12 +19,13 @@ const (
 	ClientCommandRoomSubTypeWantToSpectate  = "wantToSpectate"
 	ClientCommandRoomSubTypeSetPlayerStatus = "setPlayerStatus"
 	ClientCommandRoomSubTypeStartGame       = "startGame"
+	ClientCommandRoomSubTypeDeleteGame      = "deleteGame"
 )
 
 // ClientCommand is a command message from connected client.
 type ClientCommand struct {
 	Type    string          `json:"type"`
-	SubType string          `json:"sub_type"`
+	SubType string          `json:"subType"`
 	Data    json.RawMessage `json:"data"`
 	client  *Client
 }

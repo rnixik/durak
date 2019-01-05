@@ -152,6 +152,9 @@ func (l *Lobby) onCreateNewRoomCommand(c *Client) {
 
 	event := &ClientCreatedRoomEvent{room.toRoomInList()}
 	l.broadcastEvent(event)
+
+	roomJoinedEvent := RoomJoinedEvent{room.toRoomInfo()}
+	c.sendEvent(roomJoinedEvent)
 }
 
 func (l *Lobby) getRoomById(roomId uint64) (room *Room, err error) {

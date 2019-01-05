@@ -112,7 +112,6 @@ function App() {
             clientsInfo: {
                 yourId: '',
                 yourNickname: '',
-                yourRoomId: '',
                 clients: []
             },
             commandError: {},
@@ -150,34 +149,36 @@ function App() {
             }
         },
         methods: {
-            createRoom: function (event) {
+            createRoom: (event) => {
                 if (event) {
                     event.preventDefault();
                 }
                 app.commandCreateRoom();
             },
-            joinRoom: function (roomId, event) {
+            joinRoom: (roomId, event) => {
                 if (event) {
                     event.preventDefault();
                 }
                 app.commandJoinRoom(roomId);
-                app.vue.clientsInfo.yourRoomId = roomId;
             },
-            markWantToPlay: function () {
+            markWantToPlay: () => {
                 app.commandWantToPlay();
-                this.wantToPlay = true;
+                app.vue.wantToPlay = true;
             },
-            markWantToSpectate: function () {
+            markWantToSpectate: () => {
                 app.commandWantToSpectate();
-                this.wantToPlay = false;
+                app.vue.wantToPlay = false;
             },
-            setPlayerStatus: function (memberId, status) {
+            setPlayerStatus: (memberId, status) => {
                 app.commandSetPlayerStatus(memberId, status);
             },
-            startGame: function () {
+            startGame: () => {
                 app.commandStartGame();
             },
-            useCard: function (card) {
+            deleteGame: () => {
+                app.commandDeleteGame();
+            },
+            useCard: (card) => {
                 if (app.vue.gameState.pickedCard == card) {
                     app.vue.gameState.pickedCard = null
                 } else {
@@ -248,7 +249,7 @@ function App() {
         }
     });
 
-    this.onMessage = function (msg) {
+    this.onMessage = (msg) => {
         const onEventMethodName = 'on' + msg.name;
         let methodFound = false;
         for (prop in app) {
@@ -264,26 +265,31 @@ function App() {
         console.log(msg.name, msg.data);
     };
 
-    this.onClientJoinedEvent = function (data) {
+    this.onClientJoinedEvent = (data) => {
         app.vue.clientsInfo.yourId = data.yourId;
         app.vue.clientsInfo.yourNickname = data.yourNickname;
         app.vue.clientsInfo.clients = data.clients;
         app.vue.rooms = data.rooms;
+
+        const roomIdFromHash = app.getFromHash('roomId');
+
         if (data.rooms.length === 0) {
             // auto create
             app.commandCreateRoom();
         } else if (data.rooms.length === 1 && data.rooms[0].membersNum === 1) {
-            // auto join
+            // auto join to one
             app.commandJoinRoom(data.rooms[0].id);
-            app.vue.clientsInfo.yourRoomId = data.rooms[0].id;
+        } else if (roomIdFromHash) {
+            // auto join by hash
+            app.commandJoinRoom(roomIdFromHash);
         }
     };
 
-    this.onClientBroadCastJoinedEvent = function (data) {
+    this.onClientBroadCastJoinedEvent = (data) => {
         app.vue.clientsInfo.clients.push(data);
     };
 
-    this.onClientLeftEvent = function (data) {
+    this.onClientLeftEvent = (data) => {
         let clients = app.vue.clientsInfo.clients;
         for (let ind = 0; ind < clients.length; ind++) {
             if (clients[ind].id === data.id) {
@@ -293,35 +299,36 @@ function App() {
         app.vue.clientsInfo.clients = clients;
     };
 
-    this.onRoomInListUpdatedEvent = function (data) {
+    this.onRoomInListUpdatedEvent = (data) => {
         const index = app.getRoomIndexById(data.room.id);
         if (index > -1) {
             Vue.set(app.vue.rooms, index, data.room);
         }
     };
 
-    this.onRoomInListRemovedEvent = function (data) {
-        const index = app.getRoomIndexById(data.room_id);
+    this.onRoomInListRemovedEvent = (data) => {
+        const index = app.getRoomIndexById(data.roomId);
         if (index > -1) {
             app.vue.rooms.splice(index, 1);
         } else {
-            console.warn("Can't remove room", data.room_id);
+            console.warn("Can't remove room", data.roomId);
         }
     };
 
-    this.onRoomJoinedEvent = function (data) {
+    this.onRoomJoinedEvent = (data) => {
         app.vue.room = data.room;
         app.updatePlayersInRoomCounter();
+        app.updateLocationWithRoomId(data.room.id);
         // TODO: remove debug
         app.commandStartGame();
     };
 
-    this.onRoomUpdatedEvent = function (data) {
+    this.onRoomUpdatedEvent = (data) => {
         app.vue.room = data.room;
         app.updatePlayersInRoomCounter();
     };
 
-    this.onClientCommandError = function (data) {
+    this.onClientCommandError = (data) => {
         app.vue.commandError = data;
         console.error(data.message);
         window.setTimeout(() => {
@@ -329,14 +336,11 @@ function App() {
         }, 3000)
     };
 
-    this.onClientCreatedRoomEvent = function (data) {
+    this.onClientCreatedRoomEvent = (data) => {
         app.vue.rooms.push(data.room);
-        if (data.room.ownerId === app.vue.clientsInfo.yourId) {
-            app.vue.clientsInfo.yourRoomId = data.room.id;
-        }
     };
 
-    this.onRoomMemberChangedStatusEvent = function (data) {
+    this.onRoomMemberChangedStatusEvent = (data) => {
         if (data.member.id === app.vue.clientsInfo.yourId) {
             app.vue.wantToPlay = data.member.wantToPlay;
         }
@@ -346,7 +350,7 @@ function App() {
         }
     };
 
-    this.onRoomMemberChangedPlayerStatusEvent = function (data) {
+    this.onRoomMemberChangedPlayerStatusEvent = (data) => {
         const memberIndex = app.getRoomMemberIndexById(data.member.id);
         if (memberIndex > -1) {
             Vue.set(app.vue.room.members, memberIndex, data.member);
@@ -354,37 +358,36 @@ function App() {
         app.updatePlayersInRoomCounter();
     };
 
-    this.onGamePlayersEvent = function (data) {
+    this.onGamePlayersEvent = (data) => {
         app.vue.game.players = data.players;
         app.vue.game.yourPlayerIndex = data.yourPlayerIndex;
     };
 
-    this.updategameStateInfo = (gameStateInfoData) => {
+    this.updateGameStateInfo = (gameStateInfoData) => {
         for (let property in gameStateInfoData) {
             if (gameStateInfoData.hasOwnProperty(property)) {
-                const camelizedProperty = this.camelize(property);
-                console.log("set gameStateInfoData", camelizedProperty, gameStateInfoData[property]);
-                app.vue.gameStateInfo[camelizedProperty] = gameStateInfoData[property];
+                console.log("set gameStateInfoData", property, gameStateInfoData[property]);
+                app.vue.gameStateInfo[property] = gameStateInfoData[property];
             }
         }
     };
 
-    this.onGameDealEvent = function (data) {
+    this.onGameDealEvent = (data) => {
         app.vue.gameState.gameEnd = false;
         if (data.gameStateInfo) {
-            app.updategameStateInfo(data.gameStateInfo);
+            app.updateGameStateInfo(data.gameStateInfo);
         }
         // TODO: refactor
         for (let property in data) {
             if (data.hasOwnProperty(property)) {
-                const camelizedProperty = this.camelize(property);
+                const camelizedProperty = app.camelize(property);
                 app.vue.gameStateInfo[camelizedProperty] = data[property];
                 console.log("set", camelizedProperty, data[property]);
             }
         }
     };
 
-    this.onGameFirstAttackerEvent = function (data) {
+    this.onGameFirstAttackerEvent = (data) => {
         app.vue.gameStateInfo.attackerIndex = data.attackerIndex;
         app.vue.gameStateInfo.defenderIndex = data.defenderIndex;
         app.vue.gameState.firstAttackerReasonCard = data.reasonCard;
@@ -392,21 +395,21 @@ function App() {
 
     this.onGameAttackEvent = (data) => {
         if (data.gameStateInfo) {
-            app.updategameStateInfo(data.gameStateInfo);
+            app.updateGameStateInfo(data.gameStateInfo);
         }
         console.log('attack', data);
     };
 
     this.onGameDefendEvent = (data) => {
         if (data.gameStateInfo) {
-            app.updategameStateInfo(data.gameStateInfo);
+            app.updateGameStateInfo(data.gameStateInfo);
         }
         console.log('defend', data);
     };
 
     this.onGameStateEvent = (data) => {
         if (data.gameStateInfo) {
-            app.updategameStateInfo(data.gameStateInfo);
+            app.updateGameStateInfo(data.gameStateInfo);
             app.vue.gameState.firstAttackerReasonCard = null;
         }
         console.log('state only', data);
@@ -416,33 +419,37 @@ function App() {
         app.vue.gameState.loserIndex = data.loserIndex;
     };
 
-    this.sendCommand = function (type, subType, data) {
+    this.sendCommand = (type, subType, data) => {
         console.log("send", type, subType, data);
-        window.WsConnection.send(JSON.stringify({type: type, sub_type: subType, data: data}));
+        window.WsConnection.send(JSON.stringify({type: type, subType: subType, data: data}));
     };
 
-    this.commandJoinRoom = function (roomId) {
-        app.sendCommand('lobby', 'joinRoom', roomId);
+    this.commandJoinRoom = (roomId) => {
+        app.sendCommand('lobby', 'joinRoom', parseInt(roomId));
     };
 
-    this.commandCreateRoom = function (roomId) {
+    this.commandCreateRoom = () => {
         app.sendCommand('lobby', 'createRoom', null);
     };
 
-    this.commandWantToPlay = function () {
+    this.commandWantToPlay = () => {
         app.sendCommand('room', 'wantToPlay', null);
     };
 
-    this.commandWantToSpectate = function () {
+    this.commandWantToSpectate = () => {
         app.sendCommand('room', 'wantToSpectate', null);
     };
 
-    this.commandSetPlayerStatus = function (memberId, status) {
+    this.commandSetPlayerStatus = (memberId, status) => {
         app.sendCommand('room', 'setPlayerStatus', {memberId: memberId, status: status});
     };
 
-    this.commandStartGame = function () {
+    this.commandStartGame = () => {
         app.sendCommand('room', 'startGame', null);
+    };
+
+    this.commandDeleteGame = () => {
+        app.sendCommand('room', 'deleteGame', null);
     };
 
     this.commandAttack = (value, suit) => {
@@ -456,14 +463,14 @@ function App() {
     };
 
     this.commandPickUp = () => {
-        app.sendCommand('game', 'pick_up');
+        app.sendCommand('game', 'pickUp');
     };
 
     this.commandComplete = () => {
         app.sendCommand('game', 'complete');
     };
 
-    this.getRoomIndexById = function (roomId) {
+    this.getRoomIndexById = (roomId) => {
         for (let i = 0; i < app.vue.rooms.length; i++) {
             if (app.vue.rooms[i].id === roomId) {
                 return i;
@@ -472,7 +479,7 @@ function App() {
         return -1;
     };
 
-    this.getRoomMemberIndexById = function (memberId) {
+    this.getRoomMemberIndexById = (memberId) => {
         if (!app.vue.room) {
             console.warn("No room for event");
             return -1;
@@ -485,7 +492,7 @@ function App() {
         return -1;
     };
 
-    this.updatePlayersInRoomCounter = function () {
+    this.updatePlayersInRoomCounter = () => {
         let playersNum = 0;
         for (let i = 0; i < app.vue.room.members.length; i++) {
             if (app.vue.room.members[i].isPlayer) {
@@ -495,14 +502,29 @@ function App() {
         app.vue.playersInRoom = playersNum;
     };
 
-    this.camelize = function (str) {
-        return str.replace(/(_)(.)/g, function ($1, $2, $3) {
+    this.camelize = (str) => {
+        return str.replace(/(_)(.)/g, ($1, $2, $3) => {
             return $3.toUpperCase();
-        })
-    }
+        });
+    };
+
+    this.updateLocationWithRoomId = (roomId) => {
+        window.location.hash = `roomId=${roomId}`;
+    };
+
+    this.getFromHash = (property) => {
+        const valuesString = window.location.hash.substr(1);
+        const valuesStringPairs = valuesString.split('&');
+        for (let i = 0; i < valuesStringPairs.length; i += 1) {
+            const pair = valuesStringPairs[i].split('=');
+            if (pair.length === 2 && pair[0] === property) {
+                return pair[1];
+            }
+        }
+    };
 }
 
-(function () {
+(() => {
     const app = new App();
     window.OnIncomingMessage = app.onMessage;
 })();
