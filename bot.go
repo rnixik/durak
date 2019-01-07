@@ -6,8 +6,9 @@ import (
 )
 
 type Bot struct {
-	botClient            *BotClient
-	lastGamePlayersEvent *GamePlayersEvent
+	botClient                  *BotClient
+	lastGamePlayersEvent       *GamePlayersEvent
+	lastGameFirstAttackerEvent *GameFirstAttackerEvent
 }
 
 func newBot(botClient *BotClient) *Bot {
@@ -34,17 +35,33 @@ func (b *Bot) dispatchEvent(message []byte) {
 	}
 
 	log.Printf("event for bot %+v", event)
+
+	// Use this encoding to use following parsing data into struct
+	eventDataJson, err := json.Marshal(event.Data)
+	if err != nil {
+		log.Printf("error at encoding event data: %s", err)
+		return
+	}
+
 	switch event.Name {
 	case "GamePlayersEvent":
-		type GamePlayersEventBot struct {
-			Event GamePlayersEvent `json:"Data"`
+		var parsedEvent GamePlayersEvent
+		err = json.Unmarshal(eventDataJson, &parsedEvent)
+		if err == nil {
+			b.onGamePlayersEvent(parsedEvent)
 		}
-		var parsedEvent GamePlayersEventBot
-		err = json.Unmarshal(message, &parsedEvent)
-		if err != nil {
-			return
+
+	case "GameFirstAttackerEvent":
+		var parsedEvent GameFirstAttackerEvent
+		err = json.Unmarshal(eventDataJson, &parsedEvent)
+		if err == nil {
+			b.onGameFirstAttackerEvent(parsedEvent)
 		}
-		b.onGamePlayersEvent(parsedEvent.Event)
+	}
+
+	if err != nil {
+		log.Printf("error at parsing event data: %s", err)
+		return
 	}
 
 	b.makeDecision()
@@ -54,10 +71,21 @@ func (b *Bot) onGamePlayersEvent(event GamePlayersEvent) {
 	b.lastGamePlayersEvent = &event
 }
 
+func (b *Bot) onGameFirstAttackerEvent(event GameFirstAttackerEvent) {
+	b.lastGameFirstAttackerEvent = &event
+}
+
 func (b *Bot) makeDecision() {
 	if b.lastGamePlayersEvent == nil {
 		return
 	}
+	if b.lastGameFirstAttackerEvent == nil {
+		return
+	}
 
-	log.Printf("My index is %d", b.lastGamePlayersEvent.YourPlayerIndex)
+	if b.lastGameFirstAttackerEvent.AttackerIndex == b.lastGamePlayersEvent.YourPlayerIndex {
+		log.Printf("Bot is attacker")
+	} else {
+		log.Printf("Bot is not attacker")
+	}
 }
