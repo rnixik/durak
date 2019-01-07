@@ -564,7 +564,7 @@ func (g *Game) onLatePlayerJoin(player *Player) {
 	player.sendEvent(gameStateEvent)
 }
 
-func (g *Game) onClientRemoved(client *Client) {
+func (g *Game) onClientRemoved(client ClientSender) {
 	for index, p := range g.players {
 		if p.client.Id() == client.Id() && p.IsActive {
 			g.onActivePlayerLeft(index, false)

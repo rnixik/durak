@@ -20,6 +20,8 @@ const (
 	ClientCommandRoomSubTypeSetPlayerStatus = "setPlayerStatus"
 	ClientCommandRoomSubTypeStartGame       = "startGame"
 	ClientCommandRoomSubTypeDeleteGame      = "deleteGame"
+	ClientCommandRoomSubTypeAddBot          = "addBot"
+	ClientCommandRoomSubTypeRemoveBots      = "removeBots"
 )
 
 // ClientCommand is a command message from connected client.

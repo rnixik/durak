@@ -174,6 +174,12 @@ function App() {
             deleteGame: () => {
                 app.commandDeleteGame();
             },
+            addBot: () => {
+                app.commandAddBot();
+            },
+            removeBots: () => {
+                app.commandRemoveBots();
+            },
             useCard: (card) => {
                 if (app.vue.gameState.pickedCard == card) {
                     app.vue.gameState.pickedCard = null
@@ -468,6 +474,14 @@ function App() {
 
     this.commandDeleteGame = () => {
         app.sendCommand('room', 'deleteGame', null);
+    };
+
+    this.commandAddBot = () => {
+        app.sendCommand('room', 'addBot', null);
+    };
+
+    this.commandRemoveBots = () => {
+        app.sendCommand('room', 'removeBots', null);
     };
 
     this.commandAttack = (value, suit) => {

@@ -168,6 +168,7 @@ func (l *Lobby) getRoomById(roomId uint64) (room *Room, err error) {
 
 func (l *Lobby) onLeftRoom(c *Client, room *Room) {
 	changedOwner, roomBecameEmpty := room.removeClient(c)
+	c.room = nil
 	if roomBecameEmpty {
 		roomInListRemovedEvent := &RoomInListRemovedEvent{room.Id()}
 		l.broadcastEvent(roomInListRemovedEvent)

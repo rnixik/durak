@@ -1,13 +1,12 @@
 package main
 
-const ()
-
 // RoomMemberInfo contains info about a client in the room
 type RoomMemberInfo struct {
 	Id         uint64 `json:"id"`
 	Nickname   string `json:"nickname"`
 	WantToPlay bool   `json:"wantToPlay"`
 	IsPlayer   bool   `json:"isPlayer"`
+	IsBot      bool   `json:"isBot"`
 }
 
 // RoomInfo contains info about room where client is.

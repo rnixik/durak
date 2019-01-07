@@ -42,6 +42,8 @@ window.i18nMessages = {
             start_game: 'Начать игру',
             complete_game: 'Завершить игру',
             game: 'Игра',
+            add_bot: 'Добавить бота',
+            remove_bots: 'Удалить ботов',
         },
         game: {
             pick_up: 'Взять',

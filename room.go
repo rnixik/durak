@@ -3,16 +3,18 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"sync/atomic"
 )
 
 // MaxPlayersInRoom limits maximum number of players in room
-const MaxPlayersInRoom = 2
+const MaxPlayersInRoom = 6
 
 // RoomMember represents connected to a room client.
 type RoomMember struct {
 	client     ClientSender
 	wantToPlay bool
 	isPlayer   bool
+	isBot      bool
 }
 
 // Room represents place where some of members want to start a new game.
@@ -26,7 +28,7 @@ type Room struct {
 
 func newRoom(roomId uint64, owner *Client, lobby *Lobby) *Room {
 	members := make(map[*RoomMember]bool, 0)
-	ownerInRoom := newRoomMember(owner)
+	ownerInRoom := newRoomMember(owner, false)
 	ownerInRoom.isPlayer = true
 	members[ownerInRoom] = true
 	room := &Room{roomId, ownerInRoom, members, nil, lobby}
@@ -35,8 +37,8 @@ func newRoom(roomId uint64, owner *Client, lobby *Lobby) *Room {
 	return room
 }
 
-func newRoomMember(client ClientSender) *RoomMember {
-	return &RoomMember{client, true, false}
+func newRoomMember(client ClientSender, isBot bool) *RoomMember {
+	return &RoomMember{client, true, false, isBot}
 }
 
 // Name returns name of the room by its owner.
@@ -49,7 +51,7 @@ func (r *Room) Id() uint64 {
 	return r.id
 }
 
-func (r *Room) getRoomMember(client *Client) (*RoomMember, bool) {
+func (r *Room) getRoomMember(client ClientSender) (*RoomMember, bool) {
 	for c := range r.members {
 		if c.client.Id() == client.Id() {
 			return c, true
@@ -58,8 +60,7 @@ func (r *Room) getRoomMember(client *Client) (*RoomMember, bool) {
 	return nil, false
 }
 
-func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty bool) {
-	client.room = nil
+func (r *Room) removeClient(client ClientSender) (changedOwner bool, roomBecameEmpty bool) {
 	member, ok := r.getRoomMember(client)
 	if !ok {
 		return
@@ -88,7 +89,7 @@ func (r *Room) removeClient(client *Client) (changedOwner bool, roomBecameEmpty 
 }
 
 func (r *Room) addClient(client *Client) {
-	member := newRoomMember(client)
+	member := newRoomMember(client, false)
 	r.members[member] = true
 	client.room = r
 
@@ -107,6 +108,19 @@ func (r *Room) addClient(client *Client) {
 		r.game.players = append(r.game.players, player)
 		r.game.onLatePlayerJoin(player)
 	}
+}
+
+func (r *Room) addBot(bot *Bot) {
+	member := newRoomMember(bot, true)
+	r.members[member] = true
+	bot.room = r
+	member.isPlayer = true
+
+	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
+	r.broadcastEvent(roomUpdatedEvent, nil)
+
+	roomJoinedEvent := RoomJoinedEvent{r.toRoomInfo()}
+	bot.sendEvent(roomJoinedEvent)
 }
 
 func (r *Room) broadcastEvent(event interface{}, exceptClient *Client) {
@@ -179,11 +193,23 @@ func (r *Room) onWantToSpectateCommand(client *Client) {
 }
 
 func (r *Room) onSetPlayerStatusCommand(c *Client, memberId uint64, playerStatus bool) {
+	if r.owner.client.Id() != c.Id() {
+		errEvent := &ClientCommandError{errorYouShouldBeOwner}
+		c.sendEvent(errEvent)
+		return
+	}
 	if r.game != nil {
 		errEvent := &ClientCommandError{errorCantChangeStatusGameHasBeenStarted}
 		c.sendEvent(errEvent)
 		return
 	}
+
+	if playerStatus && !r.hasSlotForPlayer() {
+		errEvent := &ClientCommandError{errorNumberOfPlayersExceededLimit}
+		c.sendEvent(errEvent)
+		return
+	}
+
 	r.setPlayerStatus(memberId, playerStatus)
 }
 
@@ -261,6 +287,48 @@ func (r *Room) onDeleteGameCommand(c *Client) {
 	r.lobby.sendRoomUpdate(r)
 }
 
+func (r *Room) onAddBotCommand(c *Client) {
+	if r.owner.client.Id() != c.Id() {
+		errEvent := &ClientCommandError{errorYouShouldBeOwner}
+		c.sendEvent(errEvent)
+		return
+	}
+	if r.game != nil {
+		errEvent := &ClientCommandError{errorGameHasBeenAlreadyStarted}
+		c.sendEvent(errEvent)
+		return
+	}
+	if !r.hasSlotForPlayer() {
+		errEvent := &ClientCommandError{errorNumberOfPlayersExceededLimit}
+		c.sendEvent(errEvent)
+		return
+	}
+
+	atomic.AddUint64(&lastClientId, 1)
+	lastBotIdSafe := atomic.LoadUint64(&lastClientId)
+	bot := newBot(lastBotIdSafe)
+	r.addBot(bot)
+}
+
+func (r *Room) onRemoveBotsCommand(c *Client) {
+	if r.owner.client.Id() != c.Id() {
+		errEvent := &ClientCommandError{errorYouShouldBeOwner}
+		c.sendEvent(errEvent)
+		return
+	}
+	if r.game != nil {
+		errEvent := &ClientCommandError{errorGameHasBeenAlreadyStarted}
+		c.sendEvent(errEvent)
+		return
+	}
+
+	for rm := range r.members {
+		if rm.isBot {
+			r.removeClient(rm.client)
+		}
+	}
+}
+
 func (r *Room) onClientCommand(cc *ClientCommand) {
 	log.Println(cc.SubType)
 	switch cc.SubType {
@@ -278,6 +346,10 @@ func (r *Room) onClientCommand(cc *ClientCommand) {
 		r.onStartGameCommand(cc.client)
 	case ClientCommandRoomSubTypeDeleteGame:
 		r.onDeleteGameCommand(cc.client)
+	case ClientCommandRoomSubTypeAddBot:
+		r.onAddBotCommand(cc.client)
+	case ClientCommandRoomSubTypeRemoveBots:
+		r.onRemoveBotsCommand(cc.client)
 	}
 }
 
@@ -299,6 +371,7 @@ func (rm *RoomMember) memberToRoomMemberInfo() *RoomMemberInfo {
 		Nickname:   rm.client.Nickname(),
 		WantToPlay: rm.wantToPlay,
 		IsPlayer:   rm.isPlayer,
+		IsBot:      rm.isBot,
 	}
 }
 
