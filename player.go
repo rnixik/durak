@@ -4,7 +4,7 @@ package main
 type Player struct {
 	Name        string `json:"name"`
 	IsActive    bool   `json:"is_active"`
-	IsCompleted bool   `json:"is_completed"`
+	IsCompleted bool
 	client      ClientSender
 	cards       []*Card
 }

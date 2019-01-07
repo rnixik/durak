@@ -110,10 +110,9 @@ func (r *Room) addClient(client *Client) {
 	}
 }
 
-func (r *Room) addBot(bot *Bot) {
+func (r *Room) addBot(bot *BotClient) {
 	member := newRoomMember(bot, true)
 	r.members[member] = true
-	bot.room = r
 	member.isPlayer = true
 
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
@@ -306,7 +305,7 @@ func (r *Room) onAddBotCommand(c *Client) {
 
 	atomic.AddUint64(&lastClientId, 1)
 	lastBotIdSafe := atomic.LoadUint64(&lastClientId)
-	bot := newBot(lastBotIdSafe)
+	bot := newBotClient(lastBotIdSafe, r)
 	r.addBot(bot)
 }
 

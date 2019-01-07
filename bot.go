@@ -1,46 +1,63 @@
 package main
 
-import "math/rand"
+import (
+	"encoding/json"
+	"log"
+)
 
 type Bot struct {
-	nickname string
-	id       uint64
-	room     *Room
+	botClient            *BotClient
+	lastGamePlayersEvent *GamePlayersEvent
 }
 
-func newBot(id uint64) *Bot {
+func newBot(botClient *BotClient) *Bot {
 	return &Bot{
-		nickname: generateBotName(),
-		id:       id,
+		botClient: botClient,
 	}
 }
 
-func (b *Bot) sendEvent(event interface{}) {
-	jsonEvent, _ := eventToJSON(event)
-	b.sendMessage(jsonEvent)
+func (b *Bot) run() {
+	for {
+		select {
+		case event := <-b.botClient.incomingEvents:
+			b.dispatchEvent(event)
+		}
+	}
 }
 
-func (b *Bot) sendMessage(message []byte) {
-
-}
-
-// Nickname returns nickname of the bot
-func (b *Bot) Nickname() string {
-	return b.nickname
-}
-
-// Id returns id of the bot
-func (b *Bot) Id() uint64 {
-	return b.id
-}
-
-func generateBotName() string {
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	const botNameLength = 7
-	b := make([]byte, botNameLength)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+func (b *Bot) dispatchEvent(message []byte) {
+	var event JSONEvent
+	err := json.Unmarshal(message, &event)
+	if err != nil {
+		log.Printf("cannot decode general bot event: %s", err)
+		return
 	}
 
-	return "bot-" + string(b)
+	log.Printf("event for bot %+v", event)
+	switch event.Name {
+	case "GamePlayersEvent":
+		type GamePlayersEventBot struct {
+			Event GamePlayersEvent `json:"Data"`
+		}
+		var parsedEvent GamePlayersEventBot
+		err = json.Unmarshal(message, &parsedEvent)
+		if err != nil {
+			return
+		}
+		b.onGamePlayersEvent(parsedEvent.Event)
+	}
+
+	b.makeDecision()
+}
+
+func (b *Bot) onGamePlayersEvent(event GamePlayersEvent) {
+	b.lastGamePlayersEvent = &event
+}
+
+func (b *Bot) makeDecision() {
+	if b.lastGamePlayersEvent == nil {
+		return
+	}
+
+	log.Printf("My index is %d", b.lastGamePlayersEvent.YourPlayerIndex)
 }
