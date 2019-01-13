@@ -161,30 +161,28 @@
                         }"
                 ></playing-card-inhand>
             </div>
-
         </div>
 
         <div class="game-state-holder">
-                    <span v-if="game.gameEnd">
-                        {{ $t('game.game_is_over') }}
-                        <span v-if="game.loserIndex > -1"><i>{{ loserNickname }}</i> {{ $t('game.is_looser') }}!</span>
-                        <span v-if="game.loserIndex == -1">{{ $t('game.draw') }}!</span>
-                    </span>
+                <span v-if="game.gameEnd">
+                    {{ $t('game.game_is_over') }}
+                    <span v-if="game.loserIndex > -1"><i>{{ loserNickname }}</i> {{ $t('game.is_looser') }}!</span>
+                    <span v-if="game.loserIndex == -1">{{ $t('game.draw') }}!</span>
+                </span>
             <span v-if="!game.gameEnd">
-                        <span v-if="areYouAttacker">{{ $t('game.you_are_attacker') }}!</span>
-                        <span v-if="!areYouAttacker && attackerNickname"><i>{{ attackerNickname }}</i> {{ $t('game.is_attacker') }}!</span>
-                        <span v-if="areYouAttacker && gameStateInfo.defenderPickUp">{{ $t('game.defenderPickUp') }}</span>
-                        <span v-if="isWaitingForOthers">{{ $t('game.waiting_for_other_players') }}</span>
-                        <span v-if="game.firstAttackerReasonCard">
-                            {{ $t('game.reason') }}:
-                            <span v-bind:class="{'game-state__suit-red': game.firstAttackerReasonCard.suit == '♦' || game.firstAttackerReasonCard.suit == '♥'}">
-                                {{ game.firstAttackerReasonCard.value }}{{ game.firstAttackerReasonCard.suit }}
-                            </span>
-                        </span>
-                        <span v-if="areYouDefender">{{ $t('game.you_are_defender') }}!</span>
-                        <span v-if="areBeaten">{{ $t('game.beaten') }}!</span>
+                <span v-if="areYouAttacker">{{ $t('game.you_are_attacker') }}!</span>
+                <span v-if="!areYouAttacker && attackerNickname"><i>{{ attackerNickname }}</i> {{ $t('game.is_attacker') }}!</span>
+                <span v-if="areYouAttacker && gameStateInfo.defenderPickUp">{{ $t('game.defenderPickUp') }}</span>
+                <span v-if="isWaitingForOthers">{{ $t('game.waiting_for_other_players') }}</span>
+                <span v-if="game.firstAttackerReasonCard">
+                    {{ $t('game.reason') }}:
+                    <span v-bind:class="{'game-state__suit-red': game.firstAttackerReasonCard.suit == '♦' || game.firstAttackerReasonCard.suit == '♥'}">
+                        {{ game.firstAttackerReasonCard.value }}{{ game.firstAttackerReasonCard.suit }}
                     </span>
-
+                </span>
+                <span v-if="areYouDefender">{{ $t('game.you_are_defender') }}!</span>
+                <span v-if="areBeaten">{{ $t('game.beaten') }}!</span>
+            </span>
         </div>
     </div>
 </div>
@@ -368,7 +366,7 @@
         }
 
         // TODO: remove debug
-        // wsConnect(document.getElementById('nick').value);
+        wsConnect(document.getElementById('nick').value);
     })();
 </script>
 <script src="js/vendor/vue.js"></script>
