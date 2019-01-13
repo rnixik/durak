@@ -120,7 +120,11 @@ function App() {
             infoMessage: {},
             game: {
                 players: [],
-                yourPlayerIndex: null
+                yourPlayerIndex: null,
+                firstAttackerReasonCard: null,
+                pickedCard: null,
+                gameEnd: false,
+                loserIndex: -1
             },
             gameStateInfo: {
                 handsSizes: [],
@@ -138,12 +142,6 @@ function App() {
                 defendingCards: {}, // {1: {suit, value} }
                 completedPlayers: {}, // {0: true, 1: false}
                 defenderPickUp: false
-            },
-            gameState: {
-                firstAttackerReasonCard: null,
-                pickedCard: null,
-                gameEnd: false,
-                loserIndex: -1
             }
         },
         methods: {
@@ -183,30 +181,30 @@ function App() {
                 app.commandRemoveBots();
             },
             useCard: (card) => {
-                if (app.vue.gameState.pickedCard == card) {
-                    app.vue.gameState.pickedCard = null
+                if (app.vue.game.pickedCard == card) {
+                    app.vue.game.pickedCard = null
                 } else {
-                    app.vue.gameState.pickedCard = card;
+                    app.vue.game.pickedCard = card;
                 }
             },
             attack: () => {
-                if (!app.vue.areYouAttacker || !app.vue.gameState.pickedCard) {
+                if (!app.vue.areYouAttacker || !app.vue.game.pickedCard) {
                     return;
                 }
-                app.commandAttack(app.vue.gameState.pickedCard.value, app.vue.gameState.pickedCard.suit);
-                app.vue.gameState.pickedCard = null;
+                app.commandAttack(app.vue.game.pickedCard.value, app.vue.game.pickedCard.suit);
+                app.vue.game.pickedCard = null;
             },
             defend: (attackingCard) => {
-                if (!app.vue.areYouDefender || !app.vue.gameState.pickedCard) {
+                if (!app.vue.areYouDefender || !app.vue.game.pickedCard) {
                     return;
                 }
                 app.commandDefend(
                     attackingCard.value,
                     attackingCard.suit,
-                    app.vue.gameState.pickedCard.value,
-                    app.vue.gameState.pickedCard.suit,
+                    app.vue.game.pickedCard.value,
+                    app.vue.game.pickedCard.suit,
                 );
-                app.vue.gameState.pickedCard = null;
+                app.vue.game.pickedCard = null;
             },
             pickUp: () => {
                 app.commandPickUp();
@@ -241,10 +239,10 @@ function App() {
                 return app.vue.game.players[atInd].name;
             },
             loserNickname: () => {
-                if (app.vue.gameState.loserIndex < 0) {
+                if (app.vue.game.loserIndex < 0) {
                     return;
                 }
-                const index = app.vue.gameState.loserIndex;
+                const index = app.vue.game.loserIndex;
                 if (!app.vue.game.players[index]) {
                     return;
                 }
@@ -377,7 +375,7 @@ function App() {
     };
 
     this.onGameDealEvent = (data) => {
-        app.vue.gameState.gameEnd = false;
+        app.vue.game.gameEnd = false;
         if (data.gameStateInfo) {
             app.updateGameStateInfo(data.gameStateInfo);
         }
@@ -394,7 +392,7 @@ function App() {
     this.onGameFirstAttackerEvent = (data) => {
         app.vue.gameStateInfo.attackerIndex = data.attackerIndex;
         app.vue.gameStateInfo.defenderIndex = data.defenderIndex;
-        app.vue.gameState.firstAttackerReasonCard = data.reasonCard;
+        app.vue.game.firstAttackerReasonCard = data.reasonCard;
     };
 
     this.onGameAttackEvent = (data) => {
@@ -414,14 +412,14 @@ function App() {
     this.onGameStateEvent = (data) => {
         if (data.gameStateInfo) {
             app.updateGameStateInfo(data.gameStateInfo);
-            app.vue.gameState.firstAttackerReasonCard = null;
+            app.vue.game.firstAttackerReasonCard = null;
         }
         console.log('state only', data);
     };
 
     this.onGameEndEvent = (data) => {
-        app.vue.gameState.gameEnd = true;
-        app.vue.gameState.loserIndex = data.loserIndex;
+        app.vue.game.gameEnd = true;
+        app.vue.game.loserIndex = data.loserIndex;
     };
 
     this.onGamePlayerLeftEvent = (data) => {
@@ -519,7 +517,7 @@ function App() {
             return -1;
         }
         for (let i = 0; i < app.vue.roomsInfo.room.members.length; i++) {
-            if (app.vue.room.members[i].id === memberId) {
+            if (app.vue.roomsInfo.room.members[i].id === memberId) {
                 return i;
             }
         }

@@ -125,14 +125,14 @@
 
         <div class="battleground-container">
             <div class="battleground"
-                 v-bind:class="{ 'battleground-attack-area-active': areYouAttacker && gameState.pickedCard }"
+                 v-bind:class="{ 'battleground-attack-area-active': areYouAttacker && game.pickedCard }"
                  v-on:click="attack"
             >
                 <playing-card-battleground
                         v-for="(card, index) in gameStateInfo.battleground"
                         v-bind:card="card"
                         v-bind:defending-card="gameStateInfo.defendingCards[index]"
-                        v-bind:highlighted="areYouDefender && gameState.pickedCard && !gameStateInfo.defendingCards[index]"
+                        v-bind:highlighted="areYouDefender && game.pickedCard && !gameStateInfo.defendingCards[index]"
                         v-on:use-card="defend(card)"
                 ></playing-card-battleground>
             </div>
@@ -153,7 +153,7 @@
                 <playing-card-inhand v-on:use-card="useCard"
                                      v-for="(yourCard, index) in gameStateInfo.yourHand"
                                      v-bind:card="yourCard"
-                                     v-bind:class="{ 'playing-card-picked': gameState.pickedCard === yourCard}"
+                                     v-bind:class="{ 'playing-card-picked': game.pickedCard === yourCard}"
                                      v-bind:style="{
                           left: index*(Math.max(Math.min(gameStateInfo.yourHand.length / 6 * -40, -50), -120)) + 'px',
                           transform: 'rotate(' + (index + 0.5 - Math.min(gameStateInfo.yourHand.length/2, 10)) * 3 + 'deg)',
@@ -165,20 +165,20 @@
         </div>
 
         <div class="game-state-holder">
-                    <span v-if="gameState.gameEnd">
+                    <span v-if="game.gameEnd">
                         {{ $t('game.game_is_over') }}
-                        <span v-if="gameState.loserIndex > -1"><i>{{ loserNickname }}</i> {{ $t('game.is_looser') }}!</span>
-                        <span v-if="gameState.loserIndex == -1">{{ $t('game.draw') }}!</span>
+                        <span v-if="game.loserIndex > -1"><i>{{ loserNickname }}</i> {{ $t('game.is_looser') }}!</span>
+                        <span v-if="game.loserIndex == -1">{{ $t('game.draw') }}!</span>
                     </span>
-            <span v-if="!gameState.gameEnd">
+            <span v-if="!game.gameEnd">
                         <span v-if="areYouAttacker">{{ $t('game.you_are_attacker') }}!</span>
                         <span v-if="!areYouAttacker && attackerNickname"><i>{{ attackerNickname }}</i> {{ $t('game.is_attacker') }}!</span>
                         <span v-if="areYouAttacker && gameStateInfo.defenderPickUp">{{ $t('game.defenderPickUp') }}</span>
                         <span v-if="isWaitingForOthers">{{ $t('game.waiting_for_other_players') }}</span>
-                        <span v-if="gameState.firstAttackerReasonCard">
+                        <span v-if="game.firstAttackerReasonCard">
                             {{ $t('game.reason') }}:
-                            <span v-bind:class="{'game-state__suit-red': gameState.firstAttackerReasonCard.suit == '♦' || gameState.firstAttackerReasonCard.suit == '♥'}">
-                                {{ gameState.firstAttackerReasonCard.value }}{{ gameState.firstAttackerReasonCard.suit }}
+                            <span v-bind:class="{'game-state__suit-red': game.firstAttackerReasonCard.suit == '♦' || game.firstAttackerReasonCard.suit == '♥'}">
+                                {{ game.firstAttackerReasonCard.value }}{{ game.firstAttackerReasonCard.suit }}
                             </span>
                         </span>
                         <span v-if="areYouDefender">{{ $t('game.you_are_defender') }}!</span>
