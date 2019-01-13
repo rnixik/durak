@@ -31,9 +31,8 @@ type GameDealEvent struct {
 
 // GameFirstAttackerEvent contains info who is the first attacker and why.
 type GameFirstAttackerEvent struct {
-	ReasonCard    *Card `json:"reasonCard"`
-	AttackerIndex int   `json:"attackerIndex"`
-	DefenderIndex int   `json:"defenderIndex"`
+	GameStateInfo *GameStateInfo `json:"gameStateInfo"`
+	ReasonCard    *Card          `json:"reasonCard"`
 }
 
 // GamePlayerLeftEvent contains index of player who left the game
@@ -61,6 +60,12 @@ type GameDefendEvent struct {
 // GameStateEvent contains info about state only
 type GameStateEvent struct {
 	GameStateInfo *GameStateInfo `json:"gameStateInfo"`
+}
+
+// NewRoundEvent contains info new round
+type NewRoundEvent struct {
+	GameStateInfo       *GameStateInfo `json:"gameStateInfo"`
+	WasAttackSuccessful bool           `json:"was_attack_successful"`
 }
 
 // GameEndEvent contains info about winner

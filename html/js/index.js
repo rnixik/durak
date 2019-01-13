@@ -379,8 +379,7 @@ function App() {
     };
 
     this.onGameFirstAttackerEvent = (data) => {
-        app.vue.gameStateInfo.attackerIndex = data.attackerIndex;
-        app.vue.gameStateInfo.defenderIndex = data.defenderIndex;
+        app.updateGameStateInfo(data.gameStateInfo);
         app.vue.game.firstAttackerReasonCard = data.reasonCard;
     };
 
@@ -395,6 +394,10 @@ function App() {
     this.onGameStateEvent = (data) => {
         app.updateGameStateInfo(data.gameStateInfo);
         app.vue.game.firstAttackerReasonCard = null;
+    };
+
+    this.onNewRoundEvent = (data) => {
+        app.updateGameStateInfo(data.gameStateInfo);
     };
 
     this.onGameEndEvent = (data) => {

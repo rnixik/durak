@@ -151,31 +151,6 @@ func (g *Game) sendDealEvent() {
 	}
 }
 
-func (g *Game) dumpHands() {
-	for i, p := range g.players {
-		log.Printf("player #%d has cards: %d\n", i, len(p.cards))
-		str := ""
-		for _, card := range p.cards {
-			str += card.Value + card.Suit + " "
-		}
-		log.Printf("%s", str)
-		log.Println("---")
-	}
-}
-
-func (g *Game) dumpPile() {
-	log.Printf("Pile has cards: %d\n", len(g.deck.cards))
-	str := ""
-	for _, card := range g.deck.cards {
-		str += card.Value + card.Suit + " "
-	}
-	log.Printf("%s", str)
-}
-
-func (g *Game) dump() {
-	log.Printf("%#v", g)
-}
-
 func (g *Game) prepare() {
 	g.sendPlayersEvent()
 	g.deck = newDeck()
@@ -183,9 +158,6 @@ func (g *Game) prepare() {
 	g.deal()
 	g.sendDealEvent()
 	g.attackerIndex, g.defenderIndex, g.firstAttackerReasonCard = g.findFirstAttacker()
-	g.dumpHands()
-	g.dumpPile()
-	g.dump()
 	g.sendFirstAttackerEvent()
 }
 
@@ -250,11 +222,10 @@ func (g *Game) findNewAttacker(wasPickUp bool) (attackerIndex int, defenderIndex
 
 func (g *Game) sendFirstAttackerEvent() {
 	fae := GameFirstAttackerEvent{
-		ReasonCard:    g.firstAttackerReasonCard,
-		AttackerIndex: g.attackerIndex,
-		DefenderIndex: g.defenderIndex,
+		ReasonCard: g.firstAttackerReasonCard,
 	}
 	for _, p := range g.players {
+		fae.GameStateInfo = g.getGameStateInfo(p)
 		p.sendEvent(fae)
 	}
 }
@@ -452,6 +423,7 @@ func (g *Game) endRound() {
 	g.roundDeal(g.attackerIndex, g.defenderIndex)
 
 	defenderPlayer := g.players[g.defenderIndex]
+	wasAttackSuccessful := g.defenderPickUp
 
 	if g.defenderPickUp {
 		for _, c := range g.battleground {
@@ -480,7 +452,11 @@ func (g *Game) endRound() {
 		g.endGame(hasLoser, loserIndex)
 		g.restartAfkTimers(-1)
 	} else {
-		g.broadcastGameStateEvent()
+		nrd := NewRoundEvent{WasAttackSuccessful: wasAttackSuccessful}
+		for _, p := range g.players {
+			nrd.GameStateInfo = g.getGameStateInfo(p)
+			p.sendEvent(nrd)
+		}
 		g.restartAfkTimers(g.attackerIndex)
 	}
 }

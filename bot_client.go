@@ -45,6 +45,21 @@ func (bl *BotClient) Id() uint64 {
 	return bl.id
 }
 
+func (bl *BotClient) sendGameAction(playerActionName string, actionData interface{}) {
+	var player *Player
+	for _, gamePlayer := range bl.room.game.players {
+		if gamePlayer.client.Id() == bl.Id() {
+			player = gamePlayer
+			break
+		}
+	}
+	if player == nil {
+		return
+	}
+	playerAction := &PlayerAction{Name: playerActionName, Data: actionData, player: player}
+	bl.room.game.playerActions <- playerAction
+}
+
 func generateBotName() string {
 	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	const botNameLength = 7
