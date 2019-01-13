@@ -25,7 +25,6 @@ type Game struct {
 	discardPileSize               int
 	trumpSuit                     string
 	trumpCard                     *Card
-	trumpCardIsInPile             bool
 	trumpCardIsOwnedByPlayerIndex int
 	firstAttackerReasonCard       *Card
 	attackerIndex                 int
@@ -78,10 +77,8 @@ func (g *Game) deal() {
 	}
 	if len(g.deck.cards) > 0 {
 		lastCard = g.deck.cards[0]
-		g.trumpCardIsInPile = true
 		g.trumpCardIsOwnedByPlayerIndex = -1
 	} else {
-		g.trumpCardIsInPile = false
 		g.trumpCardIsOwnedByPlayerIndex = lastPlayerIndex
 	}
 
@@ -145,8 +142,6 @@ func (g *Game) getGameStateInfo(player *Player) *GameStateInfo {
 
 func (g *Game) sendDealEvent() {
 	de := GameDealEvent{
-		TrumpCard:                     g.trumpCard,
-		TrumpCardIsInDeck:             g.trumpCardIsInPile,
 		TrumpCardIsOwnedByPlayerIndex: g.trumpCardIsOwnedByPlayerIndex,
 	}
 

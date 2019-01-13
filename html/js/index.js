@@ -124,24 +124,23 @@ function App() {
                 firstAttackerReasonCard: null,
                 pickedCard: null,
                 gameEnd: false,
-                loserIndex: -1
+                loserIndex: -1,
+                trumpCardIsOwnedByPlayerIndex: -1
             },
             gameStateInfo: {
+                yourHand: [],
+                canYouPickUp: false,
+                canYouComplete: false,
                 handsSizes: [],
                 deckSize: 0,
                 discardPileSize: 0,
                 trumpCard: null,
-                trumpCardIsInDeck: false,
-                trumpCardIsOwnedByPlayerIndex: -1,
-                attackerIndex: -1,
-                defenderIndex: -1,
-                yourHand: [],
-                canYouPickUp: false,
-                canYouComplete: false,
                 battleground: [],
                 defendingCards: {}, // {1: {suit, value} }
                 completedPlayers: {}, // {0: true, 1: false}
-                defenderPickUp: false
+                defenderPickUp: false,
+                attackerIndex: -1,
+                defenderIndex: -1
             }
         },
         methods: {
@@ -181,7 +180,7 @@ function App() {
                 app.commandRemoveBots();
             },
             useCard: (card) => {
-                if (app.vue.game.pickedCard == card) {
+                if (app.vue.game.pickedCard === card) {
                     app.vue.game.pickedCard = null
                 } else {
                     app.vue.game.pickedCard = card;
@@ -368,7 +367,6 @@ function App() {
     this.updateGameStateInfo = (gameStateInfoData) => {
         for (let property in gameStateInfoData) {
             if (gameStateInfoData.hasOwnProperty(property)) {
-                console.log("set gameStateInfoData", property, gameStateInfoData[property]);
                 app.vue.gameStateInfo[property] = gameStateInfoData[property];
             }
         }
@@ -376,17 +374,8 @@ function App() {
 
     this.onGameDealEvent = (data) => {
         app.vue.game.gameEnd = false;
-        if (data.gameStateInfo) {
-            app.updateGameStateInfo(data.gameStateInfo);
-        }
-        // TODO: refactor
-        for (let property in data) {
-            if (data.hasOwnProperty(property)) {
-                const camelizedProperty = app.camelize(property);
-                app.vue.gameStateInfo[camelizedProperty] = data[property];
-                console.log("set", camelizedProperty, data[property]);
-            }
-        }
+        app.updateGameStateInfo(data.gameStateInfo);
+        app.vue.game.trumpCardIsOwnedByPlayerIndex = data.trumpCardIsOwnedByPlayerIndex;
     };
 
     this.onGameFirstAttackerEvent = (data) => {
@@ -396,25 +385,16 @@ function App() {
     };
 
     this.onGameAttackEvent = (data) => {
-        if (data.gameStateInfo) {
-            app.updateGameStateInfo(data.gameStateInfo);
-        }
-        console.log('attack', data);
+        app.updateGameStateInfo(data.gameStateInfo);
     };
 
     this.onGameDefendEvent = (data) => {
-        if (data.gameStateInfo) {
-            app.updateGameStateInfo(data.gameStateInfo);
-        }
-        console.log('defend', data);
+        app.updateGameStateInfo(data.gameStateInfo);
     };
 
     this.onGameStateEvent = (data) => {
-        if (data.gameStateInfo) {
-            app.updateGameStateInfo(data.gameStateInfo);
-            app.vue.game.firstAttackerReasonCard = null;
-        }
-        console.log('state only', data);
+        app.updateGameStateInfo(data.gameStateInfo);
+        app.vue.game.firstAttackerReasonCard = null;
     };
 
     this.onGameEndEvent = (data) => {

@@ -26,8 +26,6 @@ type GameStateInfo struct {
 // GameDealEvent contains info about game after the deal. It includes list of cards for each player.
 type GameDealEvent struct {
 	GameStateInfo                 *GameStateInfo `json:"gameStateInfo"`
-	TrumpCard                     *Card          `json:"trumpCard"`
-	TrumpCardIsInDeck             bool           `json:"trumpCardIsInDeck"`
 	TrumpCardIsOwnedByPlayerIndex int            `json:"trumpCardIsOwnedByPlayerIndex"`
 }
 
