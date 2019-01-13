@@ -100,6 +100,9 @@ func (g *Game) dealToPlayer(player *Player) {
 			player.cards = append(player.cards, card)
 		}
 	}
+	if len(player.cards) == 0 {
+		player.IsActive = false
+	}
 }
 
 func (g *Game) roundDeal(firstIndex int, lastIndex int) {
@@ -233,6 +236,13 @@ func (g *Game) sendFirstAttackerEvent() {
 func (g *Game) begin() {
 	g.prepare()
 	g.status = GameStatusPlaying
+
+	gse := &GameStartedEvent{}
+	for _, p := range g.players {
+		gse.GameStateInfo = g.getGameStateInfo(p)
+		p.sendEvent(gse)
+	}
+
 	g.room.onGameStarted()
 	for {
 		select {
@@ -441,13 +451,15 @@ func (g *Game) endRound() {
 	g.defendingCards = make(map[int]*Card, 0)
 	g.defenderPickUp = false
 
-	if !g.haveAttackersCards() {
+	activePlayers := g.getActivePlayers()
+
+	if len(activePlayers) < 2 {
 		// End of game
-		hasLoser := true
-		loserIndex := g.defenderIndex
-		if len(defenderPlayer.cards) == 0 {
-			hasLoser = false
-			loserIndex = -1
+		hasLoser := false
+		loserIndex := -1
+		if len(activePlayers) == 1 {
+			hasLoser = true
+			loserIndex = g.getPlayerIndex(activePlayers[0])
 		}
 		g.endGame(hasLoser, loserIndex)
 		g.restartAfkTimers(-1)
@@ -633,24 +645,17 @@ func (g *Game) areAllPlayersCompleted() bool {
 	return true
 }
 
-func (g *Game) haveAttackersCards() bool {
-	for index, p := range g.players {
-		if p.IsActive && index != g.defenderIndex && len(p.cards) > 0 {
-			return true
+func (g *Game) getActivePlayers() (players []*Player) {
+	for _, p := range g.players {
+		if p.IsActive {
+			players = append(players, p)
 		}
 	}
-	return false
+	return
 }
 
 func (g *Game) getActivePlayersNum() int {
-	activePlayersNum := 0
-	for _, p := range g.players {
-		if p.IsActive {
-			activePlayersNum += 1
-		}
-	}
-
-	return activePlayersNum
+	return len(g.getActivePlayers())
 }
 
 func (g *Game) adjustPlayerIndex(index int) int {

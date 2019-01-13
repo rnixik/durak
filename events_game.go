@@ -35,6 +35,11 @@ type GameFirstAttackerEvent struct {
 	ReasonCard    *Card          `json:"reasonCard"`
 }
 
+// GameStartedEvent contains state when game was started
+type GameStartedEvent struct {
+	GameStateInfo *GameStateInfo `json:"gameStateInfo"`
+}
+
 // GamePlayerLeftEvent contains index of player who left the game
 type GamePlayerLeftEvent struct {
 	PlayerIndex int  `json:"playerIndex"`

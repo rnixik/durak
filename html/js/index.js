@@ -321,6 +321,7 @@ function App() {
         app.updatePlayersInRoomCounter();
         app.updateLocationWithRoomId(data.room.id);
         // TODO: remove debug
+        app.commandAddBot();
         app.commandStartGame();
     };
 
@@ -381,6 +382,10 @@ function App() {
     this.onGameFirstAttackerEvent = (data) => {
         app.updateGameStateInfo(data.gameStateInfo);
         app.vue.game.firstAttackerReasonCard = data.reasonCard;
+    };
+
+    this.onGameStartedEvent = (data) => {
+        app.updateGameStateInfo(data.gameStateInfo);
     };
 
     this.onGameAttackEvent = (data) => {
