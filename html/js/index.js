@@ -110,12 +110,14 @@ function App() {
                 yourNickname: '',
                 clients: []
             },
+            roomsInfo: {
+                rooms: [],
+                room: {},
+                wantToPlay: true,
+                playersInRoom: 0,
+            },
             commandError: {},
             infoMessage: {},
-            rooms: [],
-            room: {},
-            wantToPlay: true,
-            playersInRoom: 0,
             game: {
                 players: [],
                 yourPlayerIndex: null
@@ -159,11 +161,11 @@ function App() {
             },
             markWantToPlay: () => {
                 app.commandWantToPlay();
-                app.vue.wantToPlay = true;
+                app.vue.roomsInfo.wantToPlay = true;
             },
             markWantToSpectate: () => {
                 app.commandWantToSpectate();
-                app.vue.wantToPlay = false;
+                app.vue.roomsInfo.wantToPlay = false;
             },
             setPlayerStatus: (memberId, status) => {
                 app.commandSetPlayerStatus(memberId, status);
@@ -271,7 +273,7 @@ function App() {
         app.vue.clientsInfo.yourId = data.yourId;
         app.vue.clientsInfo.yourNickname = data.yourNickname;
         app.vue.clientsInfo.clients = data.clients;
-        app.vue.rooms = data.rooms;
+        app.vue.roomsInfo.rooms = data.rooms;
 
         const roomIdFromHash = app.getFromHash('roomId');
 
@@ -304,21 +306,21 @@ function App() {
     this.onRoomInListUpdatedEvent = (data) => {
         const index = app.getRoomIndexById(data.room.id);
         if (index > -1) {
-            Vue.set(app.vue.rooms, index, data.room);
+            Vue.set(app.vue.roomsInfo.rooms, index, data.room);
         }
     };
 
     this.onRoomInListRemovedEvent = (data) => {
         const index = app.getRoomIndexById(data.roomId);
         if (index > -1) {
-            app.vue.rooms.splice(index, 1);
+            app.vue.roomsInfo.rooms.splice(index, 1);
         } else {
             console.warn("Can't remove room", data.roomId);
         }
     };
 
     this.onRoomJoinedEvent = (data) => {
-        app.vue.room = data.room;
+        app.vue.roomsInfo.room = data.room;
         app.updatePlayersInRoomCounter();
         app.updateLocationWithRoomId(data.room.id);
         // TODO: remove debug
@@ -326,7 +328,7 @@ function App() {
     };
 
     this.onRoomUpdatedEvent = (data) => {
-        app.vue.room = data.room;
+        app.vue.roomsInfo.room = data.room;
         app.updatePlayersInRoomCounter();
     };
 
@@ -339,23 +341,23 @@ function App() {
     };
 
     this.onClientCreatedRoomEvent = (data) => {
-        app.vue.rooms.push(data.room);
+        app.vue.roomsInfo.rooms.push(data.room);
     };
 
     this.onRoomMemberChangedStatusEvent = (data) => {
         if (data.member.id === app.vue.clientsInfo.yourId) {
-            app.vue.wantToPlay = data.member.wantToPlay;
+            app.vue.roomsInfo.wantToPlay = data.member.wantToPlay;
         }
         const memberIndex = app.getRoomMemberIndexById(data.member.id);
         if (memberIndex > -1) {
-            Vue.set(app.vue.room.members, memberIndex, data.member);
+            Vue.set(app.vue.roomsInfo.room.members, memberIndex, data.member);
         }
     };
 
     this.onRoomMemberChangedPlayerStatusEvent = (data) => {
         const memberIndex = app.getRoomMemberIndexById(data.member.id);
         if (memberIndex > -1) {
-            Vue.set(app.vue.room.members, memberIndex, data.member);
+            Vue.set(app.vue.roomsInfo.room.members, memberIndex, data.member);
         }
         app.updatePlayersInRoomCounter();
     };
@@ -503,8 +505,8 @@ function App() {
     };
 
     this.getRoomIndexById = (roomId) => {
-        for (let i = 0; i < app.vue.rooms.length; i++) {
-            if (app.vue.rooms[i].id === roomId) {
+        for (let i = 0; i < app.vue.roomsInfo.rooms.length; i++) {
+            if (app.vue.roomsInfo.rooms[i].id === roomId) {
                 return i;
             }
         }
@@ -512,11 +514,11 @@ function App() {
     };
 
     this.getRoomMemberIndexById = (memberId) => {
-        if (!app.vue.room) {
+        if (!app.vue.roomsInfo.room) {
             console.warn("No room for event");
             return -1;
         }
-        for (let i = 0; i < app.vue.room.members.length; i++) {
+        for (let i = 0; i < app.vue.roomsInfo.room.members.length; i++) {
             if (app.vue.room.members[i].id === memberId) {
                 return i;
             }
@@ -526,12 +528,12 @@ function App() {
 
     this.updatePlayersInRoomCounter = () => {
         let playersNum = 0;
-        for (let i = 0; i < app.vue.room.members.length; i++) {
-            if (app.vue.room.members[i].isPlayer) {
+        for (let i = 0; i < app.vue.roomsInfo.room.members.length; i++) {
+            if (app.vue.roomsInfo.room.members[i].isPlayer) {
                 playersNum++;
             }
         }
-        app.vue.playersInRoom = playersNum;
+        app.vue.roomsInfo.playersInRoom = playersNum;
     };
 
     this.camelize = (str) => {

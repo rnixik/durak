@@ -53,25 +53,25 @@
 
         <div>{{ $t("lobby.rooms") }}:</div>
         <transition-group name="slide-fade" tag="ol">
-            <li v-for="r in rooms" v-bind:key="r.id">
-                <strong v-if="room && r.id == room.id">--{{ $t("lobby.here") }}--</strong>
+            <li v-for="r in roomsInfo.rooms" v-bind:key="r.id">
+                <strong v-if="roomsInfo.room && r.id == roomsInfo.room.id">--{{ $t("lobby.here") }}--</strong>
                 <a href="#" v-on:click="joinRoom(r.id, $event)">{{ r.name }}#{{ r.id }}: {{ r.membersNum }}
                     <span v-if="r.gameStatus"> ({{ $t(`lobby.game_status.${r.gameStatus}`) }})</span></a>
                 <strong v-if="r.ownerId == clientsInfo.yourId">{{ $t("lobby.your_are_owner") }}</strong>
             </li>
         </transition-group>
 
-        <div v-if="room && room.id">
-            <h2>{{ $t("lobby.room") }} - {{ room.name }}
-                - {{ room.gameStatus ? $t(`lobby.game_status.${room.gameStatus}`) : '' }}</h2>
+        <div v-if="roomsInfo.room && roomsInfo.room.id">
+            <h2>{{ $t("lobby.room") }} - {{ roomsInfo.room.name }}
+                - {{ roomsInfo.room.gameStatus ? $t(`lobby.game_status.${roomsInfo.room.gameStatus}`) : '' }}</h2>
             <transition-group name="slide-fade" tag="ol">
-                <li v-for="member in room.members" v-bind:key="member.id"
+                <li v-for="member in roomsInfo.room.members" v-bind:key="member.id"
                     v-bind:class="{ 'member-want-to-play': member.wantToPlay, 'member-is-player': member.isPlayer }">
                     {{ member.nickname }}
-                    <span v-if="room.ownerId == clientsInfo.yourId && !member.isBot">
-                            <button v-if="member.wantToPlay && !member.isPlayer && playersInRoom < room.maxPlayers && !room.gameStatus"
+                    <span v-if="roomsInfo.room.ownerId == clientsInfo.yourId && !member.isBot">
+                            <button v-if="member.wantToPlay && !member.isPlayer && roomsInfo.playersInRoom < roomsInfo.room.maxPlayers && !roomsInfo.room.gameStatus"
                                     v-on:click="setPlayerStatus(member.id, true)">{{ $t('lobby.mark_as_player') }}</button>
-                            <button v-if="member.isPlayer && !room.gameStatus"
+                            <button v-if="member.isPlayer && !roomsInfo.room.gameStatus"
                                     v-on:click="setPlayerStatus(member.id, false)">{{ $t('lobby.mark_as_spectator') }}</button>
                           </span>
                 </li>
@@ -86,25 +86,25 @@
 
         <button v-on:click="createRoom">{{ $t('lobby.create_new_room') }}</button>
         <br>
-        <button v-if="!room.gameStatus" v-on:click="markWantToPlay"
-                v-bind:class="{ 'want-btn-active': wantToPlay }">{{ $t('lobby.want_to_play') }}</button>
-        <button v-if="!room.gameStatus" v-on:click="markWantToSpectate"
-                v-bind:class="{ 'want-btn-active': !wantToPlay }">{{ $t('lobby.want_to_spectate') }}</button>
+        <button v-if="!roomsInfo.room.gameStatus" v-on:click="markWantToPlay"
+                v-bind:class="{ 'want-btn-active': roomsInfo.wantToPlay }">{{ $t('lobby.want_to_play') }}</button>
+        <button v-if="!roomsInfo.room.gameStatus" v-on:click="markWantToSpectate"
+                v-bind:class="{ 'want-btn-active': !roomsInfo.wantToPlay }">{{ $t('lobby.want_to_spectate') }}</button>
         <br>
-        <button v-if="room.ownerId == clientsInfo.yourId && !room.gameStatus"
+        <button v-if="roomsInfo.room.ownerId == clientsInfo.yourId && !roomsInfo.room.gameStatus"
                 v-on:click="startGame">{{ $t('lobby.start_game') }}</button>
 
-        <button v-if="room.ownerId == clientsInfo.yourId && room.gameStatus === 'end'"
+        <button v-if="roomsInfo.room.ownerId == clientsInfo.yourId && roomsInfo.room.gameStatus === 'end'"
                 v-on:click="deleteGame">{{ $t('lobby.complete_game') }}</button>
 
-        <button v-if="room.ownerId == clientsInfo.yourId && !room.gameStatus"
+        <button v-if="roomsInfo.room.ownerId == clientsInfo.yourId && !roomsInfo.room.gameStatus"
                 v-on:click="addBot">{{ $t('lobby.add_bot') }}</button>
 
-        <button v-if="room.ownerId == clientsInfo.yourId && !room.gameStatus"
+        <button v-if="roomsInfo.room.ownerId == clientsInfo.yourId && !roomsInfo.room.gameStatus"
                 v-on:click="removeBots">{{ $t('lobby.remove_bots') }}</button>
     </div>
 
-    <div class="playing-table" v-if="room.gameStatus">
+    <div class="playing-table" v-if="roomsInfo.room.gameStatus">
         <div>
             <deck
                     v-bind:deck-size="gameStateInfo.deckSize"
