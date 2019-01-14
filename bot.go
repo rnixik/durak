@@ -341,7 +341,11 @@ func (b *Bot) findLowestCard(cards []*Card) *Card {
 			minimalValueCard = avCard
 			continue
 		}
-		if avCard.getValueIndex() < minimalValueCard.getValueIndex() {
+
+		sameSuitType := avCard.Suit == trumpSuit && minimalValueCard.Suit == trumpSuit ||
+			avCard.Suit != trumpSuit && minimalValueCard.Suit != trumpSuit
+
+		if sameSuitType && avCard.getValueIndex() < minimalValueCard.getValueIndex() {
 			minimalValueCard = avCard
 		}
 	}
