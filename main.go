@@ -8,6 +8,7 @@ import (
 
 var addr = flag.String("addr", "127.0.0.1:8007", "http service address")
 var serveFiles = flag.Bool("serveFiles", true, "use this app to serve static files (js, css, images)")
+var gameLogDir = flag.String("gameLogDir", "/var/log/durak", "dir to store game logs")
 
 func serveIndexPage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -23,7 +24,8 @@ func serveIndexPage(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	flag.Parse()
-	lobby := newLobby()
+	gameLogger := NewGameFileLogger(*gameLogDir)
+	lobby := newLobby(gameLogger)
 	go lobby.run()
 	http.HandleFunc("/", serveIndexPage)
 	if *serveFiles {

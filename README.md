@@ -17,7 +17,7 @@ This implementation is in progress.
 [x] Observing started games, joining by an url  
 [ ] Simple AI  
 [ ] Advanced visualizing of cards on client-side: animations, drag'n'drops  
-[ ] Full structured log of games  
+[x] Full structured log of games  
 [ ] AI based on saved games  
 
 ## License

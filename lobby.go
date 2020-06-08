@@ -32,9 +32,11 @@ type Lobby struct {
 
 	// Rooms created by clients
 	rooms map[*Client]*Room
+
+	gameLogger GameLogger
 }
 
-func newLobby() *Lobby {
+func newLobby(gameLogger GameLogger) *Lobby {
 	return &Lobby{
 		broadcast:      make(chan []byte),
 		register:       make(chan *Client),
@@ -43,6 +45,7 @@ func newLobby() *Lobby {
 		clientCommands: make(chan *ClientCommand),
 		games:          make([]*Game, 0),
 		rooms:          make(map[*Client]*Room),
+		gameLogger:     gameLogger,
 	}
 }
 
@@ -80,10 +83,10 @@ func (l *Lobby) run() {
 }
 
 func (l *Lobby) broadcastEvent(event interface{}) {
-	json, _ := eventToJSON(event)
+	jsonData, _ := eventToJSON(event)
 	for client := range l.clients {
 		// TODO: add check whether client is in a room or in a game
-		client.sendMessage(json)
+		client.sendMessage(jsonData)
 	}
 }
 

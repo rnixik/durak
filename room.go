@@ -257,7 +257,7 @@ func (r *Room) onStartGameCommand(c *Client) {
 		}
 	}
 
-	r.game = newGame(r, players)
+	r.game = newGame(r, players, r.lobby.gameLogger)
 	go r.game.begin()
 
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}

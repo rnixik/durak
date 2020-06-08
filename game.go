@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 )
@@ -16,6 +17,7 @@ const (
 
 // Game represents status, state, etc of the game.
 type Game struct {
+	id                            string
 	playerActions                 chan *PlayerAction
 	owner                         *Player
 	room                          *Room
@@ -33,10 +35,32 @@ type Game struct {
 	defendingCards                map[int]*Card
 	defenderPickUp                bool
 	afkTimers                     map[int]*time.Timer
+	gameLogger                    GameLogger
 }
 
-func newGame(room *Room, players []*Player) *Game {
+type GameLogger interface {
+	LogGameBegins(game *Game)
+	LogPlayerActionAttack(game *Game, data AttackActionData)
+	LogPlayerActionDefend(game *Game, data DefendActionData)
+	LogPlayerActionPickUp(game *Game)
+	LogPlayerActionComplete(game *Game)
+	LogGameEnds(game *Game, hasLoser bool, loserIndex int) error
+}
+
+func newGame(room *Room, players []*Player, gameLogger GameLogger) *Game {
+	currentTime := time.Now()
+	gameId := fmt.Sprintf(
+		"%d%02d%02d_%02d%02d%02d_%d",
+		currentTime.Year(),
+		currentTime.Month(),
+		currentTime.Day(),
+		currentTime.Hour(),
+		currentTime.Minute(),
+		currentTime.Second(),
+		room.id,
+	)
 	return &Game{
+		id:             gameId,
 		room:           room,
 		playerActions:  make(chan *PlayerAction),
 		status:         GameStatusPreparing,
@@ -44,6 +68,7 @@ func newGame(room *Room, players []*Player) *Game {
 		battleground:   make([]*Card, 0),
 		defendingCards: make(map[int]*Card, 0),
 		afkTimers:      make(map[int]*time.Timer, 0),
+		gameLogger:     gameLogger,
 	}
 }
 
@@ -83,7 +108,9 @@ func (g *Game) deal() {
 	}
 
 	g.trumpCard = lastCard
-	g.trumpSuit = lastCard.Suit
+	if lastCard != nil {
+		g.trumpSuit = lastCard.Suit
+	}
 }
 
 func (g *Game) dealToPlayer(player *Player) {
@@ -243,6 +270,7 @@ func (g *Game) begin() {
 		p.sendEvent(gse)
 	}
 
+	g.gameLogger.LogGameBegins(g)
 	g.room.onGameStarted()
 	for {
 		select {
@@ -493,16 +521,20 @@ func (g *Game) onClientAction(action *PlayerAction) {
 		data, ok := action.Data.(AttackActionData)
 		if ok {
 			g.attack(action.player, data)
+			g.gameLogger.LogPlayerActionAttack(g, data)
 		}
 	} else if action.Name == PlayerActionNameDefend {
 		data, ok := action.Data.(DefendActionData)
 		if ok {
 			g.defend(action.player, data)
+			g.gameLogger.LogPlayerActionDefend(g, data)
 		}
 	} else if action.Name == PlayerActionNamePickUp {
 		g.pickUp(action.player)
+		g.gameLogger.LogPlayerActionPickUp(g)
 	} else if action.Name == PlayerActionNameComplete {
 		g.complete(action.player)
+		g.gameLogger.LogPlayerActionComplete(g)
 	} else {
 		log.Printf("Unknown game action: %s", action.Name)
 	}
@@ -524,6 +556,10 @@ func (g *Game) endGame(hasLoser bool, loserIndex int) {
 	gameEndEvent := &GameEndEvent{
 		HasLoser:   hasLoser,
 		LoserIndex: loserIndex,
+	}
+	err := g.gameLogger.LogGameEnds(g, hasLoser, loserIndex)
+	if err != nil {
+		log.Printf("Error writing log: %s", err)
 	}
 	g.room.broadcastEvent(gameEndEvent, nil)
 	close(g.playerActions)
