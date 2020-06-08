@@ -45,7 +45,6 @@ func (b *Bot) dispatchEvent(message []byte) {
 
 	log.Printf("BOT: event %+v", event)
 
-	// Use this encoding to use following parsing data into struct
 	eventDataJson, err := json.Marshal(event.Data)
 	if err != nil {
 		log.Printf("BOT: error at encoding event data: %s", err)
