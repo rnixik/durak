@@ -99,7 +99,7 @@ func (b *Bot) dispatchEvent(message []byte) {
 		var parsedEvent GameEndEvent
 		err = json.Unmarshal(eventDataJson, &parsedEvent)
 		if err == nil {
-			b.onGameEndEvent(parsedEvent)
+			b.onGameEndEvent()
 		}
 	}
 
@@ -144,7 +144,7 @@ func (b *Bot) onNewRoundEvent(event NewRoundEvent) {
 	b.gameStateInfo = event.GameStateInfo
 }
 
-func (b *Bot) onGameEndEvent(event GameEndEvent) {
+func (b *Bot) onGameEndEvent() {
 	b.gameIsOver = true
 }
 

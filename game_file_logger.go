@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	os "os"
+	"os"
 	"strings"
 	"time"
 )
@@ -84,6 +84,8 @@ func (l *GameFileLogger) write(game *Game) error {
 	if err != nil {
 		return err
 	}
+
+	defer f.Close()
 
 	_, err = f.WriteString(l.buffers[game.id])
 	delete(l.buffers, game.id)

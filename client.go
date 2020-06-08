@@ -123,10 +123,10 @@ func (c *Client) writeLoop() {
 }
 
 func (c *Client) sendEvent(event interface{}) {
-	json, _ := eventToJSON(event)
+	jsonData, _ := eventToJSON(event)
 	log.Printf("Send json to client %s", c.nickname)
-	log.Println(string(json))
-	c.sendMessage(json)
+	log.Println(string(jsonData))
+	c.sendMessage(jsonData)
 }
 
 func (c *Client) sendMessage(message []byte) {
