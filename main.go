@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-var addr = flag.String("addr", ":8007", "http service address")
+var addr = flag.String("addr", "127.0.0.1:8007", "http service address")
 var serveFiles = flag.Bool("serveFiles", true, "use this app to serve static files (js, css, images)")
 
 func serveIndexPage(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +34,7 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(lobby, w, r)
 	})
+	log.Printf("Listening http://%s", *addr)
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
