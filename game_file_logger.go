@@ -8,11 +8,13 @@ import (
 	"time"
 )
 
+// GameFileLogger is implementation of GameLogger which stores logs in files
 type GameFileLogger struct {
 	dir     string
 	buffers map[string]string
 }
 
+// NewGameFileLogger constructor for GameFileLogger
 func NewGameFileLogger(dir string) *GameFileLogger {
 	_ = os.MkdirAll(dir, 0777)
 	return &GameFileLogger{
@@ -21,6 +23,7 @@ func NewGameFileLogger(dir string) *GameFileLogger {
 	}
 }
 
+// LogGameBegins starts recording log and adds entry about beginning the game
 func (l *GameFileLogger) LogGameBegins(game *Game) {
 	l.buffers[game.id] = ""
 	lines := fmt.Sprintf("ENTRY Game begins. ID=%s\n", game.id)
@@ -29,6 +32,7 @@ func (l *GameFileLogger) LogGameBegins(game *Game) {
 	l.buffers[game.id] += lines
 }
 
+// LogPlayerActionAttack adds entry about attack
 func (l *GameFileLogger) LogPlayerActionAttack(game *Game, data AttackActionData) {
 	lines := fmt.Sprintf("ENTRY Attack. card=%s%s;\n", data.Card.Value, data.Card.Suit)
 	lines += getCurrentStateAsLines(game)
@@ -36,6 +40,7 @@ func (l *GameFileLogger) LogPlayerActionAttack(game *Game, data AttackActionData
 	l.buffers[game.id] += lines
 }
 
+// LogPlayerActionDefend adds entry about defense
 func (l *GameFileLogger) LogPlayerActionDefend(game *Game, data DefendActionData) {
 	lines := fmt.Sprintf(
 		"Defend. attackingCard=%s%s; defendingCard=%s%s\n",
@@ -49,6 +54,7 @@ func (l *GameFileLogger) LogPlayerActionDefend(game *Game, data DefendActionData
 	l.buffers[game.id] += lines
 }
 
+// LogPlayerActionPickUp adds entry about pick up
 func (l *GameFileLogger) LogPlayerActionPickUp(game *Game) {
 	lines := fmt.Sprintf("ENTRY PickUp.\n")
 	lines += getCurrentStateAsLines(game)
@@ -56,6 +62,7 @@ func (l *GameFileLogger) LogPlayerActionPickUp(game *Game) {
 	l.buffers[game.id] += lines
 }
 
+// LogPlayerActionComplete adds entry about completing a round
 func (l *GameFileLogger) LogPlayerActionComplete(game *Game) {
 	lines := fmt.Sprintf("ENTRY Complete.\n")
 	lines += getCurrentStateAsLines(game)
@@ -63,6 +70,7 @@ func (l *GameFileLogger) LogPlayerActionComplete(game *Game) {
 	l.buffers[game.id] += lines
 }
 
+// LogGameEnds adds entry about ending game and writes file with entries
 func (l *GameFileLogger) LogGameEnds(game *Game, hasLoser bool, loserIndex int) error {
 	lines := fmt.Sprintf("ENTRY Game ends. hasLoser=%t;loserIndex=%d\n", hasLoser, loserIndex)
 	lines += getCurrentStateAsLines(game)

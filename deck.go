@@ -46,7 +46,7 @@ func (p *Deck) getCard() (*Card, error) {
 }
 
 func (p *Deck) asString() string {
-	cardsStrings := []string{}
+	var cardsStrings []string
 	for _, card := range p.cards {
 		cardsStrings = append(cardsStrings, card.Value+card.Suit)
 	}
