@@ -3,6 +3,7 @@ package main
 import "encoding/json"
 
 const (
+	// Constants for client command types
 	ClientCommandTypeLobby              = "lobby"
 	ClientCommandLobbySubTypeJoin       = "join"
 	ClientCommandLobbySubTypeCreateRoom = "createRoom"

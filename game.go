@@ -38,12 +38,19 @@ type Game struct {
 	gameLogger                    GameLogger
 }
 
+// GameLogger stores game events
 type GameLogger interface {
+	// Save event when game starts
 	LogGameBegins(game *Game)
+	// Save event when a player attacks with card
 	LogPlayerActionAttack(game *Game, data AttackActionData)
+	// Save event when a player defends card
 	LogPlayerActionDefend(game *Game, data DefendActionData)
+	// Save event when a player picks up cards from desk
 	LogPlayerActionPickUp(game *Game)
+	// Save event when a players completes a round
 	LogPlayerActionComplete(game *Game)
+	// Save event when game ends
 	LogGameEnds(game *Game, hasLoser bool, loserIndex int) error
 }
 

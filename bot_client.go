@@ -5,6 +5,7 @@ import (
 	"math/rand"
 )
 
+// BotClient represents a connection to the game for an AI player
 type BotClient struct {
 	nickname string
 	id       uint64

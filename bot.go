@@ -5,6 +5,7 @@ import (
 	"log"
 )
 
+// Bot represents a AI player
 type Bot struct {
 	botClient       *BotClient
 	gameStateInfo   *GameStateInfo
@@ -298,9 +299,9 @@ func (b *Bot) makeDecision() {
 		log.Println("BOT: Can attack")
 		b.attack()
 		return
-	} else {
-		log.Println("BOT: Can't attack")
 	}
+
+	log.Println("BOT: Can't attack")
 
 	if b.canDefend() {
 		b.defend()

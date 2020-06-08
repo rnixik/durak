@@ -1,8 +1,15 @@
 package main
 
+// Attack with card
 const PlayerActionNameAttack = "attack"
+
+// Defend with card
 const PlayerActionNameDefend = "defend"
+
+// Pick up cards from desk
 const PlayerActionNamePickUp = "pick_up"
+
+// Complete round
 const PlayerActionNameComplete = "complete"
 
 // PlayerAction contains command message from a player to a game.
