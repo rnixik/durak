@@ -3,7 +3,18 @@
 [![Build Status](https://travis-ci.org/rnixik/durak.svg?branch=master)](https://travis-ci.org/rnixik/durak) [![Go Report Card](https://goreportcard.com/badge/github.com/rnixik/durak)](https://goreportcard.com/report/github.com/rnixik/durak)
 
 Rules are described on [Wikipedia](https://en.wikipedia.org/wiki/Durak).
-This implementation is in progress.
+
+## Run
+
+```bash
+go build . && ./durak
+```
+
+## Deployment on production
+
+```bash
+bash scripts/release.sh
+```
 
 ## Roadmap
 
