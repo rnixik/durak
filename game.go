@@ -465,6 +465,7 @@ func (g *Game) complete(player *Player) {
 
 func (g *Game) endRound() {
 	g.resetPlayersCompleteStatuses()
+	// Can change number of active players to end game
 	g.roundDeal(g.attackerIndex, g.defenderIndex)
 
 	defenderPlayer := g.players[g.defenderIndex]
