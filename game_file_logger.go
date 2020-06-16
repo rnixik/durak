@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -28,7 +27,6 @@ func (l *GameFileLogger) LogGameBegins(game *Game) {
 	l.buffers[game.id] = ""
 	lines := fmt.Sprintf("ENTRY Game begins. ID=%s\n", game.id)
 	lines += getCurrentStateAsLines(game)
-	log.Println(lines)
 	l.buffers[game.id] += lines
 }
 
@@ -36,7 +34,6 @@ func (l *GameFileLogger) LogGameBegins(game *Game) {
 func (l *GameFileLogger) LogPlayerActionAttack(game *Game, data AttackActionData) {
 	lines := fmt.Sprintf("ENTRY Attack. card=%s%s;\n", data.Card.Value, data.Card.Suit)
 	lines += getCurrentStateAsLines(game)
-	log.Println(lines)
 	l.buffers[game.id] += lines
 }
 
@@ -50,7 +47,6 @@ func (l *GameFileLogger) LogPlayerActionDefend(game *Game, data DefendActionData
 		data.DefendingCard.Suit,
 	)
 	lines += getCurrentStateAsLines(game)
-	log.Println(lines)
 	l.buffers[game.id] += lines
 }
 
@@ -58,7 +54,6 @@ func (l *GameFileLogger) LogPlayerActionDefend(game *Game, data DefendActionData
 func (l *GameFileLogger) LogPlayerActionPickUp(game *Game) {
 	lines := fmt.Sprintf("ENTRY PickUp.\n")
 	lines += getCurrentStateAsLines(game)
-	log.Println(lines)
 	l.buffers[game.id] += lines
 }
 
@@ -66,7 +61,6 @@ func (l *GameFileLogger) LogPlayerActionPickUp(game *Game) {
 func (l *GameFileLogger) LogPlayerActionComplete(game *Game) {
 	lines := fmt.Sprintf("ENTRY Complete.\n")
 	lines += getCurrentStateAsLines(game)
-	log.Println(lines)
 	l.buffers[game.id] += lines
 }
 
@@ -74,7 +68,6 @@ func (l *GameFileLogger) LogPlayerActionComplete(game *Game) {
 func (l *GameFileLogger) LogGameEnds(game *Game, hasLoser bool, loserIndex int) error {
 	lines := fmt.Sprintf("ENTRY Game ends. hasLoser=%t;loserIndex=%d\n", hasLoser, loserIndex)
 	lines += getCurrentStateAsLines(game)
-	log.Println(lines)
 	l.buffers[game.id] += lines
 
 	return l.write(game)
