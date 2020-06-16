@@ -1,0 +1,20 @@
+version: '3.5'
+
+services:
+  durak:
+    build:
+      context: ./../
+      dockerfile: ./build/Dockerfile
+
+    container_name: durak
+
+    network_mode: bridge
+    restart: always
+
+    environment:
+      VIRTUAL_PORT: 8007
+      VIRTUAL_HOST: "durak.getid.org"
+      LETSENCRYPT_HOST: "durak.getid.org"
+
+    volumes:
+    - /var/log/durak:/var/log/durak
