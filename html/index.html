@@ -271,7 +271,8 @@
 
 <script src="js/messages.js"></script>
 <script>
-    window.APP_ENV = document.querySelector('meta[name="app-env"]').getAttribute('value');
+    window.APP_ENV = document.querySelector('meta[name="app-env"]').getAttribute('content');
+    console.log('APP_ENV', window.APP_ENV);
 
     const loginElement = document.getElementById('login');
     (() => {
