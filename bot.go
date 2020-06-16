@@ -51,62 +51,81 @@ func (b *Bot) dispatchEvent(message []byte) {
 		return
 	}
 
-	switch event.Name {
-	case "GamePlayersEvent":
-		var parsedEvent GamePlayersEvent
-		err = json.Unmarshal(eventDataJson, &parsedEvent)
-		if err == nil {
-			b.onGamePlayersEvent(parsedEvent)
-		}
-	case "GameFirstAttackerEvent":
-		var parsedEvent GameFirstAttackerEvent
-		err = json.Unmarshal(eventDataJson, &parsedEvent)
-		if err == nil {
-			b.onGameFirstAttackerEvent(parsedEvent)
-		}
-	case "GameStartedEvent":
-		var parsedEvent GameStartedEvent
-		err = json.Unmarshal(eventDataJson, &parsedEvent)
-		if err == nil {
-			b.onGameStartedEvent(parsedEvent)
-		}
-	case "GameAttackEvent":
-		var parsedEvent GameAttackEvent
-		err = json.Unmarshal(eventDataJson, &parsedEvent)
-		if err == nil {
-			b.onGameAttackEvent(parsedEvent)
-		}
-	case "GameDefendEvent":
-		var parsedEvent GameDefendEvent
-		err = json.Unmarshal(eventDataJson, &parsedEvent)
-		if err == nil {
-			b.onGameDefendEvent(parsedEvent)
-		}
-	case "GameStateEvent":
-		var parsedEvent GameStateEvent
-		err = json.Unmarshal(eventDataJson, &parsedEvent)
-		if err == nil {
-			b.onGameStateEvent(parsedEvent)
-		}
-	case "NewRoundEvent":
-		var parsedEvent NewRoundEvent
-		err = json.Unmarshal(eventDataJson, &parsedEvent)
-		if err == nil {
-			b.onNewRoundEvent(parsedEvent)
-		}
-	case "GameEndEvent":
-		var parsedEvent GameEndEvent
-		err = json.Unmarshal(eventDataJson, &parsedEvent)
-		if err == nil {
-			b.onGameEndEvent()
-		}
+	eventHandlers := map[string]func(b *Bot) (func(), error){
+		"GamePlayersEvent": func(b *Bot) (func(), error) {
+			var parsedEvent GamePlayersEvent
+			err = json.Unmarshal(eventDataJson, &parsedEvent)
+
+			return func() {
+				b.onGamePlayersEvent(parsedEvent)
+			}, err
+		},
+		"GameFirstAttackerEvent": func(b *Bot) (func(), error) {
+			var parsedEvent GameFirstAttackerEvent
+			err = json.Unmarshal(eventDataJson, &parsedEvent)
+
+			return func() {
+				b.onGameFirstAttackerEvent(parsedEvent)
+			}, err
+		},
+		"GameStartedEvent": func(b *Bot) (func(), error) {
+			var parsedEvent GameStartedEvent
+			err = json.Unmarshal(eventDataJson, &parsedEvent)
+
+			return func() {
+				b.onGameStartedEvent(parsedEvent)
+			}, err
+		},
+		"GameAttackEvent": func(b *Bot) (func(), error) {
+			var parsedEvent GameAttackEvent
+			err = json.Unmarshal(eventDataJson, &parsedEvent)
+
+			return func() {
+				b.onGameAttackEvent(parsedEvent)
+			}, err
+		},
+		"GameDefendEvent": func(bot *Bot) (func(), error) {
+			var parsedEvent GameDefendEvent
+			err = json.Unmarshal(eventDataJson, &parsedEvent)
+
+			return func() {
+				b.onGameDefendEvent(parsedEvent)
+			}, err
+		},
+		"GameStateEvent": func(bot *Bot) (func(), error) {
+			var parsedEvent GameStateEvent
+			err = json.Unmarshal(eventDataJson, &parsedEvent)
+
+			return func() {
+				b.onGameStateEvent(parsedEvent)
+			}, err
+		},
+		"NewRoundEvent": func(bot *Bot) (func(), error) {
+			var parsedEvent NewRoundEvent
+			err = json.Unmarshal(eventDataJson, &parsedEvent)
+
+			return func() {
+				b.onNewRoundEvent(parsedEvent)
+			}, err
+		},
+		"GameEndEvent": func(bot *Bot) (func(), error) {
+			var parsedEvent GameEndEvent
+			err = json.Unmarshal(eventDataJson, &parsedEvent)
+
+			return func() {
+				b.onGameEndEvent()
+			}, err
+		},
 	}
+
+	finishExec, err := eventHandlers[event.Name](b)
 
 	if err != nil {
 		log.Printf("BOT: error at parsing event data: %s", err)
 		return
 	}
 
+	finishExec()
 	b.makeDecision()
 }
 
