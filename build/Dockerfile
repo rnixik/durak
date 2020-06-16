@@ -19,4 +19,4 @@ COPY --from=builder /app/durak /app/
 COPY ./html/ /app/html/
 RUN mkdir -p /var/log/durak && chmod 0777 /var/log/durak
 EXPOSE 8007
-ENTRYPOINT ["/app/durak", "--addr=:8007"]
+ENTRYPOINT ["/app/durak", "--addr=:8007", "--env=production"]

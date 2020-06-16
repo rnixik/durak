@@ -324,10 +324,10 @@ function App() {
         app.vue.roomsInfo.room = data.room;
         app.updatePlayersInRoomCounter();
         app.updateLocationWithRoomId(data.room.id);
-        // TODO: remove debug
-        app.commandAddBot();
-        app.commandAddBot();
-        app.commandStartGame();
+        if (window.APP_ENV === 'local') {
+            app.commandAddBot();
+            app.commandStartGame();
+        }
     };
 
     this.onRoomUpdatedEvent = (data) => {
