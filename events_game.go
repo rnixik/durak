@@ -10,6 +10,7 @@ type GamePlayersEvent struct {
 type GameStateInfo struct {
 	YourHand         []*Card       `json:"yourHand"`
 	CanYouPickUp     bool          `json:"canYouPickUp"`
+	CanYouAttack     bool          `json:"canYouAttack"`
 	CanYouComplete   bool          `json:"canYouComplete"`
 	HandsSizes       []int         `json:"handsSizes"`
 	DeckSize         int           `json:"deckSize"`

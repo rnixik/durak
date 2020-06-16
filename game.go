@@ -168,6 +168,7 @@ func (g *Game) getGameStateInfo(player *Player) *GameStateInfo {
 		if p == player {
 			gsi.YourHand = p.cards
 			gsi.CanYouComplete = g.canPlayerComplete(player)
+			gsi.CanYouAttack = g.canPlayerAttack(player)
 			gsi.CanYouPickUp = g.canPlayerPickUp(player)
 		}
 		gsi.HandsSizes[i] = len(p.cards)
@@ -291,11 +292,8 @@ func (g *Game) begin() {
 	}
 }
 
-func (g *Game) canPlayerAttackWithCard(player *Player, card *Card) bool {
+func (g *Game) canPlayerAttack(player *Player) bool {
 	if g.status != GameStatusPlaying {
-		return false
-	}
-	if !player.hasCard(card) {
 		return false
 	}
 	if g.defenderIndex == g.getPlayerIndex(player) {
@@ -307,11 +305,21 @@ func (g *Game) canPlayerAttackWithCard(player *Player, card *Card) bool {
 	if len(g.battleground) >= 6 {
 		return false
 	}
-
-	if len(g.battleground) > 0 && (!g.hasBattlegroundSameValue(card) && !g.hasDefendingCardsSameValue(card)) {
+	if player.IsCompleted {
 		return false
 	}
-	if player.IsCompleted {
+
+	return true
+}
+
+func (g *Game) canPlayerAttackWithCard(player *Player, card *Card) bool {
+	if !g.canPlayerAttack(player) {
+		return false
+	}
+	if !player.hasCard(card) {
+		return false
+	}
+	if len(g.battleground) > 0 && (!g.hasBattlegroundSameValue(card) && !g.hasDefendingCardsSameValue(card)) {
 		return false
 	}
 
@@ -374,6 +382,9 @@ func (g *Game) defend(player *Player, data DefendActionData) {
 	attackingIndex := g.getBattlegroundCardIndex(data.AttackingCard)
 	g.defendingCards[attackingIndex] = data.DefendingCard
 	player.removeCard(data.DefendingCard)
+
+	// Allow other players to attack in the middle of a round
+	g.resetPlayersCompleteStatuses()
 
 	gameAttackEvent := GameDefendEvent{
 		DefenderIndex: g.getPlayerIndex(player),
@@ -441,6 +452,10 @@ func (g *Game) canPlayerComplete(player *Player) bool {
 		return false
 	}
 	if player.IsCompleted {
+		return false
+	}
+
+	if len(g.battleground) != len(g.defendingCards) && !g.defenderPickUp {
 		return false
 	}
 

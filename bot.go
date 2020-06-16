@@ -118,7 +118,12 @@ func (b *Bot) dispatchEvent(message []byte) {
 		},
 	}
 
-	finishExec, err := eventHandlers[event.Name](b)
+	handler, ok := eventHandlers[event.Name]
+	if !ok {
+		return
+	}
+
+	finishExec, err := handler(b)
 
 	if err != nil {
 		log.Printf("BOT: error at parsing event data: %s", err)
@@ -192,20 +197,7 @@ func (b *Bot) isGameStateValid() bool {
 }
 
 func (b *Bot) canAttack() bool {
-	if b.gameStateInfo.DefenderIndex == b.yourPlayerIndex {
-		log.Println("BOT: is defender")
-		return false
-	}
-	if b.gameStateInfo.CompletedPlayers[b.yourPlayerIndex] {
-		log.Println("BOT: is completed")
-		return false
-	}
-	if len(b.gameStateInfo.YourHand) == 0 {
-		log.Println("BOT: no cards")
-		return false
-	}
-	if len(b.gameStateInfo.Battleground) == 0 && b.gameStateInfo.AttackerIndex != b.yourPlayerIndex {
-		log.Println("BOT: not first attacker")
+	if !b.gameStateInfo.CanYouAttack {
 		return false
 	}
 	if len(b.getAvailableCardsForAttack()) == 0 {
@@ -326,7 +318,7 @@ func (b *Bot) makeDecision() {
 		return
 	}
 
-	if b.gameStateInfo.CanYouComplete && len(b.myUnbeatenCards) == 0 {
+	if b.gameStateInfo.CanYouComplete {
 		b.complete()
 	}
 }

@@ -130,6 +130,7 @@ function App() {
             gameStateInfo: {
                 yourHand: [],
                 canYouPickUp: false,
+                canYouAttack: false,
                 canYouComplete: false,
                 handsSizes: [],
                 deckSize: 0,
@@ -187,7 +188,7 @@ function App() {
                 }
             },
             attack: () => {
-                if (!app.vue.areYouAttacker || !app.vue.game.pickedCard) {
+                if (!app.vue.canYouAttack || !app.vue.game.pickedCard) {
                     return;
                 }
                 app.commandAttack(app.vue.game.pickedCard.value, app.vue.game.pickedCard.suit);
@@ -215,6 +216,9 @@ function App() {
         computed: {
             areYouAttacker: () => {
                 return app.vue.gameStateInfo.attackerIndex === app.vue.game.yourPlayerIndex;
+            },
+            canYouAttack: () => {
+                return app.vue.gameStateInfo.canYouAttack;
             },
             areYouDefender: () => {
                 return app.vue.gameStateInfo.defenderIndex === app.vue.game.yourPlayerIndex;
@@ -321,6 +325,7 @@ function App() {
         app.updatePlayersInRoomCounter();
         app.updateLocationWithRoomId(data.room.id);
         // TODO: remove debug
+        app.commandAddBot();
         app.commandAddBot();
         app.commandStartGame();
     };
