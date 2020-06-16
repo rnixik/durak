@@ -16,8 +16,5 @@ services:
       VIRTUAL_HOST: "durak.getid.org"
       LETSENCRYPT_HOST: "durak.getid.org"
 
-    ports:
-    - 8007:8007
-
     volumes:
     - /var/log/durak:/var/log/durak
