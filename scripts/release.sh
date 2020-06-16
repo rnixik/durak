@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd && cd ./..)"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)"
 
-cd "${BASE_DIR}"
+cd "${DIR}/.."
 git pull && docker-compose -f deployments/docker-compose.prod.yml up -d --build
 cd -
