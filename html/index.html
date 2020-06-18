@@ -374,8 +374,9 @@
             }
         }
 
-        // TODO: remove debug
-        wsConnect(document.getElementById('nick').value);
+        if (window.APP_ENV === 'local') {
+            wsConnect(document.getElementById('nick').value);
+        }
     })();
 </script>
 <script src="js/vendor/vue.js"></script>
