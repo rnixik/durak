@@ -27,6 +27,10 @@ func serveIndexPage(w http.ResponseWriter, r *http.Request) {
 	w.Write(indexPageContent)
 }
 
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "html/favicon.ico")
+}
+
 func main() {
 	flag.Parse()
 
@@ -41,6 +45,7 @@ func main() {
 	go lobby.run()
 	http.HandleFunc("/", serveIndexPage)
 	if *serveFiles {
+		http.HandleFunc("/favicon.ico", faviconHandler)
 		http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./html/js"))))
 		http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./html/css"))))
 		http.Handle("/img/", http.StripPrefix("/img/", http.FileServer(http.Dir("./html/img"))))
