@@ -7,6 +7,7 @@ window.i18nMessages = {
             play: 'Play',
             websockets_are_not_supported: 'Sorry, you can\'t play because you device does not support WebSockets',
             disconnected: 'Disconnected',
+            durak_an_online_multiplayer_card_game: 'Durak - an online multiplayer card game'
         },
         lobby: {
             clients: 'Clients',
@@ -20,6 +21,7 @@ window.i18nMessages = {
             play: 'Играть',
             websockets_are_not_supported: 'Извините, вы не сможете играть, потому что ваше устройство не поддерживает WebSocket',
             disconnected: 'Отключены',
+            durak_an_online_multiplayer_card_game: 'Дурак - многопользовательская карточная онлайн игра'
         },
         lobby: {
             clients: 'Клиенты',

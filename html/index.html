@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Durak - An online multiplayer card game</title>
+    <title data-t="durak_an_online_multiplayer_card_game">Durak - An online multiplayer card game</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
     <meta name="app-env" content="%APP_ENV%"/>
     <link rel=icon href=/favicon.ico>
@@ -363,7 +363,7 @@
         // i18n
         if (window.i18nMessages[window.CURRENT_LOCALE]) {
             const translations = window.i18nMessages[window.CURRENT_LOCALE].login;
-            const elementsToTranslate = document.querySelectorAll('#login [data-t]');
+            const elementsToTranslate = document.querySelectorAll('#login [data-t], title');
             for (let i = 0; i < elementsToTranslate.length; i += 1) {
                 const transKey = elementsToTranslate[i].getAttribute('data-t');
                 if (transKey && translations[transKey]) {
