@@ -361,6 +361,7 @@ func (g *Game) attack(player *Player, data AttackActionData) {
 	}
 	g.battleground = append(g.battleground, card)
 	player.removeCard(card)
+	g.gameLogger.LogPlayerActionAttack(g, data)
 
 	gameAttackEvent := GameAttackEvent{
 		AttackerIndex: g.getPlayerIndex(player),
@@ -385,6 +386,8 @@ func (g *Game) defend(player *Player, data DefendActionData) {
 	attackingIndex := g.getBattlegroundCardIndex(data.AttackingCard)
 	g.defendingCards[attackingIndex] = data.DefendingCard
 	player.removeCard(data.DefendingCard)
+
+	g.gameLogger.LogPlayerActionDefend(g, data)
 
 	// Allow other players to attack in the middle of a round
 	g.resetPlayersCompleteStatuses()
@@ -436,7 +439,10 @@ func (g *Game) pickUp(player *Player) {
 		log.Printf("Can't pick up")
 		return
 	}
+
 	g.defenderPickUp = true
+	g.gameLogger.LogPlayerActionPickUp(g)
+
 	if g.areAllPlayersCompleted() {
 		g.endRound()
 	} else {
@@ -479,6 +485,7 @@ func (g *Game) complete(player *Player) {
 	}
 
 	player.IsCompleted = true
+	g.gameLogger.LogPlayerActionComplete(g)
 
 	if g.areAllPlayersCompleted() {
 		g.endRound()
@@ -553,20 +560,16 @@ func (g *Game) onClientAction(action *PlayerAction) {
 		data, ok := action.Data.(AttackActionData)
 		if ok {
 			g.attack(action.player, data)
-			g.gameLogger.LogPlayerActionAttack(g, data)
 		}
 	} else if action.Name == PlayerActionNameDefend {
 		data, ok := action.Data.(DefendActionData)
 		if ok {
 			g.defend(action.player, data)
-			g.gameLogger.LogPlayerActionDefend(g, data)
 		}
 	} else if action.Name == PlayerActionNamePickUp {
 		g.pickUp(action.player)
-		g.gameLogger.LogPlayerActionPickUp(g)
 	} else if action.Name == PlayerActionNameComplete {
 		g.complete(action.player)
-		g.gameLogger.LogPlayerActionComplete(g)
 	} else {
 		log.Printf("Unknown game action: %s", action.Name)
 	}
