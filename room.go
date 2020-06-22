@@ -74,7 +74,14 @@ func (r *Room) removeClient(client ClientSender) (changedOwner bool, roomBecameE
 	roomUpdatedEvent := &RoomUpdatedEvent{r.toRoomInfo()}
 	r.broadcastEvent(roomUpdatedEvent, nil)
 
-	if len(r.members) == 0 {
+	nonBotsMembersNumber := 0
+	for ic := range r.members {
+		if !ic.isBot {
+			nonBotsMembersNumber += 1
+		}
+	}
+
+	if nonBotsMembersNumber == 0 {
 		roomBecameEmpty = true
 		return
 	}
