@@ -305,6 +305,9 @@ func (g *Game) canPlayerAttack(player *Player) bool {
 	if len(g.battleground) >= 6 {
 		return false
 	}
+	if len(g.battleground) >= len(g.players[g.defenderIndex].cards) {
+		return false
+	}
 	if player.IsCompleted {
 		return false
 	}
