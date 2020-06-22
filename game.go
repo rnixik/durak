@@ -51,7 +51,7 @@ type GameLogger interface {
 	// Save event when a players completes a round
 	LogPlayerActionComplete(game *Game)
 	// Save event when game ends
-	LogGameEnds(game *Game, hasLoser bool, loserIndex int) error
+	LogGameEnds(game *Game, hasLoser bool, loserIndex int)
 }
 
 func newGame(room *Room, players []*Player, gameLogger GameLogger) *Game {
@@ -592,10 +592,7 @@ func (g *Game) endGame(hasLoser bool, loserIndex int) {
 		HasLoser:   hasLoser,
 		LoserIndex: loserIndex,
 	}
-	err := g.gameLogger.LogGameEnds(g, hasLoser, loserIndex)
-	if err != nil {
-		log.Printf("Error writing log: %s", err)
-	}
+	g.gameLogger.LogGameEnds(g, hasLoser, loserIndex)
 	g.room.broadcastEvent(gameEndEvent, nil)
 	close(g.playerActions)
 	g.room.onGameEnded()

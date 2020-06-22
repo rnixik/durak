@@ -40,7 +40,10 @@ func main() {
 	}
 	indexPageContent = bytes.Replace(indexPageContentRaw, []byte("%APP_ENV%"), []byte(*appEnv), 1)
 
-	gameLogger := NewGameFileLogger(*gameLogDir)
+	gameLogger := NewGameFileLogger(*gameLogDir, func(err error) {
+		log.Println(err)
+	})
+
 	lobby := newLobby(gameLogger)
 	go lobby.run()
 	http.HandleFunc("/", serveIndexPage)
