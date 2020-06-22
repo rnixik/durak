@@ -400,7 +400,13 @@ func (g *Game) defend(player *Player, data DefendActionData) {
 		p.sendEvent(gameAttackEvent)
 	}
 
-	g.restartAfkTimers(g.defenderIndex)
+	if len(g.defendingCards) == len(g.battleground) {
+		// All cards are beaten, wait for attacker
+		g.restartAfkTimers(g.attackerIndex)
+	} else {
+		// Not all cards are beaten, wait for defender
+		g.restartAfkTimers(g.defenderIndex)
+	}
 }
 
 func (g *Game) canPlayerPickUp(player *Player) bool {
