@@ -38,7 +38,7 @@ type Lobby struct {
 
 func newLobby(gameLogger GameLogger) *Lobby {
 	return &Lobby{
-		broadcast:      make(chan []byte),
+		broadcast:      make(chan []byte, 10),
 		register:       make(chan *Client),
 		unregister:     make(chan *Client),
 		clients:        make(map[*Client]bool),
@@ -66,15 +66,12 @@ func (l *Lobby) run() {
 				delete(l.clients, client)
 				close(client.send)
 			}
-		case message := <-l.broadcast:
+		case message, ok := <-l.broadcast:
+			if !ok {
+				continue
+			}
 			for client := range l.clients {
-				select {
-				case client.send <- message:
-				default:
-					client.isValid = false
-					close(client.send)
-					delete(l.clients, client)
-				}
+				client.sendMessage(message)
 			}
 		case clientCommand := <-l.clientCommands:
 			l.onClientCommand(clientCommand)
@@ -84,10 +81,7 @@ func (l *Lobby) run() {
 
 func (l *Lobby) broadcastEvent(event interface{}) {
 	jsonData, _ := eventToJSON(event)
-	for client := range l.clients {
-		// TODO: add check whether client is in a room or in a game
-		client.sendMessage(jsonData)
-	}
+	l.broadcast <- jsonData
 }
 
 func (l *Lobby) onJoinCommand(c *Client, nickname string) {
