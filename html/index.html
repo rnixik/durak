@@ -275,6 +275,8 @@
 <script>
     window.APP_ENV = document.querySelector('meta[name="app-env"]').getAttribute('content');
     console.log('APP_ENV', window.APP_ENV);
+    window.APP_VERSION = document.querySelector('meta[name="app-version"]').getAttribute('content');
+    console.log('APP_VERSION', window.APP_VERSION);
 
     const loginElement = document.getElementById('login');
     (() => {
