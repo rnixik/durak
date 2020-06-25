@@ -33,6 +33,7 @@ func (l *GameFileLogger) LogGameBegins(game *Game) {
 	go l.writeLoop(game.id)
 
 	lines := fmt.Sprintf("ENTRY Game begins. ID=%s\n", game.id)
+	lines += getPlayersNames(game.players) + "\n"
 	lines += getCurrentStateAsLines(game)
 	l.bufferChans[game.id] <- lines
 }
@@ -153,6 +154,20 @@ func getPlayersCards(players []*Player) string {
 		}
 
 		str += fmt.Sprintf("P=%d(%s):%s;", index, isBot, cardsToString(player.cards))
+	}
+
+	return str
+}
+
+func getPlayersNames(players []*Player) string {
+	str := ""
+
+	for index, player := range players {
+		if index != 0 {
+			str += " "
+		}
+
+		str += fmt.Sprintf("P%d=%s;", index, player.Name)
 	}
 
 	return str
