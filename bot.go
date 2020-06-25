@@ -317,7 +317,7 @@ func (b *Bot) makeDecision() {
 		b.myUnbeatenCards = make(map[Card]bool, 0)
 	}
 
-	log.Println(b.getTablePickUpValue(nil))
+	// log.Println(b.getTablePickUpValue(nil))
 
 	if b.canAttack() {
 		if len(b.gameStateInfo.Battleground) == 0 {
