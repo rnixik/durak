@@ -291,6 +291,10 @@ function App() {
     };
 
     this.onClientBroadCastJoinedEvent = (data) => {
+        if (app.vue.clientsInfo.yourId === data.id) {
+            // Double join event of current client
+            return
+        }
         app.vue.clientsInfo.clients.push(data);
     };
 
