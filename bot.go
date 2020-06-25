@@ -317,6 +317,8 @@ func (b *Bot) makeDecision() {
 		b.myUnbeatenCards = make(map[Card]bool, 0)
 	}
 
+	log.Println(b.getTablePickUpValue(nil))
+
 	if b.canAttack() {
 		if len(b.gameStateInfo.Battleground) == 0 {
 			if b.attack() {
@@ -388,17 +390,44 @@ func (b *Bot) findLowestCard(cards []*Card) *Card {
 	return minimalValueCard
 }
 
-func (b *Bot) getTablePickUpValue(possibleCard *Card) float64 {
+func (b *Bot) getTablePickUpValue(additionalCard *Card) float64 {
 	if len(b.gameStateInfo.Battleground) == 0 {
 		return float64(0)
 	}
 
-	// How many cards left in deck: 0..1: 0 - empty deck; 1 - full deck.
+	deckRemainsIndex := b.getDeckRemainsIndex()
+	battlegroundAttackRateIndex := b.getCardsOnTablePowerRate(additionalCard)
+	tripletsIndex, quartetsIndex := b.getPairsOnTableIndex(additionalCard)
+
+	cardsPowerIndex := (10*battlegroundAttackRateIndex + tripletsIndex + 2*quartetsIndex) / float64(13)
+
+	value := deckRemainsIndex * cardsPowerIndex
+
+	log.Printf(
+		"pickup value = %f, D=%f, AR=%f, T=%f, Q=%f, CP=%f",
+		value,
+		deckRemainsIndex,
+		battlegroundAttackRateIndex,
+		tripletsIndex,
+		quartetsIndex,
+		cardsPowerIndex,
+	)
+
+	return value
+}
+
+// How many cards left in deck: 0..1: 0 - empty deck; 1 - full deck.
+func (b *Bot) getDeckRemainsIndex() float64 {
 	deckRemainsIndex := float64(0)
 	if b.initialPlayersNum < 6 {
 		deckRemainsIndex = float64(b.gameStateInfo.DeckSize) / float64(36-b.initialPlayersNum*6)
 	}
 
+	return deckRemainsIndex
+}
+
+// Calculate power of cards on table in range 0..1, where 1 is maximum possible cards power
+func (b *Bot) getCardsOnTablePowerRate(additionalCard *Card) float64 {
 	// Each card has attack rate from 0 ("6") to 9 ("A")
 	// Each trump card has attack rate from 10 (trump "6") to 18 (trump "A")
 	// maxAttackRate - cards with highest value: trump "A", "K", "Q", ...
@@ -407,7 +436,7 @@ func (b *Bot) getTablePickUpValue(possibleCard *Card) float64 {
 	maxAttackRatePerCurrentCard := 18 // Trump "A" has maximum attack rate
 
 	totalCardsOnTable := len(b.gameStateInfo.Battleground) + len(b.gameStateInfo.DefendingCards)
-	if possibleCard != nil {
+	if additionalCard != nil {
 		totalCardsOnTable += 1
 	}
 	for i := 0; i < totalCardsOnTable; i++ {
@@ -415,28 +444,23 @@ func (b *Bot) getTablePickUpValue(possibleCard *Card) float64 {
 		maxAttackRatePerCurrentCard -= 1
 	}
 
-	battlegroundAttackRate := 0
-	for _, card := range b.gameStateInfo.Battleground {
+	getCardAttackRate := func(card *Card) int {
 		if card.Suit == b.gameStateInfo.TrumpCard.Suit {
-			battlegroundAttackRate += card.getValueIndex() + 9
-		} else {
-			battlegroundAttackRate += card.getValueIndex()
+			return card.getValueIndex() + 9
 		}
-	}
-	for _, card := range b.gameStateInfo.DefendingCards {
-		if card.Suit == b.gameStateInfo.TrumpCard.Suit {
-			battlegroundAttackRate += card.getValueIndex() + 9
-		} else {
-			battlegroundAttackRate += card.getValueIndex()
-		}
+		return card.getValueIndex()
 	}
 
-	if possibleCard != nil {
-		if possibleCard.Suit == b.gameStateInfo.TrumpCard.Suit {
-			battlegroundAttackRate += possibleCard.getValueIndex() + 9
-		} else {
-			battlegroundAttackRate += possibleCard.getValueIndex()
-		}
+	battlegroundAttackRate := 0
+	for _, card := range b.gameStateInfo.Battleground {
+		battlegroundAttackRate += getCardAttackRate(card)
+	}
+	for _, card := range b.gameStateInfo.DefendingCards {
+		battlegroundAttackRate += getCardAttackRate(card)
+	}
+
+	if additionalCard != nil {
+		battlegroundAttackRate += getCardAttackRate(additionalCard)
 	}
 
 	battlegroundAttackRateIndex := float64(0)
@@ -444,36 +468,24 @@ func (b *Bot) getTablePickUpValue(possibleCard *Card) float64 {
 		battlegroundAttackRateIndex = float64(battlegroundAttackRate) / float64(maxAttackRate)
 	}
 
-	// How many pairs on table
+	return battlegroundAttackRateIndex
+}
+
+// Returns indexes based on how many pairs on table
+func (b *Bot) getPairsOnTableIndex(additionalCard *Card) (tripletsIndex float64, quartetsIndex float64) {
 	pairNumberCards := b.getCardsNumberOnTable()
-	if possibleCard != nil {
-		if _, ok := pairNumberCards[possibleCard.Value]; ok {
-			pairNumberCards[possibleCard.Value] += 1
+	if additionalCard != nil {
+		if _, ok := pairNumberCards[additionalCard.Value]; ok {
+			pairNumberCards[additionalCard.Value] += 1
 		} else {
-			pairNumberCards[possibleCard.Value] = 1
+			pairNumberCards[additionalCard.Value] = 1
 		}
 	}
 
-	pair2Index := getCardsPairsIndex(pairNumberCards, 2)
-	pair3Index := getCardsPairsIndex(pairNumberCards, 3)
-	pair4Index := getCardsPairsIndex(pairNumberCards, 4)
+	tripletsIndex = getCardsPairsIndex(pairNumberCards, 3)
+	quartetsIndex = getCardsPairsIndex(pairNumberCards, 4)
 
-	cardsPowerIndex := (9*battlegroundAttackRateIndex + pair2Index/2 + pair3Index + 2*pair4Index) / float64(13)
-
-	value := deckRemainsIndex * cardsPowerIndex
-
-	log.Printf(
-		"pickup value = %f, deck index = %f, attack rate index = %f, pair2 = %f, pair3 = %f, pair4 = %f, cards power = %f",
-		value,
-		deckRemainsIndex,
-		battlegroundAttackRateIndex,
-		pair2Index,
-		pair3Index,
-		pair4Index,
-		cardsPowerIndex,
-	)
-
-	return value
+	return
 }
 
 func (b *Bot) getCardsNumberOnTable() map[string]int {
