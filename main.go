@@ -38,7 +38,12 @@ func main() {
 	if err != nil {
 		log.Fatal("Read index.html error: ", err)
 	}
+	version, err := ioutil.ReadFile("version")
+	if err != nil {
+		log.Println("Cannot read file 'version': ", err)
+	}
 	indexPageContent = bytes.Replace(indexPageContentRaw, []byte("%APP_ENV%"), []byte(*appEnv), 1)
+	indexPageContent = bytes.Replace(indexPageContent, []byte("%APP_VERSION%"), bytes.TrimSpace([]byte(version)), 2)
 
 	gameLogger := NewGameFileLogger(*gameLogDir, func(err error) {
 		log.Println(err)

@@ -10,7 +10,8 @@ window.i18nMessages = {
             durak_an_online_multiplayer_card_game: 'Durak - an online multiplayer card game'
         },
         lobby: {
-            clients: 'Clients',
+            version: 'Version',
+            clients: 'Clients'
         }
     },
     ru: {
@@ -24,6 +25,7 @@ window.i18nMessages = {
             durak_an_online_multiplayer_card_game: 'Дурак - многопользовательская карточная онлайн игра'
         },
         lobby: {
+            version: 'Версия',
             clients: 'Клиенты',
             your_nickname: 'Ваш псевдоним',
             your_id: 'Ваш ID',
