@@ -8,7 +8,8 @@ services:
 
     container_name: durak
 
-    network_mode: bridge
+    networks:
+      - nginx-proxy
     restart: always
 
     environment:
@@ -18,3 +19,7 @@ services:
 
     volumes:
     - /var/log/durak:/var/log/durak
+
+networks:
+  nginx-proxy:
+    external: true
