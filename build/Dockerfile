@@ -16,6 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
 FROM busybox
 WORKDIR /app
 RUN mkdir -p /var/log/durak && chmod 0777 /var/log/durak
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app/durak /app/
 COPY ./html/ /app/html/
 COPY ./version /app/version
