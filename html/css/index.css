@@ -211,7 +211,44 @@ body {
 }
 
 .app {
-    display: flex;
+    display: grid;
+    grid-template-areas:
+        "rooms  clients user"
+        "game   game    game"
+        "status status  status";
+    grid-template-rows: 24px 1fr 80px;
+    grid-template-columns: 6fr 2fr 1fr;
+    grid-gap: 24px;
+}
+
+
+.rooms {
+    grid-area: rooms;
+    border: 1px solid #ddd;
+}
+
+.clients {
+    grid-area: clients;
+    border: 1px solid #ddd;
+    text-align: right;
+}
+
+.user {
+    grid-area: user;
+    text-align: right;
+    border: 1px solid #ddd;
+}
+
+.game {
+    grid-area: game;
+}
+
+.status {
+    grid-area: status;
+}
+
+.rooms, .game, .status, .clients, .user {
+    overflow: hidden;
 }
 
 .game-info {
@@ -219,7 +256,6 @@ body {
 }
 
 .game-state-holder {
-    position: absolute;
     bottom: 10px;
     text-align: center;
     background: rgba(0, 0, 0, 0.7);
