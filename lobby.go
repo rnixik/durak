@@ -38,7 +38,7 @@ type Lobby struct {
 
 func newLobby(gameLogger GameLogger) *Lobby {
 	return &Lobby{
-		broadcast:      make(chan []byte, 10),
+		broadcast:      make(chan []byte),
 		register:       make(chan *Client),
 		unregister:     make(chan *Client),
 		clients:        make(map[*Client]bool),
@@ -51,6 +51,21 @@ func newLobby(gameLogger GameLogger) *Lobby {
 
 func (l *Lobby) run() {
 	log.Println("Go lobby")
+
+	go func() {
+		for {
+			select {
+			case message, ok := <-l.broadcast:
+				if !ok {
+					continue
+				}
+				for client := range l.clients {
+					client.sendMessage(message)
+				}
+			}
+		}
+	}()
+
 	for {
 		select {
 		case client := <-l.register:
@@ -65,13 +80,6 @@ func (l *Lobby) run() {
 				client.isValid = false
 				delete(l.clients, client)
 				close(client.send)
-			}
-		case message, ok := <-l.broadcast:
-			if !ok {
-				continue
-			}
-			for client := range l.clients {
-				client.sendMessage(message)
 			}
 		case clientCommand := <-l.clientCommands:
 			l.onClientCommand(clientCommand)
