@@ -76,9 +76,9 @@ func (l *Lobby) run() {
 			l.clients[client] = true
 		case client := <-l.unregister:
 			if _, ok := l.clients[client]; ok {
-				l.onClientLeft(client)
 				client.isValid = false
 				delete(l.clients, client)
+				l.onClientLeft(client)
 				close(client.send)
 			}
 		case clientCommand := <-l.clientCommands:

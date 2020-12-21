@@ -41,7 +41,7 @@ type Client struct {
 
 	conn *websocket.Conn
 
-	// Buffered channel of outbound messages.
+	// Channel of outbound messages.
 	send chan []byte
 
 	isValid bool
@@ -146,7 +146,7 @@ func serveWs(lobby *Lobby, w http.ResponseWriter, r *http.Request) {
 	client := &Client{
 		lobby: lobby,
 		conn:  conn,
-		send:  make(chan []byte, 256),
+		send:  make(chan []byte),
 	}
 	client.lobby.register <- client
 
