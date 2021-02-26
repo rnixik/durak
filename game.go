@@ -587,22 +587,29 @@ func (g *Game) endGame(hasLoser bool, loserIndex int) {
 		return
 	}
 	g.status = GameStatusEnd
+	log.Printf("endgame: broadcast game state event")
 	g.broadcastGameStateEvent()
 	gameEndEvent := &GameEndEvent{
 		HasLoser:   hasLoser,
 		LoserIndex: loserIndex,
 	}
 	g.gameLogger.LogGameEnds(g, hasLoser, loserIndex)
+	log.Printf("endgame: broadcast game end event")
 	g.room.broadcastEvent(gameEndEvent, nil)
+	log.Printf("endgame: close playerActions")
 	close(g.playerActions)
+	log.Printf("endgame: room.onGameEnded")
 	g.room.onGameEnded()
+	log.Printf("endgame: complete")
 }
 
 func (g *Game) onActivePlayerLeft(playerIndex int, isAfk bool) {
+	log.Printf("active player left index: %d, is afk = %t", playerIndex, isAfk)
 	gamePlayerLeft := &GamePlayerLeftEvent{playerIndex, isAfk}
-	g.room.broadcastEvent(gamePlayerLeft, nil)
+	g.room.broadcastEvent(gamePlayerLeft, g.players[playerIndex].client.(*Client))
 
 	if g.getActivePlayersNum() == 2 {
+		log.Printf("ending game")
 		g.endGame(true, playerIndex)
 	}
 }
