@@ -176,23 +176,23 @@ func (b *Bot) onGameEndEvent() {
 
 func (b *Bot) isGameStateValid() bool {
 	if len(b.players) < 2 {
-		log.Println("BOT: not enough players")
+		// log.Println("BOT: not enough players")
 		return false
 	}
 	if b.yourPlayerIndex < 0 {
-		log.Println("BOT: wrong your player index")
+		// log.Println("BOT: wrong your player index")
 		return false
 	}
 	if b.gameIsOver {
-		log.Println("BOT: game is over")
+		// log.Println("BOT: game is over")
 		return false
 	}
 	if b.gameStateInfo == nil {
-		log.Println("BOT: game state info is nil")
+		// log.Println("BOT: game state info is nil")
 		return false
 	}
 	if !b.gameWasStarted {
-		log.Println("BOT: game was not started")
+		// log.Println("BOT: game was not started")
 		return false
 	}
 
@@ -387,19 +387,7 @@ func (b *Bot) getTablePickUpValue(additionalCard *Card) float64 {
 
 	cardsPowerIndex := (10*battlegroundAttackRateIndex + tripletsIndex + 2*quartetsIndex) / float64(13)
 
-	value := deckRemainsIndex * cardsPowerIndex
-
-	log.Printf(
-		"pickup value = %f, D=%f, AR=%f, T=%f, Q=%f, CP=%f",
-		value,
-		deckRemainsIndex,
-		battlegroundAttackRateIndex,
-		tripletsIndex,
-		quartetsIndex,
-		cardsPowerIndex,
-	)
-
-	return value
+	return deckRemainsIndex * cardsPowerIndex
 }
 
 // How many cards left in deck: 0..1: 0 - empty deck; 1 - full deck.

@@ -377,7 +377,7 @@ func (g *Game) attack(player *Player, data AttackActionData) {
 func (g *Game) defend(player *Player, data DefendActionData) {
 	canDefend := g.canPlayerDefendWithCard(player, data.AttackingCard, data.DefendingCard)
 	if !canDefend {
-		log.Printf("Cannot use card to defend")
+		log.Printf("Cannot use card to defend %+v %+v", data.AttackingCard, data.DefendingCard)
 		return
 	}
 	attackingIndex := g.getBattlegroundCardIndex(data.AttackingCard)
@@ -431,9 +431,7 @@ func (g *Game) canPlayerPickUp(player *Player) bool {
 }
 
 func (g *Game) pickUp(player *Player) {
-	log.Printf("pick up")
 	if !g.canPlayerPickUp(player) {
-		log.Printf("Can't pick up")
 		return
 	}
 
@@ -582,20 +580,15 @@ func (g *Game) endGame(hasLoser bool, loserIndex int) {
 		return
 	}
 	g.status = GameStatusEnd
-	log.Printf("endgame: broadcast game state event")
 	g.broadcastGameStateEvent()
 	gameEndEvent := &GameEndEvent{
 		HasLoser:   hasLoser,
 		LoserIndex: loserIndex,
 	}
 	g.gameLogger.LogGameEnds(g, hasLoser, loserIndex)
-	log.Printf("endgame: broadcast game end event")
 	g.room.broadcastEvent(gameEndEvent, nil)
-	log.Printf("endgame: close playerActions")
 	close(g.playerActions)
-	log.Printf("endgame: room.onGameEnded")
 	g.room.onGameEnded()
-	log.Printf("endgame: complete")
 }
 
 func (g *Game) onActivePlayerLeft(playerIndex int, isAfk bool) {
