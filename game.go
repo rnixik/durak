@@ -286,7 +286,6 @@ func (g *Game) begin() {
 			if !ok {
 				return
 			}
-			log.Printf("action: %#v", action)
 			g.onClientAction(action)
 		}
 	}
@@ -353,10 +352,8 @@ func (g *Game) canPlayerDefendWithCard(player *Player, attackingCard *Card, defe
 
 func (g *Game) attack(player *Player, data AttackActionData) {
 	card := data.Card
-	log.Printf("attack card: %#v", card)
 	canAttack := g.canPlayerAttackWithCard(player, card)
 	if !canAttack {
-		log.Printf("Cannot use card to attack")
 		return
 	}
 	g.battleground = append(g.battleground, card)
@@ -478,9 +475,7 @@ func (g *Game) canPlayerComplete(player *Player) bool {
 }
 
 func (g *Game) complete(player *Player) {
-	log.Printf("complete")
 	if !g.canPlayerComplete(player) {
-		log.Printf("Can't complete")
 		return
 	}
 
@@ -606,7 +601,7 @@ func (g *Game) endGame(hasLoser bool, loserIndex int) {
 func (g *Game) onActivePlayerLeft(playerIndex int, isAfk bool) {
 	log.Printf("active player left index: %d, is afk = %t", playerIndex, isAfk)
 	gamePlayerLeft := &GamePlayerLeftEvent{playerIndex, isAfk}
-	g.room.broadcastEvent(gamePlayerLeft, g.players[playerIndex].client.(*Client))
+	g.room.broadcastEvent(gamePlayerLeft, nil)
 
 	if g.getActivePlayersNum() == 2 {
 		log.Printf("ending game")

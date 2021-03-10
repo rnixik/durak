@@ -204,11 +204,9 @@ func (b *Bot) canAttack() bool {
 		return false
 	}
 	if len(b.getAvailableCardsForAttack()) == 0 {
-		log.Println("BOT: no cards for attack")
 		return false
 	}
 	if len(b.myUnbeatenCards) > 0 {
-		log.Printf("BOT: waiting for cards beaten: %+v", b.myUnbeatenCards)
 		return false
 	}
 
@@ -230,14 +228,12 @@ func (b *Bot) getAvailableCardsForAttack() (cards []*Card) {
 }
 
 func (b *Bot) attack() bool {
-	b.printHand()
 	availableCards := b.getAvailableCardsForAttack()
 	minimalValueCard := b.findLowestCard(availableCards)
 
 	// Should bot add card to strong cards on table?
 	battlegroundPickUpValue := b.getTablePickUpValue(minimalValueCard)
 	if battlegroundPickUpValue > additionalAttackStopIndex {
-		log.Printf("STOPPED ATTACK BY PICKUP VALUE = %f (with card = %s)", battlegroundPickUpValue, minimalValueCard.Value)
 		return false
 	}
 
@@ -270,7 +266,6 @@ func (b *Bot) getAttackingCardsToDefend() (attackingCards []*Card) {
 }
 
 func (b *Bot) defend() {
-	b.printHand()
 	attackingCards := b.getAttackingCardsToDefend()
 	trumpSuit := b.gameStateInfo.TrumpCard.Suit
 	for _, attackCard := range attackingCards {
@@ -281,26 +276,22 @@ func (b *Bot) defend() {
 			}
 		}
 		if len(defendCandidates) == 0 {
-			log.Printf("BOT: can't beat card %+v", attackCard)
 			b.pickUp()
 			return
 		}
 
 		minimalValueCard := b.findLowestCard(defendCandidates)
-		attackActionData := DefendActionData{AttackingCard: attackCard, DefendingCard: minimalValueCard}
-		b.botClient.sendGameAction(PlayerActionNameDefend, attackActionData)
+		defendActionData := DefendActionData{AttackingCard: attackCard, DefendingCard: minimalValueCard}
+		b.botClient.sendGameAction(PlayerActionNameDefend, defendActionData)
 	}
 }
 
 func (b *Bot) complete() {
-	log.Println("BOT: complete")
 	b.botClient.sendGameAction(PlayerActionNameComplete, nil)
 }
 
 func (b *Bot) pickUp() {
-	log.Println("BOT: pick up")
 	if b.iAmPickingUp {
-		log.Println("BOT: already pick up")
 		return
 	}
 	b.iAmPickingUp = true
@@ -309,7 +300,6 @@ func (b *Bot) pickUp() {
 
 func (b *Bot) makeDecision() {
 	if !b.isGameStateValid() {
-		log.Println("BOT: Invalid state for decision")
 		return
 	}
 
@@ -332,12 +322,8 @@ func (b *Bot) makeDecision() {
 			if b.attack() {
 				return
 			}
-		} else {
-			log.Printf("STOPPED ATTACK BY PICKUP VALUE = %f", battlegroundPickUpValue)
 		}
 	}
-
-	log.Println("BOT: Can't attack")
 
 	if b.canDefend() {
 		b.defend()
@@ -526,12 +512,4 @@ func getCardsPairsIndex(cards map[string]int, pairSize int) float64 {
 	}
 
 	return index
-}
-
-func (b *Bot) printHand() {
-	cardsStr := ""
-	for _, card := range b.gameStateInfo.YourHand {
-		cardsStr += " " + card.Value + card.Suit
-	}
-	log.Printf("Cards: %s", cardsStr)
 }

@@ -124,8 +124,6 @@ func (c *Client) writeLoop() {
 
 func (c *Client) sendEvent(event interface{}) {
 	jsonData, _ := eventToJSON(event)
-	log.Printf("Send json to client %s", c.nickname)
-	log.Println(string(jsonData))
 	c.sendMessage(jsonData)
 }
 

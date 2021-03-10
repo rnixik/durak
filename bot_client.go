@@ -17,10 +17,11 @@ type BotClient struct {
 
 func newBotClient(id uint64, room *Room) *BotClient {
 	botClient := &BotClient{
-		nickname:        generateBotName(),
-		id:              id,
-		room:            room,
-		incomingEvents:  make(chan []byte),
+		nickname: generateBotName(),
+		id:       id,
+		room:     room,
+		// We use buffered channel because a decision of one bot produces game events for this bot too
+		incomingEvents:  make(chan []byte, MaxPlayersInRoom*MaxPlayersInRoom+1),
 		outgoingActions: make(chan *PlayerAction),
 	}
 
@@ -67,7 +68,6 @@ func (bl *BotClient) sendGameAction(playerActionName string, actionData interfac
 		return
 	}
 	playerAction := &PlayerAction{Name: playerActionName, Data: actionData, player: player}
-	log.Printf("BOT: sending game action to game %+v", playerAction)
 	bl.outgoingActions <- playerAction
 }
 func (bl *BotClient) sendingActionsToGame() {

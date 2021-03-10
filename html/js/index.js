@@ -329,8 +329,8 @@ function App() {
         app.updatePlayersInRoomCounter();
         app.updateLocationWithRoomId(data.room.id);
         if (window.APP_ENV === 'local') {
-            app.commandAddBot();
-            app.commandStartGame();
+            // app.commandAddBot();
+            // app.commandStartGame();
         }
     };
 
